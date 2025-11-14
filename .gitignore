@@ -9,3 +9,7 @@ node_modules
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# Data folder (but keep default database.json)
+/data/*.json
+!/data/database.json
+

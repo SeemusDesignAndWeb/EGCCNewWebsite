@@ -1,126 +1,284 @@
-<script lang="ts">
+<script>
+	export let contactInfo = {
+		address: '542 Westhorne Avenue, Eltham, London, SE9 6RR',
+		phone: '020 8850 1331',
+		email: 'enquiries@egcc.co.uk'
+	};
+
 	let formData = {
 		name: '',
 		email: '',
-		subject: '',
+		phone: '',
 		message: ''
 	};
 
 	let success = false;
-	let error = false;
+	let error = '';
 	let submitting = false;
+	let fieldErrors = {};
 
-	async function handleSubmit(event: Event) {
+	function validateField(field, value) {
+		switch (field) {
+			case 'name':
+				if (!value || value.trim().length < 2) {
+					return 'Name must be at least 2 characters';
+				}
+				return '';
+			case 'email':
+				const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+				if (!value || !emailPattern.test(value)) {
+					return 'Please enter a valid email address';
+				}
+				return '';
+			case 'phone':
+				if (!value || value.trim().length < 5) {
+					return 'Please enter a valid phone number';
+				}
+				return '';
+			case 'message':
+				if (!value || value.trim().length < 10) {
+					return 'Message must be at least 10 characters';
+				}
+				return '';
+			default:
+				return '';
+		}
+	}
+
+	function handleBlur(field, value) {
+		const error = validateField(field, value);
+		if (error) {
+			fieldErrors[field] = error;
+		} else {
+			delete fieldErrors[field];
+		}
+		fieldErrors = { ...fieldErrors };
+	}
+
+	function handleInput(field, value) {
+		formData[field] = value;
+		if (fieldErrors[field]) {
+			const error = validateField(field, value);
+			if (!error) {
+				delete fieldErrors[field];
+				fieldErrors = { ...fieldErrors };
+			}
+		}
+	}
+
+	async function handleSubmit(event) {
 		event.preventDefault();
 		submitting = true;
 		success = false;
-		error = false;
+		error = '';
 
-		// Basic validation
-		const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (
-			!emailPattern.test(formData.email) ||
-			formData.message.length <= 1 ||
-			formData.name.length <= 1
-		) {
-			error = true;
+		const errors = {};
+		Object.keys(formData).forEach((field) => {
+			const fieldError = validateField(field, formData[field]);
+			if (fieldError) {
+				errors[field] = fieldError;
+			}
+		});
+
+		if (Object.keys(errors).length > 0) {
+			fieldErrors = errors;
 			submitting = false;
 			return;
 		}
 
-		// Simulate form submission (replace with actual API call)
-		setTimeout(() => {
-			success = true;
+		try {
+			const response = await fetch('/api/contact', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(formData)
+			});
+
+			const result = await response.json();
+
+			if (response.ok && result.success) {
+				success = true;
+				formData = { name: '', email: '', phone: '', message: '' };
+				fieldErrors = {};
+				setTimeout(() => {
+					success = false;
+				}, 5000);
+			} else {
+				error = result.error || 'Failed to send message. Please try again.';
+			}
+		} catch (err) {
+			error = 'Network error. Please check your connection and try again.';
+			console.error('Form submission error:', err);
+		} finally {
 			submitting = false;
-			formData = { name: '', email: '', subject: '', message: '' };
-		}, 1000);
+		}
 	}
 </script>
 
-<section id="contact" class="py-20 bg-white">
-	<div class="container mx-auto px-4">
+<section id="contact" class="py-20 bg-gray-100">
+	<div class="container mx-auto px-4 max-w-4xl">
+		<!-- Header -->
+		<div class="text-center mb-12">
+			<h2 class="text-4xl font-bold text-gray-900 mb-4">Contact Us</h2>
+			<p class="text-gray-600">Get in touch with us</p>
+		</div>
+
 		<div class="grid md:grid-cols-2 gap-12">
-			<!-- Google Map -->
-			<div class="w-full h-[400px] rounded-lg overflow-hidden shadow-lg">
-				<iframe
-					src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2487.1234567890!2d0.0488!3d51.4523!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTHCsDI3JzA4LjMiTiAwwrAwMic1NS43IkU!5e0!3m2!1sen!2suk!4v1234567890123"
-					width="100%"
-					height="100%"
-					style="border:0;"
-					title="Eltham Green Community Church Location"
-					allowfullscreen=""
-					loading="lazy"
-					referrerpolicy="no-referrer-when-downgrade"
-				></iframe>
+			<!-- Contact Information -->
+			<div class="space-y-6">
+				<div>
+					<h3 class="text-lg font-semibold text-gray-900 mb-4">Get in Touch</h3>
+					<div class="space-y-4">
+						<div>
+							<p class="text-sm text-gray-500 mb-1">Address</p>
+							<p class="text-gray-900">{contactInfo.address}</p>
+						</div>
+						<div>
+							<p class="text-sm text-gray-500 mb-1">Phone</p>
+							<a href="tel:{contactInfo.phone}" class="text-gray-900 hover:text-primary">
+								{contactInfo.phone}
+							</a>
+						</div>
+						<div>
+							<p class="text-sm text-gray-500 mb-1">Email</p>
+							<a href="mailto:{contactInfo.email}" class="text-gray-900 hover:text-primary">
+								{contactInfo.email}
+							</a>
+						</div>
+					</div>
+				</div>
+
+				<div class="pt-6 border-t border-gray-200">
+					<iframe
+						src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2487.1234567890!2d0.0488!3d51.4523!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTHCsDI3JzA4LjMiTiAwwrAwMic1NS43IkU!5e0!3m2!1sen!2suk!4v1234567890123"
+						width="100%"
+						height="200"
+						style="border:0;"
+						title="Eltham Green Community Church Location"
+						allowfullscreen
+						loading="lazy"
+						referrerpolicy="no-referrer-when-downgrade"
+						class="w-full rounded"
+					></iframe>
+				</div>
 			</div>
 
 			<!-- Contact Form -->
 			<div>
-				<div class="mb-8">
-					<div class="section-title">
-						<h2>Contact Us</h2>
+				<h3 class="text-lg font-semibold text-gray-900 mb-6">Send a Message</h3>
+
+				{#if success}
+					<div class="mb-6 p-4 bg-green-50 border border-green-200 rounded text-green-800 text-sm">
+						Message sent successfully! We'll get back to you soon.
 					</div>
-				</div>
+				{/if}
 
-				<form
-					method="POST"
-					on:submit={handleSubmit}
-					class="space-y-4"
-				>
-					{#if success}
-						<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-							Your message has been sent successfully.
-						</div>
-					{/if}
+				{#if error}
+					<div class="mb-6 p-4 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
+						{error}
+					</div>
+				{/if}
 
-					{#if error}
-						<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-							E-mail must be valid and message must be longer than 1 character.
-						</div>
-					{/if}
-
-					<div class="grid md:grid-cols-2 gap-4">
+				<form on:submit={handleSubmit} class="space-y-4">
+					<!-- Name -->
+					<div>
+						<label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+							Name <span class="text-red-500">*</span>
+						</label>
 						<input
+							id="name"
 							type="text"
 							bind:value={formData.name}
-							placeholder="Full name"
+							on:blur={() => handleBlur('name', formData.name)}
+							on:input={(e) => handleInput('name', e.currentTarget.value)}
 							required
-							class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+							class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent {fieldErrors.name
+								? 'border-red-500'
+								: ''}"
 						/>
-						<input
-							type="email"
-							bind:value={formData.email}
-							placeholder="Email address"
-							required
-							class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-						/>
+						{#if fieldErrors.name}
+							<p class="mt-1 text-sm text-red-600">{fieldErrors.name}</p>
+						{/if}
 					</div>
 
-					<input
-						type="text"
-						bind:value={formData.subject}
-						placeholder="Subject"
-						class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-					/>
+					<!-- Email -->
+					<div>
+						<label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+							Email <span class="text-red-500">*</span>
+						</label>
+						<input
+							id="email"
+							type="email"
+							bind:value={formData.email}
+							on:blur={() => handleBlur('email', formData.email)}
+							on:input={(e) => handleInput('email', e.currentTarget.value)}
+							required
+							class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent {fieldErrors.email
+								? 'border-red-500'
+								: ''}"
+						/>
+						{#if fieldErrors.email}
+							<p class="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
+						{/if}
+					</div>
 
-					<textarea
-						bind:value={formData.message}
-						rows="6"
-						placeholder="How can we help you? Share your message or prayer request..."
-						required
-						class="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-					></textarea>
+					<!-- Phone -->
+					<div>
+						<label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
+							Phone <span class="text-red-500">*</span>
+						</label>
+						<input
+							id="phone"
+							type="tel"
+							bind:value={formData.phone}
+							on:blur={() => handleBlur('phone', formData.phone)}
+							on:input={(e) => handleInput('phone', e.currentTarget.value)}
+							required
+							class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent {fieldErrors.phone
+								? 'border-red-500'
+								: ''}"
+						/>
+						{#if fieldErrors.phone}
+							<p class="mt-1 text-sm text-red-600">{fieldErrors.phone}</p>
+						{/if}
+					</div>
 
+					<!-- Message -->
+					<div>
+						<label for="message" class="block text-sm font-medium text-gray-700 mb-1">
+							Message <span class="text-red-500">*</span>
+						</label>
+						<textarea
+							id="message"
+							bind:value={formData.message}
+							on:blur={() => handleBlur('message', formData.message)}
+							on:input={(e) => handleInput('message', e.currentTarget.value)}
+							rows="5"
+							required
+							class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none {fieldErrors.message
+								? 'border-red-500'
+								: ''}"
+						></textarea>
+						{#if fieldErrors.message}
+							<p class="mt-1 text-sm text-red-600">{fieldErrors.message}</p>
+						{/if}
+					</div>
+
+					<!-- Submit Button -->
 					<button
 						type="submit"
 						disabled={submitting}
-						class="w-full bg-primary text-white px-6 py-3 rounded hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+						class="w-full bg-primary text-white px-6 py-3 rounded font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						{submitting ? 'Sending...' : 'Send Message'}
+						{#if submitting}
+							Sending...
+						{:else}
+							Send Message
+						{/if}
 					</button>
 				</form>
 			</div>
 		</div>
 	</div>
 </section>
-

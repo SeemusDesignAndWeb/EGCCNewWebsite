@@ -1,42 +1,50 @@
-<script lang="ts">
+<script lang="js">
 	import { onMount } from 'svelte';
 
-	let currentSlide = 0;
-	let autoplayInterval: number | null = null;
+	export let heroSlides = null;
 
-	const slides = [
+	let currentSlide = 0;
+	let autoplayInterval = null;
+
+	// Fallback slides if none in database
+	const defaultSlides = [
 		{
+			id: 'default-1',
 			title: 'Eltham Green Community Church',
 			subtitle: 'A welcoming community of faith, hope, and love',
 			cta: 'Join Us',
 			ctaLink: '#services',
-			image: '/images/slider-image1.jpg'
+			image: '/images/church-bg.jpg'
 		},
 		{
+			id: 'default-2',
 			title: 'Sunday Worship',
 			subtitle: 'Join us every Sunday for inspiring worship and fellowship',
 			cta: 'Service Times',
 			ctaLink: '#services',
-			image: '/images/slider-image2.jpg'
+			image: '/images/church-bg.jpg'
 		},
 		{
+			id: 'default-3',
 			title: 'Community & Connection',
 			subtitle: 'Building relationships and serving our community together',
 			cta: 'Get Involved',
 			ctaLink: '#contact',
-			image: '/images/slider-image3.jpg'
+			image: '/images/church-bg.jpg'
 		}
 	];
+
+	$: slides = heroSlides && heroSlides.length > 0 ? heroSlides : defaultSlides;
 
 	function nextSlide() {
 		currentSlide = (currentSlide + 1) % slides.length;
 	}
 
-	function goToSlide(index: number) {
+	function goToSlide(index) {
 		currentSlide = index;
 	}
 
-	function smoothScroll(e: MouseEvent, targetId: string) {
+	function smoothScroll(e, targetId) {
 		e.preventDefault();
 		const element = document.getElementById(targetId);
 		if (element) {
@@ -51,9 +59,9 @@
 	}
 
 	onMount(() => {
-		autoplayInterval = setInterval(nextSlide, 5000);
+		autoplayInterval = window.setInterval(nextSlide, 5000);
 		return () => {
-			if (autoplayInterval) clearInterval(autoplayInterval);
+			if (autoplayInterval) window.clearInterval(autoplayInterval);
 		};
 	});
 </script>
@@ -66,22 +74,32 @@
 			class:opacity-100={currentSlide === index}
 			style="background-image: url('{slide.image}'); background-size: cover; background-position: center;"
 		>
-			<div class="absolute inset-0 bg-black bg-opacity-40"></div>
-			<div class="relative h-full flex items-center">
-				<div class="container mx-auto px-4">
-					<div class="max-w-2xl">
-						<h3 class="text-white text-2xl mb-4 animate-fade-in">{slide.title}</h3>
-						<h1 class="text-white text-5xl mb-8 animate-fade-in">{slide.subtitle}</h1>
+		<div class="absolute inset-0 bg-black bg-opacity-40"></div>
+		<div class="relative h-full flex items-center">
+			<div class="container mx-auto px-4">
+				<div class="max-w-3xl">
+					{#if slide.title}
+						<p class="text-white text-xl md:text-2xl font-light mb-4 animate-fade-in">
+							{slide.title}
+						</p>
+					{/if}
+					{#if slide.subtitle}
+						<h1 class="text-white text-5xl md:text-6xl font-bold mb-8 leading-tight animate-fade-in">
+							{slide.subtitle}
+						</h1>
+					{/if}
+					{#if slide.cta}
 						<a
 							href={slide.ctaLink}
 							on:click={(e) => smoothScroll(e, slide.ctaLink.slice(1))}
-							class="inline-block bg-primary text-white px-8 py-3 rounded hover:bg-opacity-90 transition-colors animate-fade-in"
+							class="inline-block bg-primary text-white px-8 py-4 rounded-lg font-semibold hover:bg-opacity-90 transition-all transform hover:scale-105 shadow-lg animate-fade-in"
 						>
 							{slide.cta}
 						</a>
-					</div>
+					{/if}
 				</div>
 			</div>
+		</div>
 		</div>
 	{/each}
 

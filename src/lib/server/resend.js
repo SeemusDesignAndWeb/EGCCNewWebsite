@@ -1,0 +1,188 @@
+import { Resend } from 'resend';
+import { env } from '$env/dynamic/private';
+
+// Initialize Resend with API key from environment or fallback
+const resend = new Resend(env.RESEND_API_KEY || 're_C88Tpi9d_5uF8M4U2R8r4NbyTwjHBVZ6A');
+
+/**
+ * Send a contact form email via Resend
+ * @param {object} options - Email options
+ * @param {string} options.to - Recipient email address
+ * @param {string} options.from - Sender email address (must be verified in Resend)
+ * @param {string} options.name - Sender's name
+ * @param {string} options.email - Sender's email
+ * @param {string} options.phone - Sender's phone (optional)
+ * @param {string} options.message - Message content
+ * @param {string} options.replyTo - Reply-to email (defaults to sender's email)
+ * @returns {Promise<object>} Resend API response
+ */
+export async function sendContactEmail({
+	to,
+	from = 'onboarding@resend.dev', // Default Resend sender (should be changed to verified domain)
+	name,
+	email,
+	phone,
+	message,
+	replyTo
+}) {
+	try {
+		console.log('Sending contact email:', { to, from, replyTo: replyTo || email, name });
+		const result = await resend.emails.send({
+			from: from,
+			to: [to],
+			replyTo: replyTo || email,
+			subject: `New Contact Form Submission from ${name}`,
+			html: `
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<meta charset="utf-8">
+					<meta name="viewport" content="width=device-width, initial-scale=1.0">
+					<title>New Contact Form Submission</title>
+				</head>
+				<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+					<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+						<h1 style="color: white; margin: 0; font-size: 24px;">New Contact Form Submission</h1>
+					</div>
+					
+					<div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e5e7eb; border-top: none;">
+						<div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+							<h2 style="color: #2d7a32; margin-top: 0; font-size: 18px; border-bottom: 2px solid #2d7a32; padding-bottom: 10px;">Contact Information</h2>
+							<table style="width: 100%; border-collapse: collapse;">
+								<tr>
+									<td style="padding: 8px 0; font-weight: 600; color: #666; width: 120px;">Name:</td>
+									<td style="padding: 8px 0; color: #333;">${name}</td>
+								</tr>
+								<tr>
+									<td style="padding: 8px 0; font-weight: 600; color: #666;">Email:</td>
+									<td style="padding: 8px 0; color: #333;">
+										<a href="mailto:${email}" style="color: #2d7a32; text-decoration: none;">${email}</a>
+									</td>
+								</tr>
+								${phone ? `
+								<tr>
+									<td style="padding: 8px 0; font-weight: 600; color: #666;">Phone:</td>
+									<td style="padding: 8px 0; color: #333;">
+										<a href="tel:${phone}" style="color: #2d7a32; text-decoration: none;">${phone}</a>
+									</td>
+								</tr>
+								` : ''}
+							</table>
+						</div>
+						
+						<div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+							<h2 style="color: #2d7a32; margin-top: 0; font-size: 18px; border-bottom: 2px solid #2d7a32; padding-bottom: 10px;">Message</h2>
+							<div style="color: #333; white-space: pre-wrap; line-height: 1.8;">${message.replace(/\n/g, '<br>')}</div>
+						</div>
+						
+						<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #666; font-size: 12px;">
+							<p style="margin: 0;">This email was sent from the contact form on Eltham Green Community Church website.</p>
+							<p style="margin: 5px 0 0 0;">
+								<a href="mailto:${email}" style="color: #2d7a32; text-decoration: none;">Reply to ${name}</a>
+							</p>
+						</div>
+					</div>
+				</body>
+				</html>
+			`,
+			text: `
+New Contact Form Submission
+
+Contact Information:
+Name: ${name}
+Email: ${email}
+${phone ? `Phone: ${phone}` : ''}
+
+Message:
+${message}
+
+---
+This email was sent from the contact form on Eltham Green Community Church website.
+Reply to: ${email}
+			`.trim()
+		});
+
+		console.log('Contact email sent successfully:', result);
+		return result;
+	} catch (error) {
+		console.error('Resend email error:', error);
+		console.error('Error details:', {
+			message: error.message,
+			name: error.name,
+			response: error.response || error.body
+		});
+		
+		// Check for common Resend errors
+		if (error.message && error.message.includes('domain')) {
+			console.error('⚠️  Domain verification error. The sender domain may not be verified in Resend.');
+			console.error('💡 Solution: Verify your domain in Resend Dashboard or use onboarding@resend.dev for testing.');
+		}
+		
+		throw error;
+	}
+}
+
+/**
+ * Send a confirmation email to the form submitter
+ * @param {object} options - Email options
+ * @param {string} options.to - Recipient email address
+ * @param {string} options.from - Sender email address
+ * @param {string} options.name - Recipient's name
+ * @returns {Promise<object>} Resend API response
+ */
+export async function sendConfirmationEmail({ to, from = 'onboarding@resend.dev', name }) {
+	try {
+		const result = await resend.emails.send({
+			from: from,
+			to: [to],
+			subject: 'Thank you for contacting Eltham Green Community Church',
+			html: `
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<meta charset="utf-8">
+					<meta name="viewport" content="width=device-width, initial-scale=1.0">
+					<title>Thank You</title>
+				</head>
+				<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+					<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+						<h1 style="color: white; margin: 0; font-size: 24px;">Thank You, ${name}!</h1>
+					</div>
+					
+					<div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e5e7eb; border-top: none;">
+						<div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center;">
+							<p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">
+								We've received your message and will get back to you as soon as possible.
+							</p>
+							<p style="color: #666; font-size: 14px; margin: 0;">
+								If you have any urgent questions, please feel free to call us at <a href="tel:02088501331" style="color: #2d7a32; text-decoration: none;">020 8850 1331</a>.
+							</p>
+						</div>
+						
+						<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #666; font-size: 12px;">
+							<p style="margin: 0;">Eltham Green Community Church</p>
+							<p style="margin: 5px 0 0 0;">542 Westhorne Avenue, Eltham, London, SE9 6RR</p>
+						</div>
+					</div>
+				</body>
+				</html>
+			`,
+			text: `
+Thank You, ${name}!
+
+We've received your message and will get back to you as soon as possible.
+
+If you have any urgent questions, please feel free to call us at 020 8850 1331.
+
+Eltham Green Community Church
+542 Westhorne Avenue, Eltham, London, SE9 6RR
+			`.trim()
+		});
+
+		return result;
+	} catch (error) {
+		console.error('Resend confirmation email error:', error);
+		throw error;
+	}
+}
+

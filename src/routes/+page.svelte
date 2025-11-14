@@ -4,9 +4,10 @@
 	import About from '$lib/components/About.svelte';
 	import Team from '$lib/components/Team.svelte';
 	import Menu from '$lib/components/Menu.svelte';
-	import Testimonial from '$lib/components/Testimonial.svelte';
 	import Contact from '$lib/components/Contact.svelte';
 	import Footer from '$lib/components/Footer.svelte';
+
+	export let data;
 </script>
 
 <svelte:head>
@@ -15,11 +16,9 @@
 </svelte:head>
 
 <Navbar />
-<Hero />
+<Hero heroSlides={data.heroSlides} />
 <About />
-<Team />
 <Menu />
-<Testimonial />
-<Contact />
-<Footer />
+<Contact contactInfo={data.contactInfo} />
+<Footer contactInfo={data.contactInfo} serviceTimes={data.serviceTimes} />
 

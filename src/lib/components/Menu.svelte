@@ -1,8 +1,8 @@
-<script lang="ts">
+<script lang="js">
 	import { onMount } from 'svelte';
 
 	let mounted = false;
-	let lightboxImage: string | null = null;
+	let lightboxImage = null;
 
 	onMount(() => {
 		mounted = true;
@@ -13,41 +13,41 @@
 			name: 'Sunday Worship',
 			description: 'Join us every Sunday at 10:30 AM for inspiring worship and teaching',
 			time: '10:30 AM',
-			image: '/images/menu-image1.jpg'
+			image: 'https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066390/egcc/egcc/img-church-bg.jpg'
 		},
 		{
 			name: 'Youth Group',
 			description: 'Fridays at 7 PM - A place for teens to connect, grow, and have fun',
 			time: 'Friday 7:00 PM',
-			image: '/images/menu-image2.jpg'
+			image: 'https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066391/egcc/egcc/img-community-groups-bg.jpg'
 		},
 		{
 			name: 'Bible Study',
 			description: 'Wednesday evenings - Deep dive into God\'s Word together',
 			time: 'Wednesday 7:30 PM',
-			image: '/images/menu-image3.jpg'
+			image: 'https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066390/egcc/egcc/img-church-bg.jpg'
 		},
 		{
 			name: 'Prayer Meeting',
 			description: 'Join us for prayer and fellowship every Tuesday evening',
 			time: 'Tuesday 7:00 PM',
-			image: '/images/menu-image4.jpg'
+			image: 'https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066390/egcc/egcc/img-church-bg.jpg'
 		},
 		{
 			name: 'Children\'s Ministry',
 			description: 'Sunday School and activities for kids during the service',
 			time: 'Sunday 10:30 AM',
-			image: '/images/menu-image5.jpg'
+			image: 'https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066391/egcc/egcc/img-community-groups-bg.jpg'
 		},
 		{
 			name: 'Community Outreach',
 			description: 'Serving our local community through various programs and events',
 			time: 'Various Times',
-			image: '/images/menu-image6.jpg'
+			image: 'https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066391/egcc/egcc/img-community-groups-bg.jpg'
 		}
 	];
 
-	function openLightbox(image: string) {
+	function openLightbox(image) {
 		lightboxImage = image;
 	}
 
@@ -56,19 +56,22 @@
 	}
 </script>
 
-<section id="services" class="py-20 bg-white">
+<section id="services" class="py-20 bg-gray-900">
 	<div class="container mx-auto px-4">
 		<div class="text-center mb-16">
-			<div class="section-title inline-block">
-				<h2>Our Services & Programs</h2>
-				<h4>Worship, Community & Growth</h4>
-			</div>
+			<span class="text-primary text-sm font-semibold uppercase tracking-wider mb-2 block">What We Offer</span>
+			<h2 class="text-4xl md:text-5xl font-bold text-white mb-4">
+				Our Services & Programs
+			</h2>
+			<p class="text-xl text-gray-300 max-w-2xl mx-auto">
+				Worship, Community & Growth
+			</p>
 		</div>
 
 		<div class="grid md:grid-cols-3 gap-8">
 			{#each services as service, index}
 				<div
-					class="group relative cursor-pointer animate-fade-in-up"
+					class="group relative cursor-pointer animate-fade-in-up bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
 					style="animation-delay: {index * 0.1}s"
 					on:click={() => openLightbox(service.image)}
 					role="button"
@@ -79,11 +82,11 @@
 						}
 					}}
 				>
-					<div class="relative overflow-hidden rounded-lg">
+					<div class="relative overflow-hidden aspect-[2/1]">
 						<img
 							src={service.image}
 							alt={service.name}
-							class="w-full h-auto transition-transform duration-500 group-hover:scale-110"
+							class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
 						/>
 						<div
 							class="absolute inset-0 bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
@@ -93,12 +96,12 @@
 							</div>
 						</div>
 					</div>
-					<div class="mt-4">
+					<div class="p-6">
 						<div class="flex justify-between items-start mb-2">
-							<h3 class="text-xl mb-1">{service.name}</h3>
+							<h3 class="text-xl font-bold mb-1 text-white">{service.name}</h3>
 							<div class="text-primary font-bold text-sm whitespace-nowrap ml-4">{service.time}</div>
 						</div>
-						<p class="text-light-gray text-sm">{service.description}</p>
+						<p class="text-gray-300 text-sm leading-relaxed">{service.description}</p>
 					</div>
 				</div>
 			{/each}
@@ -124,12 +127,17 @@
 		>
 			&times;
 		</button>
-		<img
-			src={lightboxImage}
-			alt="Service"
-			class="max-w-full max-h-full object-contain"
+		<div
 			on:click|stopPropagation
-		/>
+			on:keydown|stopPropagation
+			role="presentation"
+		>
+			<img
+				src={lightboxImage}
+				alt="Service"
+				class="max-w-full max-h-full object-contain"
+			/>
+		</div>
 	</div>
 {/if}
 

@@ -1,8 +1,8 @@
-<script lang="ts">
+<script lang="js">
 	import { onMount } from 'svelte';
 
 	let currentTestimonial = 0;
-	let autoplayInterval: number | null = null;
+	let autoplayInterval = null;
 
 	const testimonials = [
 		{
@@ -26,14 +26,14 @@
 		currentTestimonial = (currentTestimonial + 1) % testimonials.length;
 	}
 
-	function goToTestimonial(index: number) {
+	function goToTestimonial(index) {
 		currentTestimonial = index;
 	}
 
 	onMount(() => {
-		autoplayInterval = setInterval(nextTestimonial, 5000);
+		autoplayInterval = window.setInterval(nextTestimonial, 5000);
 		return () => {
-			if (autoplayInterval) clearInterval(autoplayInterval);
+			if (autoplayInterval) window.clearInterval(autoplayInterval);
 		};
 	});
 </script>

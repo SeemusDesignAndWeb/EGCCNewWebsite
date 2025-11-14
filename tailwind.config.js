@@ -7,8 +7,12 @@ export default {
 				sans: ['Montserrat', 'sans-serif']
 			},
 			colors: {
-				primary: '#2d7a32',
-				'primary-dark': '#1e5a22',
+				primary: '#4BB170', // Green (main brand color)
+				'primary-dark': '#3a8a56',
+				'brand-blue': '#4A97D2',
+				'brand-green': '#4BB170',
+				'brand-yellow': '#E6A324',
+				'brand-red': '#A62524',
 				'dark-gray': '#252525',
 				'medium-gray': '#353535',
 				'light-gray': '#757575'

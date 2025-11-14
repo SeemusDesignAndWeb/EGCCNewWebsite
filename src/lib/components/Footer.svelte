@@ -1,139 +1,95 @@
-<script lang="ts">
-	function smoothScroll(e: MouseEvent, targetId: string) {
-		e.preventDefault();
-		const element = document.getElementById(targetId);
-		if (element) {
-			const offset = 49;
-			const elementPosition = element.getBoundingClientRect().top;
-			const offsetPosition = elementPosition + window.pageYOffset - offset;
-			window.scrollTo({
-				top: offsetPosition,
-				behavior: 'smooth'
-			});
-		}
-	}
+<script lang="js">
+	export let contactInfo = {
+		address: '542 Westhorne Avenue, Eltham, London, SE9 6RR',
+		phone: '020 8850 1331',
+		email: 'enquiries@egcc.co.uk'
+	};
+
+	export let serviceTimes = {
+		sunday: '11:00 AM (Doors open at 10:30 AM)',
+		weekday: 'Various times - see Community Groups',
+		notes: ''
+	};
 </script>
 
-<footer
-	id="footer"
-	class="bg-cover bg-center bg-fixed py-20 text-white"
-	style="background-image: url('/images/footer-open-hour-bg.jpg');"
->
-	<div class="bg-black bg-opacity-60">
-		<div class="container mx-auto px-4">
-			<div class="grid md:grid-cols-12 gap-8">
-				<!-- Find us -->
-				<div class="md:col-span-3">
-					<div class="section-title">
-						<h2 class="text-white">Find us</h2>
-					</div>
-					<address class="not-italic text-gray-300">
-						<p>
-							Eltham Green Community Church<br />
-							Eltham, London<br />
-							SE9 1XX
-						</p>
-					</address>
+<footer class="bg-gray-900 text-white py-12">
+	<div class="container mx-auto px-4">
+		<div class="grid md:grid-cols-3 gap-8 mb-8">
+			<!-- Contact -->
+			<div>
+				<a href="/" class="inline-block mb-6">
+					<img
+						src="/images/egcc-logo-text.png"
+						alt="Eltham Green Community Church"
+						class="h-12 w-auto"
+					/>
+				</a>
+				<h3 class="text-white font-semibold mb-4">Contact</h3>
+				<div class="space-y-2 text-sm text-white">
+					<p class="text-white">{contactInfo.address}</p>
+					<p>
+						<a href="tel:{contactInfo.phone}" class="text-white hover:text-gray-300">
+							{contactInfo.phone}
+						</a>
+					</p>
+					<p>
+						<a href="mailto:{contactInfo.email}" class="text-white hover:text-gray-300">
+							{contactInfo.email}
+						</a>
+					</p>
 				</div>
+			</div>
 
-				<!-- Contact -->
-				<div class="md:col-span-3">
-					<div class="section-title">
-						<h2 class="text-white">Contact</h2>
-					</div>
-					<address class="not-italic text-gray-300">
-						<p>020 8850 3030</p>
-						<p>
-							<a href="mailto:info@egcc.co.uk" class="hover:text-primary transition-colors"
-								>info@egcc.co.uk</a
-							>
-						</p>
-						<p>
-							<a href="mailto:hello@egcc.co.uk" class="hover:text-primary transition-colors"
-								>hello@egcc.co.uk</a
-							>
-						</p>
-					</address>
+			<!-- Service Times -->
+			<div>
+				<h3 class="text-white font-semibold mb-4">Service Times</h3>
+				<div class="space-y-2 text-sm text-white">
+					{#if serviceTimes.sunday && serviceTimes.sunday.trim() !== ''}
+						<div>
+							<p class="text-white font-medium">Sunday</p>
+							<p class="text-white">{serviceTimes.sunday}</p>
+						</div>
+					{/if}
+					{#if serviceTimes.weekday && serviceTimes.weekday.trim() !== ''}
+						<div>
+							<p class="text-white font-medium">Weekday</p>
+							<p class="text-white">{serviceTimes.weekday}</p>
+						</div>
+					{/if}
+					{#if serviceTimes.notes && serviceTimes.notes.trim() !== ''}
+						<div class="pt-2">
+							<p class="text-xs text-white">{serviceTimes.notes}</p>
+						</div>
+					{/if}
 				</div>
+			</div>
 
-				<!-- Service Times -->
-				<div class="md:col-span-4">
-					<div class="section-title">
-						<h2 class="text-white">Service Times</h2>
-					</div>
-					<div class="text-gray-300 space-y-2">
-						<div>
-							<strong class="text-white">Sunday Worship</strong>
-							<p>10:30 AM</p>
-						</div>
-						<div>
-							<strong class="text-white">Bible Study</strong>
-							<p>Wednesday 7:30 PM</p>
-						</div>
-						<div>
-							<strong class="text-white">Prayer Meeting</strong>
-							<p>Tuesday 7:00 PM</p>
-						</div>
-						<div>
-							<strong class="text-white">Youth Group</strong>
-							<p>Friday 7:00 PM</p>
-						</div>
-					</div>
-				</div>
-
-				<!-- Social & Copyright -->
-				<div class="md:col-span-2">
-					<ul class="flex gap-4 mb-8">
-						<li>
-							<a
-								href="#"
-								class="text-white hover:text-primary text-2xl transition-colors"
-								aria-label="Facebook"
-							>
-								<i class="fa fa-facebook-square"></i>
-							</a>
-						</li>
-						<li>
-							<a
-								href="#"
-								class="text-white hover:text-primary text-2xl transition-colors"
-								aria-label="Twitter"
-							>
-								<i class="fa fa-twitter"></i>
-							</a>
-						</li>
-						<li>
-							<a
-								href="#"
-								class="text-white hover:text-primary text-2xl transition-colors"
-								aria-label="Instagram"
-							>
-								<i class="fa fa-instagram"></i>
-							</a>
-						</li>
-						<li>
-							<a
-								href="#"
-								class="text-white hover:text-primary text-2xl transition-colors"
-								aria-label="Google"
-							>
-								<i class="fa fa-google"></i>
-							</a>
-						</li>
-					</ul>
-
-					<div class="text-gray-300 text-sm">
-						<p>
-							<br />Copyright &copy; {new Date().getFullYear()} <br />Eltham Green Community Church
-							<br /><br />
-							<a href="https://egcc.co.uk" class="hover:text-primary transition-colors"
-								>egcc.co.uk</a
-							>
-						</p>
-					</div>
+			<!-- Links -->
+			<div>
+				<h3 class="text-white font-semibold mb-4">Quick Links</h3>
+				<div class="space-y-2 text-sm text-white">
+					<p>
+						<a href="/im-new" class="text-white hover:text-gray-300">I'm New</a>
+					</p>
+					<p>
+						<a href="/church" class="text-white hover:text-gray-300">About Us</a>
+					</p>
+					<p>
+						<a href="/team" class="text-white hover:text-gray-300">Team</a>
+					</p>
+					<p>
+						<a href="/community-groups" class="text-white hover:text-gray-300">Community Groups</a>
+					</p>
+					<p>
+						<a href="/audio" class="text-white hover:text-gray-300">Audio</a>
+					</p>
 				</div>
 			</div>
 		</div>
+
+		<!-- Copyright -->
+		<div class="border-t border-gray-800 pt-8 text-center text-sm text-white">
+			<p>&copy; {new Date().getFullYear()} Eltham Green Community Church. All rights reserved.</p>
+		</div>
 	</div>
 </footer>
-
