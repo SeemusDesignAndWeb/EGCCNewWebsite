@@ -71,32 +71,17 @@ export function readDatabase() {
 		return JSON.parse(data);
 	} catch (error) {
 		console.warn('[DB] Failed to read database from persistent location:', error);
+		console.log('[DB] Database file does not exist, initializing with default structure...');
 
-		// If file doesn't exist, try to initialize from git version
+		// Initialize with default structure and save to persistent location
 		try {
-			const gitDbPath = join(process.cwd(), './data/database.json');
-
-			if (gitDbPath !== getDbPath() && existsSync(gitDbPath)) {
-				console.log('[DB] Initializing from git version...');
-				const gitData = readFileSync(gitDbPath, 'utf-8');
-				const db = JSON.parse(gitData);
-
-				// Copy to persistent location
-				try {
-					writeDatabase(db);
-					console.log('[DB] Successfully initialized database');
-				} catch (writeError) {
-					console.warn('[DB] Could not write to persistent location:', writeError);
-				}
-
-				return db;
-			}
-		} catch (initError) {
-			console.warn('[DB] Could not initialize from git database:', initError);
+			writeDatabase(defaultDatabase);
+			console.log('[DB] Successfully initialized database with default structure');
+		} catch (writeError) {
+			console.warn('[DB] Could not write to persistent location:', writeError);
+			console.log('[DB] Returning default structure in memory (changes will not persist)');
 		}
 
-		// Return default structure if initialization fails
-		console.log('[DB] Using default database structure');
 		return defaultDatabase;
 	}
 }
