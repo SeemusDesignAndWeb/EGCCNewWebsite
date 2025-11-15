@@ -126,20 +126,21 @@
 								{#each featuredEvents as event}
 									<a
 										href="/events/{event.id}"
-										class="block relative rounded-lg overflow-hidden shadow-2xl transition-all transform hover:scale-105 cursor-pointer group"
-										style="height: 280px;"
+										class="block rounded-lg overflow-hidden shadow-2xl transition-all transform hover:scale-105 cursor-pointer group"
 									>
-										{#if event.image}
-											<div
-												class="absolute inset-0 bg-cover bg-center"
-												style="background-image: url('{event.image}');"
-											>
-												<div class="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-30 transition-all"></div>
-											</div>
-										{:else}
-											<div class="absolute inset-0 bg-primary"></div>
-										{/if}
-										<div class="absolute bottom-0 left-0 right-0 bg-primary/70 px-4 py-2">
+										<div class="relative" style="height: 280px;">
+											{#if event.image}
+												<div
+													class="absolute inset-0 bg-cover bg-center"
+													style="background-image: url('{event.image}');"
+												>
+													<div class="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-30 transition-all"></div>
+												</div>
+											{:else}
+												<div class="absolute inset-0 bg-primary"></div>
+											{/if}
+										</div>
+										<div class="bg-black px-4 py-2">
 											<div class="flex items-center gap-2 text-sm text-white">
 												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
