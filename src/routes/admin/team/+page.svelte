@@ -9,17 +9,9 @@
 	let editing = null;
 	let showForm = false;
 	let showImagePicker = false;
-	let showHeroImagePicker = false;
-	let teamDescription = '';
-	let teamHeroTitle = '';
-	let teamHeroImage = '';
-	let savingSettings = false;
-	let settingsSaved = false;
-	let showSettings = false;
 
 	onMount(async () => {
 		await loadTeam();
-		await loadTeamSettings();
 	});
 
 	async function loadTeam() {
@@ -33,47 +25,6 @@
 		}
 	}
 
-	async function loadTeamSettings() {
-		try {
-			const response = await fetch('/api/content?type=settings');
-			const settings = await response.json();
-			teamDescription = settings.teamDescription || '';
-			teamHeroTitle = settings.teamHeroTitle || '';
-			teamHeroImage = settings.teamHeroImage || '';
-		} catch (error) {
-			console.error('Failed to load team settings:', error);
-		}
-	}
-
-	async function saveTeamSettings() {
-		savingSettings = true;
-		settingsSaved = false;
-		try {
-			// Merge with existing settings
-			const currentSettings = await fetch('/api/content?type=settings').then(r => r.json());
-			const mergedSettings = {
-				...currentSettings,
-				teamDescription: teamDescription,
-				teamHeroTitle: teamHeroTitle,
-				teamHeroImage: teamHeroImage
-			};
-			
-			const response = await fetch('/api/content', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ type: 'settings', data: mergedSettings })
-			});
-
-			if (response.ok) {
-				settingsSaved = true;
-				setTimeout(() => (settingsSaved = false), 3000);
-			}
-		} catch (error) {
-			console.error('Failed to save team settings:', error);
-		} finally {
-			savingSettings = false;
-		}
-	}
 
 	function startEdit(member) {
 		editing = member
@@ -103,11 +54,6 @@
 			editing.image = imagePath;
 		}
 		showImagePicker = false;
-	}
-
-	function handleHeroImageSelect(imagePath) {
-		teamHeroImage = imagePath;
-		showHeroImagePicker = false;
 	}
 
 	async function saveMember() {
@@ -152,108 +98,6 @@
 
 <div class="container mx-auto px-4 py-8">
 	<h1 class="text-3xl font-bold mb-8">Manage Team</h1>
-
-	{#if settingsSaved}
-		<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-			Team settings saved successfully!
-		</div>
-	{/if}
-
-	<!-- Settings Toggle Button -->
-	<div class="mb-6">
-		<button
-			on:click={() => (showSettings = !showSettings)}
-			class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors flex items-center gap-2"
-		>
-			<svg
-				class="w-5 h-5 transition-transform {showSettings ? 'rotate-180' : ''}"
-				fill="none"
-				stroke="currentColor"
-				viewBox="0 0 24 24"
-			>
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-			</svg>
-			Settings
-		</button>
-	</div>
-
-	<!-- Team Page Settings -->
-	{#if showSettings}
-		<div class="bg-white p-6 rounded-lg shadow mb-8">
-		<h2 class="text-2xl font-bold mb-4">Team Page Settings</h2>
-		<p class="text-sm text-gray-600 mb-4">
-			Edit the hero title and description text for the team page.
-		</p>
-		<div class="space-y-4">
-			<div>
-				<label for="team-hero-title" class="block text-sm font-medium mb-1">Hero Title</label>
-				<input
-					id="team-hero-title"
-					type="text"
-					bind:value={teamHeroTitle}
-					class="w-full px-3 py-2 border rounded"
-					placeholder="Developing leaders of tomorrow"
-				/>
-				<p class="text-xs text-gray-500 mt-1">
-					The main title text displayed in the hero section of the team page.
-				</p>
-			</div>
-			<div>
-				<label for="team-hero-image" class="block text-sm font-medium mb-1">Hero Image</label>
-				<div class="space-y-2">
-					<div class="flex gap-2">
-						<input
-							id="team-hero-image"
-							type="text"
-							bind:value={teamHeroImage}
-							class="flex-1 px-3 py-2 border rounded"
-							placeholder="https://res.cloudinary.com/..."
-						/>
-						<button
-							type="button"
-							on:click={() => (showHeroImagePicker = true)}
-							class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-						>
-							Choose Image
-						</button>
-					</div>
-					{#if teamHeroImage}
-						<div class="mt-2">
-							<img
-								src={teamHeroImage}
-								alt="Hero preview"
-								class="max-w-md h-48 object-cover rounded border"
-							/>
-						</div>
-					{/if}
-					<p class="text-xs text-gray-500 mt-1">
-						The background image for the hero section of the team page.
-					</p>
-				</div>
-			</div>
-			<div>
-				<label for="team-description" class="block text-sm font-medium mb-1">Team Description</label>
-				<textarea
-					id="team-description"
-					bind:value={teamDescription}
-					rows="6"
-					class="w-full px-3 py-2 border rounded"
-					placeholder="EGCC is led by an Eldership Team..."
-				></textarea>
-				<p class="text-xs text-gray-500 mt-1">
-					You can use HTML entities like &nbsp; for spacing. The text will be displayed centered below the team title.
-				</p>
-			</div>
-			<button
-				on:click={saveTeamSettings}
-				disabled={savingSettings}
-				class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 disabled:opacity-50"
-			>
-				{savingSettings ? 'Saving...' : 'Save Team Settings'}
-			</button>
-		</div>
-	</div>
-	{/if}
 
 	<div class="flex justify-between items-center mb-6">
 		<h2 class="text-2xl font-bold">Team Members</h2>
@@ -432,5 +276,4 @@
 </div>
 
 <ImagePicker open={showImagePicker} onSelect={handleImageSelect} />
-<ImagePicker open={showHeroImagePicker} onSelect={handleHeroImageSelect} />
 

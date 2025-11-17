@@ -62,7 +62,7 @@
 {/if}
 
 <!-- Team Members Section -->
-<Team teamDescription={data.teamDescription} team={data.team} />
+<Team teamDescription={data.page?.teamDescription || ''} team={data.team} />
 
 <!-- Page Sections -->
 {#each sections as section, sectionIndex}
@@ -74,7 +74,7 @@
 						<div class="grid md:grid-cols-2 gap-12 items-center">
 							<div class="order-2 md:order-1">
 								{#if section.title}
-									<h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+									<h2 class="text-4xl font-bold text-gray-900 mb-4">
 										{@html section.title}
 									</h2>
 								{/if}
@@ -109,7 +109,7 @@
 					{:else}
 						<div class="max-w-4xl mx-auto text-center">
 							{#if section.title}
-								<h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+								<h2 class="text-4xl font-bold text-gray-900 mb-4">
 									{@html section.title}
 								</h2>
 							{/if}
