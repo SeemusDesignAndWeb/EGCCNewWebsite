@@ -142,14 +142,25 @@
 						{/if}
 					</div>
 					<div class="order-1 md:order-2 flex justify-center md:justify-end">
-						<div class="relative w-full max-w-lg">
-							<div class="absolute -inset-4 bg-primary/20 rounded-2xl transform rotate-3"></div>
-							<img
-								src="https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066407/egcc/egcc/page-hero-church.jpg"
-								alt="Eltham Green Community Church"
-								class="relative rounded-2xl shadow-2xl w-full h-auto"
-							/>
-						</div>
+						{#if historySection.image}
+							<div class="relative w-full max-w-lg">
+								<div class="absolute -inset-4 bg-primary/20 rounded-2xl transform rotate-3"></div>
+								<img
+									src={historySection.image}
+									alt={historySection.title || "Eltham Green Community Church"}
+									class="relative rounded-2xl shadow-2xl w-full h-auto"
+								/>
+							</div>
+						{:else}
+							<div class="relative w-full max-w-lg">
+								<div class="absolute -inset-4 bg-primary/20 rounded-2xl transform rotate-3"></div>
+								<img
+									src="https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066407/egcc/egcc/page-hero-church.jpg"
+									alt="Eltham Green Community Church"
+									class="relative rounded-2xl shadow-2xl w-full h-auto"
+								/>
+							</div>
+						{/if}
 					</div>
 				</div>
 			</div>
@@ -178,24 +189,33 @@
 							style="animation-delay: {index * 0.1}s"
 						>
 							<div class="relative overflow-hidden aspect-[2/1]">
-								{#if index === 0}
+								{#if section.image}
 									<img
-										src="https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066390/egcc/egcc/img-church-bg.jpg"
-										alt="Church Community"
-										class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-									/>
-								{:else if index === 1}
-									<img
-										src="https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066391/egcc/egcc/img-community-groups-bg.jpg"
-										alt="Church Family"
+										src={section.image}
+										alt={section.title || "Section Image"}
 										class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
 									/>
 								{:else}
-									<img
-										src="https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066391/egcc/egcc/img-community-groups-bg.jpg"
-										alt="Community Groups"
-										class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-									/>
+									<!-- Fallback images if no image is set -->
+									{#if index === 0}
+										<img
+											src="https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066390/egcc/egcc/img-church-bg.jpg"
+											alt="Church Community"
+											class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+										/>
+									{:else if index === 1}
+										<img
+											src="https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066391/egcc/egcc/img-community-groups-bg.jpg"
+											alt="Church Family"
+											class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+										/>
+									{:else}
+										<img
+											src="https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066391/egcc/egcc/img-community-groups-bg.jpg"
+											alt="Community Groups"
+											class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+										/>
+									{/if}
 								{/if}
 							</div>
 							<div class="p-6 flex-1 flex flex-col">
