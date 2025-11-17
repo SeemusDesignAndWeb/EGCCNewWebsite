@@ -1,11 +1,9 @@
-// TEMPORARY endpoint to initialize database from git history
+// TEMPORARY endpoint to initialize database
 // DELETE THIS FILE AFTER USE
-// Access: POST /api/init-database with ADMIN_PASSWORD in header
+// Access: POST /api/init-database with database content in body
 
 import { json } from '@sveltejs/kit';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { execSync } from 'child_process';
-import { join } from 'path';
+import { writeFileSync, existsSync } from 'fs';
 
 export async function POST({ request }) {
 	// Simple password check (use your admin password)
@@ -28,24 +26,27 @@ export async function POST({ request }) {
 			});
 		}
 		
-		// Try to restore from git history
-		console.log('Restoring database from git history...');
-		const gitDb = execSync('git show fc4b61b:data/database.json', { 
-			encoding: 'utf-8',
-			cwd: process.cwd()
-		});
+		// Get database content from request body
+		const body = await request.json();
+		const dbContent = body.database || body.content;
+		
+		if (!dbContent) {
+			return json({ 
+				error: 'Database content required in body.database or body.content'
+			}, { status: 400 });
+		}
 		
 		// Validate JSON
-		JSON.parse(gitDb);
+		const parsed = JSON.parse(dbContent);
 		
 		// Write to volume
-		writeFileSync(DB_PATH, gitDb, 'utf-8');
+		writeFileSync(DB_PATH, JSON.stringify(parsed, null, 2), 'utf-8');
 		
 		return json({ 
 			success: true,
 			message: 'Database initialized successfully',
 			path: DB_PATH,
-			size: gitDb.length
+			size: dbContent.length
 		});
 		
 	} catch (error) {
