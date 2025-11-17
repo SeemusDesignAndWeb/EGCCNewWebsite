@@ -18,7 +18,7 @@
 <section
 	id="home"
 	class="relative h-[50vh] overflow-hidden"
-	style="background-image: url('https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066390/egcc/egcc/img-church-bg.jpg'); background-size: cover; background-position: center;"
+	style="background-image: url('{data.teamHeroImage}'); background-size: cover; background-position: center;"
 >
 	<div class="absolute inset-0 bg-black bg-opacity-40"></div>
 	<div class="relative h-full flex items-end pb-12">

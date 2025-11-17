@@ -9,6 +9,7 @@ export async function load() {
 		teamHeroTitle: settings.teamHeroTitle || 'Developing leaders of tomorrow',
 		teamHeroSubtitle: settings.teamHeroSubtitle || '',
 		teamHeroButtons: settings.teamHeroButtons || [],
+		teamHeroImage: settings.teamHeroImage || 'https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066390/egcc/egcc/img-church-bg.jpg',
 		team: team || [],
 		contactInfo
 	};

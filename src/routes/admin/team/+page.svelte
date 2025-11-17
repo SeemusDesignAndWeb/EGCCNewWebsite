@@ -9,8 +9,10 @@
 	let editing = null;
 	let showForm = false;
 	let showImagePicker = false;
+	let showHeroImagePicker = false;
 	let teamDescription = '';
 	let teamHeroTitle = '';
+	let teamHeroImage = '';
 	let savingSettings = false;
 	let settingsSaved = false;
 	let showSettings = false;
@@ -37,6 +39,7 @@
 			const settings = await response.json();
 			teamDescription = settings.teamDescription || '';
 			teamHeroTitle = settings.teamHeroTitle || '';
+			teamHeroImage = settings.teamHeroImage || '';
 		} catch (error) {
 			console.error('Failed to load team settings:', error);
 		}
@@ -51,7 +54,8 @@
 			const mergedSettings = {
 				...currentSettings,
 				teamDescription: teamDescription,
-				teamHeroTitle: teamHeroTitle
+				teamHeroTitle: teamHeroTitle,
+				teamHeroImage: teamHeroImage
 			};
 			
 			const response = await fetch('/api/content', {
@@ -99,6 +103,11 @@
 			editing.image = imagePath;
 		}
 		showImagePicker = false;
+	}
+
+	function handleHeroImageSelect(imagePath) {
+		teamHeroImage = imagePath;
+		showHeroImagePicker = false;
 	}
 
 	async function saveMember() {
@@ -188,6 +197,39 @@
 				<p class="text-xs text-gray-500 mt-1">
 					The main title text displayed in the hero section of the team page.
 				</p>
+			</div>
+			<div>
+				<label for="team-hero-image" class="block text-sm font-medium mb-1">Hero Image</label>
+				<div class="space-y-2">
+					<div class="flex gap-2">
+						<input
+							id="team-hero-image"
+							type="text"
+							bind:value={teamHeroImage}
+							class="flex-1 px-3 py-2 border rounded"
+							placeholder="https://res.cloudinary.com/..."
+						/>
+						<button
+							type="button"
+							on:click={() => (showHeroImagePicker = true)}
+							class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+						>
+							Choose Image
+						</button>
+					</div>
+					{#if teamHeroImage}
+						<div class="mt-2">
+							<img
+								src={teamHeroImage}
+								alt="Hero preview"
+								class="max-w-md h-48 object-cover rounded border"
+							/>
+						</div>
+					{/if}
+					<p class="text-xs text-gray-500 mt-1">
+						The background image for the hero section of the team page.
+					</p>
+				</div>
 			</div>
 			<div>
 				<label for="team-description" class="block text-sm font-medium mb-1">Team Description</label>
@@ -390,4 +432,5 @@
 </div>
 
 <ImagePicker open={showImagePicker} onSelect={handleImageSelect} />
+<ImagePicker open={showHeroImagePicker} onSelect={handleHeroImageSelect} />
 
