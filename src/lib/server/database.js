@@ -134,17 +134,28 @@ export function savePage(page) {
 		// CRITICAL: Preserve sections and other fields that might not be in the incoming page object
 		// Only update fields that are actually provided in the page object
 		const existingPage = db.pages[index];
-		db.pages[index] = {
+		
+		// Merge the page data, but explicitly handle sections and other complex fields
+		const updatedPage = {
 			...existingPage,
 			...page,
-			// Explicitly preserve sections if they exist in existing page but not in new page
-			sections: page.sections !== undefined ? page.sections : existingPage.sections,
+			// Always use the incoming sections if provided (even if empty array)
+			// This allows clearing sections if needed
+			sections: page.sections !== undefined ? page.sections : (existingPage.sections || []),
 			// Preserve other important fields
-			heroMessages: page.heroMessages !== undefined ? page.heroMessages : existingPage.heroMessages,
-			heroButtons: page.heroButtons !== undefined ? page.heroButtons : existingPage.heroButtons,
+			heroMessages: page.heroMessages !== undefined ? page.heroMessages : (existingPage.heroMessages || []),
+			heroButtons: page.heroButtons !== undefined ? page.heroButtons : (existingPage.heroButtons || []),
 		};
+		
+		db.pages[index] = updatedPage;
 	} else {
-		db.pages.push(page);
+		// New page - ensure sections and other fields are initialized
+		db.pages.push({
+			...page,
+			sections: page.sections || [],
+			heroMessages: page.heroMessages || [],
+			heroButtons: page.heroButtons || [],
+		});
 	}
 	writeDatabase(db);
 }
