@@ -46,13 +46,14 @@ export async function POST({ request }) {
 		}
 		
 		// Write to volume
-		writeFileSync(DB_PATH, JSON.stringify(parsed, null, 2), 'utf-8');
+		const dbString = JSON.stringify(parsed, null, 2);
+		writeFileSync(DB_PATH, dbString, 'utf-8');
 		
 		return json({ 
 			success: true,
 			message: 'Database initialized successfully',
 			path: DB_PATH,
-			size: dbContent.length
+			size: dbString.length
 		});
 		
 	} catch (error) {
