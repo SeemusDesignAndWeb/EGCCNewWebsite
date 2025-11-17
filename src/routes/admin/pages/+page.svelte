@@ -24,7 +24,34 @@
 	async function loadPages() {
 		try {
 			const response = await fetch('/api/content?type=pages');
-			pages = await response.json();
+			let loadedPages = await response.json();
+			
+			// Ensure team page exists in the list
+			const teamPageExists = loadedPages.some(p => p.id === 'team');
+			if (!teamPageExists) {
+				// Load settings to get default values
+				const settingsResponse = await fetch('/api/content?type=settings');
+				const settings = await settingsResponse.json();
+				
+				// Create default team page
+				const defaultTeamPage = {
+					id: 'team',
+					title: 'Our Team',
+					heroTitle: settings.teamHeroTitle || 'Developing leaders of tomorrow',
+					heroSubtitle: settings.teamHeroSubtitle || '',
+					heroButtons: settings.teamHeroButtons || [],
+					heroImage: settings.teamHeroImage || 'https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763066390/egcc/egcc/img-church-bg.jpg',
+					heroOverlay: 40,
+					teamDescription: settings.teamDescription || '',
+					sections: [],
+					metaDescription: 'Meet the leadership team of Eltham Green Community Church'
+				};
+				
+				// Add to the list
+				loadedPages = [...loadedPages, defaultTeamPage];
+			}
+			
+			pages = loadedPages;
 		} catch (error) {
 			console.error('Failed to load pages:', error);
 		} finally {
@@ -41,7 +68,8 @@
 				heroSubtitle: page.heroSubtitle || '',
 				heroButtons: page.heroButtons || [],
 				heroOverlay: page.heroOverlay || 40,
-				sections: page.sections || []
+				sections: page.sections || [],
+				teamDescription: page.teamDescription || ''
 			}
 			: {
 					id: '',
@@ -54,7 +82,8 @@
 					heroOverlay: 40,
 					metaDescription: '',
 					heroMessages: [],
-					sections: []
+					sections: [],
+					teamDescription: ''
 				};
 		showForm = true;
 	}
@@ -294,12 +323,14 @@
 					</button>
 				</div>
 				{#if !editing.sections || editing.sections.length === 0}
-					<div class="relative mb-4">
-						<label class="block text-sm font-medium mb-1">Content</label>
-						<div class="relative" style="height: 400px;">
-							<RichTextEditor bind:value={editing.content} height="400px" />
+					{#if editing.id !== 'team'}
+						<div class="relative mb-4">
+							<label class="block text-sm font-medium mb-1">Content</label>
+							<div class="relative" style="height: 400px;">
+								<RichTextEditor bind:value={editing.content} height="400px" />
+							</div>
 						</div>
-					</div>
+					{/if}
 				{/if}
 				
 				{#if editing.sections && editing.sections.length > 0}
@@ -610,6 +641,17 @@
 								</button>
 							{/if}
 							{#if editing.id === 'team'}
+								<button
+									type="button"
+									on:click={() => {
+										if (!editing.sections) editing.sections = [];
+										editing.sections = [...editing.sections, { type: 'columns', columns: [{ title: '', content: '' }] }];
+										editing = editing;
+									}}
+									class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+								>
+									+ Add Columns Section
+								</button>
 								<p class="text-xs text-gray-500 mt-2">
 									Note: Team members are managed separately in the <a href="/admin/team" class="text-brand-blue underline">Team Management</a> section.
 								</p>
@@ -617,7 +659,57 @@
 						</div>
 					</div>
 				{/if}
-				<div class="relative mt-4">
+				
+				<!-- Show "Add Section" buttons even when no sections exist (especially for team page) -->
+				{#if editing.id === 'team' && (!editing.sections || editing.sections.length === 0)}
+					<div class="border-t pt-6 mt-6">
+						<h3 class="text-lg font-semibold mb-4">Page Sections</h3>
+						<div class="flex gap-2">
+							<button
+								type="button"
+								on:click={() => {
+									if (!editing.sections) editing.sections = [];
+									editing.sections = [...editing.sections, { type: 'text', title: '', content: '' }];
+									editing = editing;
+								}}
+								class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+							>
+								+ Add Text Section
+							</button>
+							<button
+								type="button"
+								on:click={() => {
+									if (!editing.sections) editing.sections = [];
+									editing.sections = [...editing.sections, { type: 'columns', columns: [{ title: '', content: '' }] }];
+									editing = editing;
+								}}
+								class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+							>
+								+ Add Columns Section
+							</button>
+						</div>
+					</div>
+				{/if}
+				
+				{#if editing.id === 'team'}
+					<div class="border-t pt-6 mt-6">
+						<h3 class="text-lg font-semibold mb-4">Team Description</h3>
+						<p class="text-sm text-gray-600 mb-4">
+							This description appears above the team members list on the team page.
+						</p>
+						<div class="mb-4">
+							<label class="block text-sm font-medium mb-1">Team Description</label>
+							<div class="relative" style="height: 300px;">
+								<RichTextEditor bind:value={editing.teamDescription} height="280px" />
+							</div>
+							<p class="text-xs text-gray-500 mt-2">
+								You can use HTML entities like &nbsp; for spacing. The text will be displayed centered below the team title.
+							</p>
+						</div>
+					</div>
+				{/if}
+				
+				<div class="mt-6">
 					<label class="block text-sm font-medium mb-1">Hero Image URL</label>
 					<div class="space-y-2">
 						<div class="flex gap-2">
