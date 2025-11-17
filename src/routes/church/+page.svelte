@@ -31,9 +31,25 @@
 		if (typeof window !== 'undefined') {
 			console.log('[Church Page Frontend] Sections:', {
 				total: sections.length,
-				historySection: historySection ? { type: historySection.type, title: historySection.title, hasContent: !!historySection.content } : null,
+				historySection: historySection ? { 
+					type: historySection.type, 
+					title: historySection.title, 
+					hasContent: !!historySection.content,
+					contentPreview: historySection.content?.substring(0, 100) || 'no content'
+				} : null,
 				otherSectionsCount: otherSections.length,
-				valuesSection: valuesSection ? { type: valuesSection.type, title: valuesSection.title, valuesCount: valuesSection.values?.length || 0 } : null
+				otherSections: otherSections.map(s => ({
+					type: s.type,
+					title: s.title,
+					hasContent: !!s.content,
+					contentPreview: s.content?.substring(0, 50) || 'no content'
+				})),
+				valuesSection: valuesSection ? { 
+					type: valuesSection.type, 
+					title: valuesSection.title, 
+					valuesCount: valuesSection.values?.length || 0,
+					firstValue: valuesSection.values?.[0]?.title || 'no values'
+				} : null
 			});
 		}
 	}
