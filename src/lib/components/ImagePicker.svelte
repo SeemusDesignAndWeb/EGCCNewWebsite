@@ -1,8 +1,10 @@
 <script lang="js">
-	import { onMount } from 'svelte';
+	import { onMount, createEventDispatcher } from 'svelte';
 
 	export let open = false;
-	export let onSelect;
+	export let onSelect; // Legacy prop support for backward compatibility
+
+	const dispatch = createEventDispatcher();
 
 	let images = [];
 	let loading = false;
@@ -33,11 +35,17 @@
 	}
 
 	function handleSelect(image) {
-		onSelect(image.path);
+		const imagePath = image.path;
+		// Support both event dispatcher and legacy prop
+		dispatch('select', imagePath);
+		if (onSelect && typeof onSelect === 'function') {
+			onSelect(imagePath);
+		}
 		open = false;
 	}
 
 	function handleClose() {
+		dispatch('close');
 		open = false;
 	}
 

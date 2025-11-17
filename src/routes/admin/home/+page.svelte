@@ -172,7 +172,5 @@
 	</div>
 </div>
 
-{#if showImagePicker}
-	<ImagePicker on:select={handleImageSelect} on:close={() => (showImagePicker = false)} />
-{/if}
+<ImagePicker open={showImagePicker} onSelect={handleImageSelect} on:close={() => (showImagePicker = false)} />
 
