@@ -1,6 +1,5 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
-import { execSync } from 'child_process';
 
 // Environment variable configuration
 const DB_PATH = process.env.DATABASE_PATH || './data/database.json';
@@ -64,7 +63,7 @@ const defaultDatabase = {
 	}
 };
 
-// Read function - Safe initialization in production ONLY if file doesn't exist
+// Read function - Auto-initializes in development only
 export function readDatabase() {
 	const dbPath = getDbPath();
 	try {
@@ -73,68 +72,16 @@ export function readDatabase() {
 	} catch (error) {
 		const isProduction = process.env.NODE_ENV === 'production' || dbPath.startsWith('/');
 		
-		// Check if file doesn't exist (ENOENT) vs other errors
-		const fileDoesNotExist = error.code === 'ENOENT';
-		
-		if (isProduction && fileDoesNotExist) {
-			// In production, if file doesn't exist, try to restore from git history ONCE
-			// This is safe because the file doesn't exist - we're not overwriting anything
-			console.warn('[DB] Database file not found in production, attempting one-time restore from git history...');
-			console.warn('[DB] Database file path:', dbPath);
-			console.warn('[DB] Volume mount path:', process.env.RAILWAY_VOLUME_MOUNT_PATH || 'not set');
-			
-			// Check if /data directory is accessible
-			try {
-				const dataDir = dirname(dbPath);
-				const dirExists = existsSync(dataDir);
-				console.warn('[DB] Directory exists check:', dirExists, 'at', dataDir);
-				
-				// Try to list directory to verify volume is mounted
-				try {
-					const dirContents = execSync(`ls -la ${dataDir}`, { encoding: 'utf-8', timeout: 5000 });
-					console.warn('[DB] Directory contents:', dirContents.substring(0, 200));
-				} catch (lsError) {
-					console.warn('[DB] Cannot list directory:', lsError.message);
-				}
-			} catch (dirCheckError) {
-				console.warn('[DB] Directory check error:', dirCheckError.message);
-			}
-			
-			try {
-				// Try to restore from git history (commit fc4b61b has the last good version)
-				const gitDb = execSync('git show fc4b61b:data/database.json', { 
-					encoding: 'utf-8',
-					cwd: process.cwd(),
-					timeout: 10000
-				});
-				
-				// Validate JSON
-				const parsed = JSON.parse(gitDb);
-				
-				// Write to volume
-				writeDatabase(parsed);
-				console.log('[DB] ✅ Successfully restored database from git history to', dbPath);
-				
-				return parsed;
-			} catch (restoreError) {
-				console.error('[DB] ❌ Failed to restore from git history:', restoreError.message);
-				console.error('[DB] This might be because git is not available in production build');
-				console.error('[DB] Please manually create the database file at', dbPath);
-				throw new Error(`Database file not found at ${dbPath} and could not restore from backup. Please restore manually.`);
-			}
-		} else if (isProduction) {
-			// Other errors in production - don't auto-initialize
-			console.error('[DB] CRITICAL: Failed to read database in production:', error);
+		if (isProduction) {
+			// In production, database must exist on the volume
+			console.error('[DB] CRITICAL: Failed to read database in production:', error.message);
 			console.error('[DB] Database file path:', dbPath);
-			console.error('[DB] This is a production environment - NOT initializing to prevent data loss');
-			throw new Error(`Database file error at ${dbPath}: ${error.message}`);
+			throw new Error(`Database file not found at ${dbPath}. Please ensure the Railway volume is mounted and the database file exists.`);
 		}
 		
 		// Only auto-initialize in development
-		console.warn('[DB] Failed to read database from persistent location:', error);
-		console.log('[DB] Database file does not exist (development mode), initializing with default structure...');
-
-		// Initialize with default structure and save to persistent location (development only)
+		console.warn('[DB] Database file does not exist (development mode), initializing with default structure...');
+		
 		try {
 			writeDatabase(defaultDatabase);
 			console.log('[DB] Successfully initialized database with default structure');
