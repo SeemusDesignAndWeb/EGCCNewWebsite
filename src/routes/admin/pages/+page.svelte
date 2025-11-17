@@ -920,8 +920,8 @@
 					</div>
 				{/if}
 				
-				<!-- Show "Add Section" buttons even when no sections exist (especially for team page and im-new page) -->
-				{#if (editing.id === 'team' || editing.id === 'im-new') && (!editing.sections || editing.sections.length === 0)}
+				<!-- Show "Add Section" buttons even when no sections exist (especially for team page, im-new page, and church page) -->
+				{#if (editing.id === 'team' || editing.id === 'im-new' || editing.id === 'church') && (!editing.sections || editing.sections.length === 0)}
 					<div class="border-t pt-6 mt-6">
 						<h3 class="text-lg font-semibold mb-4">Page Sections</h3>
 						<div class="flex gap-2 flex-wrap">
@@ -987,6 +987,53 @@
 									class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
 								>
 									+ Add For All Ages Section
+								</button>
+							{/if}
+							{#if editing.id === 'church'}
+								<button
+									type="button"
+									on:click={() => {
+										if (!editing.sections) editing.sections = [];
+										editing.sections = [...editing.sections, { 
+											type: 'mlg', 
+											logo: 'https://res.cloudinary.com/dl8kjhwjs/image/upload/v1763397479/egcc/d79861b6-c071-4bb9-9665-299a4a7d20bf.svg',
+											label: 'Partnership',
+											title: 'Part of the MissionLifeGrace Network',
+											content: '<p>Our aim is to see the Kingdom of God come, where broken lives are restored, the lost are found and communities transformed. We believe every church exists to be part of God\'s mission to show the world Christ and that we are better equipped to do this in partnership with other churches.</p><p>As a network our focus is to encourage each other through sharing our hearts, ideas and lessons learned along the way, to challenge one another to stay true to the course and to invest in helping people fulfil their God given calling. We believe that by journeying together we can see God do great things in our nation and around the world.</p>',
+											buttonText: 'Visit Mission Life Grace'
+										}];
+										editing = editing;
+									}}
+									class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+								>
+									+ Add Mission Life Grace Section
+								</button>
+								<button
+									type="button"
+									on:click={() => {
+										if (!editing.sections) editing.sections = [];
+										const hasValues = editing.sections.some(s => s.type === 'values');
+										if (!hasValues) {
+											editing.sections = [...editing.sections, { 
+												type: 'values', 
+												title: 'Our Values',
+												description: 'We believe that God creates each movement of churches distinct, destined to fulfil a divinely appointed purpose for a specific time, with different emphasis according to the will of God.',
+												values: [
+													{ title: 'ENJOYING GOD', description: 'We want to be a joyful people, who enjoy and celebrate Jesus Christ as our Lord and saviour, knowing we are loved, accepted and made righteous by Him.' },
+													{ title: 'THE LORDSHIP OF CHRIST', description: 'We recognise the foundational significance of the simple truth that it is no longer I who live but Christ who lives in me. We must die to sin and our selfish desires and live new lives unto God.' },
+													{ title: 'SPIRIT & WORD', description: 'As churches we seek to walk in and minister in the power of the Holy Spirit. The Holy Spirit brings vitality to the life of a believer and a church and guides our decision making.' },
+													{ title: 'PRAYER', description: 'We believe in the vital importance of prayer in the life of a Christian and a church, prayer is the means by which we find the joy of the Lord and the knowledge of his will.' },
+													{ title: 'ORDINARY PEOPLE', description: 'We are humbled by the fact that Christ has entrusted the Gospel to us through the power of His Spirit to see broken lives restored and the lost saved.' },
+													{ title: 'THE CHURCH', description: 'We believe the manifold wisdom of God is displayed through the church, which is expressed through local churches.' },
+													{ title: 'ELDERSHIP', description: 'Jesus Christ reigns as head over His church, and He gives to His church elders to oversee and lead local churches under His authority.' }
+												]
+											}];
+											editing = editing;
+										}
+									}}
+									class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+								>
+									+ Add Values Section
 								</button>
 							{/if}
 							{#if editing.id === 'team'}
