@@ -65,8 +65,8 @@ const defaultDatabase = {
 
 // Read function - NEVER auto-initialize in production to prevent data loss
 export function readDatabase() {
+	const dbPath = getDbPath();
 	try {
-		const dbPath = getDbPath();
 		const data = readFileSync(dbPath, 'utf-8');
 		return JSON.parse(data);
 	} catch (error) {
@@ -77,6 +77,10 @@ export function readDatabase() {
 			console.error('[DB] CRITICAL: Failed to read database in production:', error);
 			console.error('[DB] Database file path:', dbPath);
 			console.error('[DB] This is a production environment - NOT initializing to prevent data loss');
+			console.error('[DB] Please ensure:');
+			console.error('[DB]   1. DATABASE_PATH environment variable is set correctly');
+			console.error('[DB]   2. Railway volume is mounted at the specified path');
+			console.error('[DB]   3. Database file exists in the volume');
 			throw new Error(`Database file not found at ${dbPath}. Cannot proceed in production to prevent data loss.`);
 		}
 		
