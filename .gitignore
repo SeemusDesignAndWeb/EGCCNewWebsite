@@ -14,3 +14,7 @@ vite.config.ts.timestamp-*
 /data/*.json
 data/database.json
 
+# Audio uploads - user-uploaded files should not be in git
+# They will be stored in Railway volume at /data/audio/uploaded
+static/audio/uploaded/
+
