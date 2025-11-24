@@ -5,7 +5,10 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
 	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter()
+		adapter: adapter(),
+		// Increase body size limit to 150MB for audio file uploads
+		// This is the maximum size for request bodies in SvelteKit
+		bodyParserLimit: 150 * 1024 * 1024
 	}
 };
 
