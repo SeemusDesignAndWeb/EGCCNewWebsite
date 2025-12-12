@@ -55,6 +55,28 @@
 				loadedPages = [...loadedPages, defaultTeamPage];
 			}
 			
+			// Ensure events page exists in the list
+			const eventsPageExists = loadedPages.some(p => p.id === 'events');
+			if (!eventsPageExists) {
+				// Create default events page
+				const defaultEventsPage = {
+					id: 'events',
+					title: 'Events',
+					heroTitle: 'Upcoming Events',
+					heroSubtitle: '',
+					heroButtons: [],
+					heroImage: '/images/events-bg.jpg',
+					heroOverlay: 40,
+					sections: [],
+					metaDescription: 'Join us for upcoming events and activities at Eltham Green Community Church',
+					showInNavigation: true,
+					navigationLabel: 'Events'
+				};
+				
+				// Add to the list
+				loadedPages = [...loadedPages, defaultEventsPage];
+			}
+			
 			// Sort pages by navigationOrder, then by title
 			pages = loadedPages.sort((a, b) => {
 				const orderA = a.navigationOrder !== undefined ? a.navigationOrder : 999;
@@ -84,8 +106,7 @@
 				teamDescription: page.teamDescription || '',
 			showInNavigation: page.showInNavigation !== undefined ? page.showInNavigation : true,
 			navigationLabel: page.navigationLabel || '',
-			navigationOrder: page.navigationOrder !== undefined ? page.navigationOrder : 999,
-				navigationOrder: page.navigationOrder !== undefined ? page.navigationOrder : (existingPage.navigationOrder !== undefined ? existingPage.navigationOrder : 999)
+			navigationOrder: page.navigationOrder !== undefined ? page.navigationOrder : 999
 			}
 			: {
 					id: '',
@@ -450,43 +471,45 @@
 						+ Add Button
 					</button>
 				</div>
-				<div>
-					<label class="block text-sm font-medium mb-1">Hero Messages (Rotating Subtitles)</label>
-					<p class="text-xs text-gray-500 mb-2">
-						These messages will rotate in the hero section. Leave empty if you don't want rotating messages.
-					</p>
-					{#if editing.heroMessages && editing.heroMessages.length > 0}
-						<div class="space-y-2 mb-2">
-							{#each editing.heroMessages as msg, index}
-								<div class="flex gap-2">
-									<input
-										type="text"
-										bind:value={editing.heroMessages[index]}
-										class="flex-1 px-3 py-2 border rounded"
-										placeholder="Enter rotating message..."
-									/>
-									<button
-										type="button"
-										on:click={() => removeHeroMessage(index)}
-										class="px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
-										aria-label="Remove message"
-									>
-										×
-									</button>
-								</div>
-							{/each}
-						</div>
-					{/if}
-					<button
-						type="button"
-						on:click={addHeroMessage}
-						class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
-					>
-						+ Add Message
-					</button>
-				</div>
+				{#if editing.id !== 'events'}
+					<div>
+						<label class="block text-sm font-medium mb-1">Hero Messages (Rotating Subtitles)</label>
+						<p class="text-xs text-gray-500 mb-2">
+							These messages will rotate in the hero section. Leave empty if you don't want rotating messages.
+						</p>
+						{#if editing.heroMessages && editing.heroMessages.length > 0}
+							<div class="space-y-2 mb-2">
+								{#each editing.heroMessages as msg, index}
+									<div class="flex gap-2">
+										<input
+											type="text"
+											bind:value={editing.heroMessages[index]}
+											class="flex-1 px-3 py-2 border rounded"
+											placeholder="Enter rotating message..."
+										/>
+										<button
+											type="button"
+											on:click={() => removeHeroMessage(index)}
+											class="px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+											aria-label="Remove message"
+										>
+											×
+										</button>
+									</div>
+								{/each}
+							</div>
+						{/if}
+						<button
+							type="button"
+							on:click={addHeroMessage}
+							class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+						>
+							+ Add Message
+						</button>
+					</div>
+				{/if}
 				{#if !editing.sections || editing.sections.length === 0}
-					{#if editing.id !== 'team'}
+					{#if editing.id !== 'team' && editing.id !== 'events'}
 						<div class="relative mb-4">
 							<label class="block text-sm font-medium mb-1">Content</label>
 							<div class="relative" style="height: 400px;">
@@ -519,6 +542,16 @@
 								</div>
 								
 								{#if section.type === 'text'}
+									<div class="mb-3">
+										<label class="block text-xs font-medium mb-1 text-gray-600">Section ID (optional)</label>
+										<p class="text-xs text-gray-500 mb-1">Used to identify this section (e.g., 'intro-section' for events page intro)</p>
+										<input
+											type="text"
+											bind:value={section.id}
+											class="w-full px-3 py-2 border rounded"
+											placeholder="e.g., intro-section"
+										/>
+									</div>
 									<div class="mb-3">
 										<label class="block text-xs font-medium mb-1 text-gray-600">Title</label>
 										<input
@@ -1199,6 +1232,11 @@
 									Note: Team members are managed separately in the <a href="/admin/team" class="text-brand-blue underline">Team Management</a> section.
 								</p>
 							{/if}
+							{#if editing.id === 'events'}
+								<p class="text-xs text-gray-500 mt-2">
+									Note: Individual events are managed separately in the <a href="/admin/events" class="text-brand-blue underline">Events Management</a> section. Use sections below to add introductory content or other page sections.
+								</p>
+							{/if}
 						</div>
 					</div>
 				{/if}
@@ -1342,6 +1380,14 @@
 								>
 									+ Add Columns Section
 								</button>
+								<p class="text-xs text-gray-500 mt-2">
+									Note: Team members are managed separately in the <a href="/admin/team" class="text-brand-blue underline">Team Management</a> section.
+								</p>
+							{/if}
+							{#if editing.id === 'events'}
+								<p class="text-xs text-gray-500 mt-2">
+									Note: Individual events are managed separately in the <a href="/admin/events" class="text-brand-blue underline">Events Management</a> section. Use sections above to add introductory content or other page sections.
+								</p>
 							{/if}
 						</div>
 					</div>
