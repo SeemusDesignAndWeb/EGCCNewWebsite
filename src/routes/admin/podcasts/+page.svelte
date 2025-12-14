@@ -71,7 +71,7 @@
 				title: '',
 				description: '',
 				speaker: '',
-				series: '',
+				speakerEmail: '',
 				audioUrl: '',
 				filename: '',
 				originalName: '',
@@ -402,26 +402,25 @@
 						placeholder="By John Watson"
 					></textarea>
 				</div>
-				<div>
-					<label class="block text-sm font-medium mb-1">Speaker *</label>
-					<input
-						type="text"
-						bind:value={editing.speaker}
-						class="w-full px-3 py-2 border rounded"
-						placeholder="e.g., John Watson"
-					/>
-				</div>
-				<div>
-					<label class="block text-sm font-medium mb-1">Series</label>
-					<input
-						type="text"
-						bind:value={editing.series}
-						class="w-full px-3 py-2 border rounded"
-						placeholder="e.g., Nehemiah, What Would Jesus Do?, Seeds of Revival"
-					/>
-					<p class="text-xs text-gray-500 mt-1">
-						Group related podcasts together (e.g., sermon series)
-					</p>
+				<div class="grid grid-cols-2 gap-4">
+					<div>
+						<label class="block text-sm font-medium mb-1">Speaker *</label>
+						<input
+							type="text"
+							bind:value={editing.speaker}
+							class="w-full px-3 py-2 border rounded"
+							placeholder="e.g., John Watson"
+						/>
+					</div>
+					<div>
+						<label class="block text-sm font-medium mb-1">Speaker Email</label>
+						<input
+							type="email"
+							bind:value={editing.speakerEmail}
+							class="w-full px-3 py-2 border rounded"
+							placeholder="johnawatson72@gmail.com"
+						/>
+					</div>
 				</div>
 				<div>
 					<label class="block text-sm font-medium mb-1">Audio File *</label>
