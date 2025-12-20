@@ -1,5 +1,6 @@
 <script>
 	import Footer from '$lib/components/Footer.svelte';
+	import PodcastPlayer from '$lib/components/PodcastPlayer.svelte';
 	import { getContext } from 'svelte';
 
 	export let data;
@@ -7,6 +8,7 @@
 
 	let currentPage = 1;
 	let bannerVisible = false;
+	let expandedPodcastId = null;
 	
 	// Get banner visibility from context
 	try {
@@ -37,6 +39,7 @@
 		currentPage * itemsPerPage
 	);
 	$: mostRecentPodcast = filteredPodcasts.length > 0 && currentPage === 1 ? filteredPodcasts[0] : null;
+	$: selectedPodcast = expandedPodcastId ? data.podcasts.find(p => p.id === expandedPodcastId) : null;
 
 	function resetFilters() {
 		startDate = '';
@@ -47,6 +50,21 @@
 	function goToPage(page) {
 		currentPage = page;
 		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+
+	function selectPodcast(podcastId) {
+		if (expandedPodcastId === podcastId) {
+			expandedPodcastId = null;
+		} else {
+			expandedPodcastId = podcastId;
+			// Scroll to the player section
+			setTimeout(() => {
+				const playerSection = document.querySelector('#podcast-player-section');
+				if (playerSection) {
+					playerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				}
+			}, 100);
+		}
 	}
 </script>
 
@@ -142,50 +160,57 @@
 				</div>
 			{/if}
 
-			<!-- Removed PodcastPlayer - all links now go to Spotify -->
+			<!-- Audio Player at the top -->
+			{#if selectedPodcast && selectedPodcast.audioUrl}
+				<div id="podcast-player-section" class="mb-8">
+					<PodcastPlayer podcast={selectedPodcast} />
+				</div>
+			{/if}
 
 			<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{#each paginatedPodcasts as podcast}
 					{@const isMostRecent = mostRecentPodcast && podcast.id === mostRecentPodcast.id}
-					<a
-						href={data.spotifyShowUrl}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="relative rounded-lg shadow hover:shadow-lg transition-shadow p-6 cursor-pointer block {isMostRecent ? 'bg-brand-blue' : 'bg-white'}"
-					>
-						<!-- Play Icon -->
-						<div class="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center {isMostRecent ? 'bg-white/20 text-white' : 'bg-brand-blue/10 text-brand-blue'}">
-							<svg class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-								<path d="M8 5v14l11-7z"/>
-							</svg>
-						</div>
-						<h3 class="text-xl font-bold mb-2 pr-8 {isMostRecent ? 'text-white' : 'text-gray-900'}">{podcast.title}</h3>
-						{#if podcast.description}
-							<p class="{isMostRecent ? 'text-gray-200' : 'text-gray-700'} text-sm mb-3 line-clamp-2">{podcast.description}</p>
-						{:else}
-							<p class="{isMostRecent ? 'text-gray-200' : 'text-gray-600'} text-sm mb-3">By {podcast.speaker}</p>
-						{/if}
-						<div class="flex items-center justify-between text-xs {isMostRecent ? 'text-gray-200' : 'text-gray-500'}">
-							<span>{new Date(podcast.publishedAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-							{#if podcast.duration}
-								<span>{podcast.duration}</span>
-							{/if}
-						</div>
-						<div class="flex items-center justify-between mt-2">
-							{#if podcast.series}
-								<span class="inline-block px-2 py-1 {isMostRecent ? 'bg-white text-brand-blue' : 'bg-primary/10 text-primary'} text-xs rounded">
-									{podcast.series}
-								</span>
+					{@const isSelected = expandedPodcastId === podcast.id}
+					<div class="relative rounded-lg shadow hover:shadow-lg transition-shadow {isMostRecent ? 'bg-brand-blue' : 'bg-white'} {isSelected ? 'ring-2 ring-brand-blue' : ''}">
+						<!-- Podcast Card Header (clickable) -->
+						<button
+							on:click={() => selectPodcast(podcast.id)}
+							class="w-full text-left p-6 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2 rounded-lg"
+						>
+							<!-- Play Icon -->
+							<div class="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center {isMostRecent ? 'bg-white/20 text-white' : 'bg-brand-blue/10 text-brand-blue'}">
+								<svg class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+									<path d="M8 5v14l11-7z"/>
+								</svg>
+							</div>
+							<h3 class="text-xl font-bold mb-2 pr-8 {isMostRecent ? 'text-white' : 'text-gray-900'}">{podcast.title}</h3>
+							{#if podcast.description}
+								<p class="{isMostRecent ? 'text-gray-200' : 'text-gray-700'} text-sm mb-3 line-clamp-2">{podcast.description}</p>
 							{:else}
-								<span></span>
+								<p class="{isMostRecent ? 'text-gray-200' : 'text-gray-600'} text-sm mb-3">By {podcast.speaker}</p>
 							{/if}
-							{#if isMostRecent}
-								<span class="bg-white text-brand-blue px-3 py-1 rounded-full text-xs font-bold">
-									Latest
-								</span>
-							{/if}
-						</div>
-					</a>
+							<div class="flex items-center justify-between text-xs {isMostRecent ? 'text-gray-200' : 'text-gray-500'}">
+								<span>{new Date(podcast.publishedAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+								{#if podcast.duration}
+									<span>{podcast.duration}</span>
+								{/if}
+							</div>
+							<div class="flex items-center justify-between mt-2">
+								{#if podcast.series}
+									<span class="inline-block px-2 py-1 {isMostRecent ? 'bg-white text-brand-blue' : 'bg-primary/10 text-primary'} text-xs rounded">
+										{podcast.series}
+									</span>
+								{:else}
+									<span></span>
+								{/if}
+								{#if isMostRecent}
+									<span class="bg-white text-brand-blue px-3 py-1 rounded-full text-xs font-bold">
+										Latest
+									</span>
+								{/if}
+							</div>
+						</button>
+					</div>
 				{/each}
 			</div>
 
