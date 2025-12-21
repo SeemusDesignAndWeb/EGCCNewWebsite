@@ -20,6 +20,7 @@
 	let savingSettings = false;
 	let settingsSaved = false;
 	let showSettings = false;
+	let showMigrationTools = false;
 	
 	// Migration state
 	let migrating = false;
@@ -100,6 +101,14 @@
 		audioFile = null;
 		showForm = true;
 		uploadError = '';
+		
+		// Scroll to edit form
+		setTimeout(() => {
+			const editForm = document.getElementById('podcast-edit-form');
+			if (editForm) {
+				editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}
+		}, 100);
 	}
 
 	function cancelEdit() {
@@ -419,7 +428,7 @@
 		</div>
 	{/if}
 
-	<!-- Settings Toggle Button -->
+	<!-- Settings and Migration Toggle Buttons -->
 	<div class="mb-6 flex gap-4">
 		<button
 			on:click={() => (showSettings = !showSettings)}
@@ -435,16 +444,31 @@
 			</svg>
 			Settings
 		</button>
+		<button
+			on:click={() => (showMigrationTools = !showMigrationTools)}
+			class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors flex items-center gap-2"
+		>
+			<svg
+				class="w-5 h-5 transition-transform {showMigrationTools ? 'rotate-180' : ''}"
+				fill="none"
+				stroke="currentColor"
+				viewBox="0 0 24 24"
+			>
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+			</svg>
+			Audio Migration Tools
+		</button>
 	</div>
 
 	<!-- Audio Migration Tools -->
-	<div class="bg-white p-6 rounded-lg shadow mb-8">
-		<h2 class="text-2xl font-bold mb-4">Audio File Migration</h2>
-		<p class="text-sm text-gray-600 mb-4">
-			Migrate audio files to the Railway volume for persistent storage across deployments.
-		</p>
-		
-		<div class="space-y-4">
+	{#if showMigrationTools}
+		<div class="bg-white p-6 rounded-lg shadow mb-8">
+			<h2 class="text-2xl font-bold mb-4">Audio File Migration</h2>
+			<p class="text-sm text-gray-600 mb-4">
+				Migrate audio files to the Railway volume for persistent storage across deployments.
+			</p>
+			
+			<div class="space-y-4">
 			<!-- Bulk Upload Files -->
 			<div class="border rounded-lg p-4">
 				<h3 class="font-semibold mb-2">0. Upload Multiple Audio Files</h3>
@@ -623,7 +647,7 @@
 				{/if}
 			</div>
 		</div>
-	</div>
+	{/if}
 
 	<!-- Podcast RSS Feed Settings -->
 	{#if showSettings}
@@ -721,7 +745,7 @@
 	</div>
 
 	{#if showForm && editing}
-		<div class="bg-white p-6 rounded-lg shadow mb-6">
+		<div id="podcast-edit-form" class="bg-white p-6 rounded-lg shadow mb-6">
 			<div class="flex items-center justify-between mb-4">
 				<h2 class="text-2xl font-bold">
 					{editing.id ? 'Edit Podcast' : 'New Podcast'}
