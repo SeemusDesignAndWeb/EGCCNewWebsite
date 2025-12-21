@@ -22,18 +22,14 @@ const DEST_DIR = process.env.AUDIO_UPLOAD_DIR || '/data/audio/uploaded';
 function getDbPath() {
 	let finalPath;
 	if (DB_PATH.startsWith('./') || DB_PATH.startsWith('../')) {
-		// Relative path - resolve from project root
+		// Relative path - resolve from project root (local development only)
 		finalPath = join(process.cwd(), DB_PATH);
 	} else {
 		// Absolute path (e.g., /data/database.json for Railway volume)
 		finalPath = DB_PATH;
-		// If absolute path doesn't exist, try relative fallback
-		if (!existsSync(finalPath)) {
-			const fallbackPath = join(process.cwd(), './data/database.json');
-			if (existsSync(fallbackPath)) {
-				console.log(`⚠️  Volume path ${finalPath} not found, using fallback: ${fallbackPath}`);
-				return fallbackPath;
-			}
+		// In production, the volume MUST be mounted - don't fallback
+		if (process.env.NODE_ENV === 'production' && !existsSync(finalPath)) {
+			throw new Error(`Volume not accessible at ${finalPath}. Please ensure the Railway volume is mounted at /data`);
 		}
 	}
 	return finalPath;
@@ -41,15 +37,13 @@ function getDbPath() {
 
 function getDestPath() {
 	if (DEST_DIR.startsWith('./') || DEST_DIR.startsWith('../')) {
+		// Relative path - resolve from project root (local development only)
 		return join(process.cwd(), DEST_DIR);
 	}
-	// If absolute path doesn't exist, try relative fallback
-	if (!existsSync(DEST_DIR)) {
-		const fallbackPath = join(process.cwd(), './data/audio/uploaded');
-		if (existsSync(dirname(fallbackPath))) {
-			console.log(`⚠️  Volume path ${DEST_DIR} not found, using fallback: ${fallbackPath}`);
-			return fallbackPath;
-		}
+	// Absolute path (e.g., /data/audio/uploaded for Railway volume)
+	// In production, the volume MUST be mounted - don't fallback
+	if (process.env.NODE_ENV === 'production' && !existsSync(dirname(DEST_DIR))) {
+		throw new Error(`Volume not accessible at ${DEST_DIR}. Please ensure the Railway volume is mounted at /data`);
 	}
 	return DEST_DIR;
 }
