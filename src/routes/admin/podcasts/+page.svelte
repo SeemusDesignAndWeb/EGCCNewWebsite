@@ -34,6 +34,8 @@
 	let bulkUploadResult = null;
 	let bulkUploadError = null;
 	let selectedFiles = [];
+	let uploadProgress = [];
+	let currentUploadingFile = null;
 
 	onMount(async () => {
 		await loadPodcasts();
@@ -309,36 +311,98 @@
 		bulkUploading = true;
 		bulkUploadResult = null;
 		bulkUploadError = null;
+		uploadProgress = [];
+		currentUploadingFile = null;
 
-		try {
-			const formData = new FormData();
-			selectedFiles.forEach(file => {
+		// Initialize progress for all files
+		selectedFiles.forEach((file, index) => {
+			uploadProgress.push({
+				index: index + 1,
+				total: selectedFiles.length,
+				filename: file.name,
+				status: 'pending',
+				size: file.size,
+				message: 'Waiting...'
+			});
+		});
+
+		const results = [];
+		const errors = [];
+		let totalSize = 0;
+
+		// Upload files one at a time to show progress
+		for (let i = 0; i < selectedFiles.length; i++) {
+			const file = selectedFiles[i];
+			currentUploadingFile = i + 1;
+			
+			// Update progress
+			uploadProgress[i].status = 'uploading';
+			uploadProgress[i].message = `Uploading... (${i + 1}/${selectedFiles.length})`;
+			uploadProgress = [...uploadProgress]; // Trigger reactivity
+
+			try {
+				const formData = new FormData();
 				formData.append('files', file);
-			});
 
-			const response = await fetch('/api/audio/bulk-upload', {
-				method: 'POST',
-				body: formData
-			});
+				const response = await fetch('/api/audio/bulk-upload', {
+					method: 'POST',
+					body: formData
+				});
 
-			const result = await response.json();
-			if (response.ok) {
-				bulkUploadResult = result;
-				// Clear selected files
-				selectedFiles = [];
-				// Reset file input
-				const fileInput = document.getElementById('bulk-file-input');
-				if (fileInput) {
-					fileInput.value = '';
+				const result = await response.json();
+				if (response.ok && result.files && result.files.length > 0) {
+					const uploadedFile = result.files[0];
+					results.push(uploadedFile);
+					totalSize += uploadedFile.size;
+					
+					uploadProgress[i].status = 'success';
+					uploadProgress[i].message = `✅ Uploaded: ${uploadedFile.filename} (${uploadedFile.sizeFormatted})`;
+					uploadProgress = [...uploadProgress]; // Trigger reactivity
+				} else {
+					throw new Error(result.error || 'Upload failed');
 				}
-			} else {
-				bulkUploadError = result.error || 'Upload failed';
+			} catch (error) {
+				errors.push({
+					filename: file.name,
+					error: error.message
+				});
+				
+				uploadProgress[i].status = 'error';
+				uploadProgress[i].message = `❌ Error: ${error.message}`;
+				uploadProgress = [...uploadProgress]; // Trigger reactivity
 			}
-		} catch (error) {
-			bulkUploadError = error.message || 'Failed to upload files';
-		} finally {
-			bulkUploading = false;
 		}
+
+		currentUploadingFile = null;
+
+		// Set final result
+		bulkUploadResult = {
+			success: true,
+			uploaded: results.length,
+			failed: errors.length,
+			totalSize,
+			totalSizeFormatted: formatBytes(totalSize),
+			files: results,
+			errors: errors.length > 0 ? errors : undefined
+		};
+
+		// Clear selected files
+		selectedFiles = [];
+		// Reset file input
+		const fileInput = document.getElementById('bulk-file-input');
+		if (fileInput) {
+			fileInput.value = '';
+		}
+
+		bulkUploading = false;
+	}
+
+	function formatBytes(bytes) {
+		if (bytes === 0) return '0 Bytes';
+		const k = 1024;
+		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+		const i = Math.floor(Math.log(bytes) / Math.log(k));
+		return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 	}
 </script>
 
@@ -413,8 +477,22 @@
 						disabled={bulkUploading || selectedFiles.length === 0}
 						class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						{bulkUploading ? 'Uploading...' : `Upload ${selectedFiles.length || 0} File(s)`}
+						{bulkUploading ? `Uploading... (${currentUploadingFile || 0}/${selectedFiles.length})` : `Upload ${selectedFiles.length || 0} File(s)`}
 					</button>
+					
+					<!-- Upload Progress -->
+					{#if bulkUploading && uploadProgress.length > 0}
+						<div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded max-h-96 overflow-y-auto">
+							<p class="font-semibold text-blue-800 mb-2">Upload Progress:</p>
+							<div class="space-y-2">
+								{#each uploadProgress as progress}
+									<div class="text-sm {progress.status === 'success' ? 'text-green-700' : progress.status === 'error' ? 'text-red-700' : progress.status === 'uploading' ? 'text-blue-700 font-semibold' : 'text-gray-600'}">
+										[{progress.index}/{progress.total}] {progress.filename} - {progress.message}
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
 					
 					{#if bulkUploadResult}
 						<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded">
