@@ -646,6 +646,7 @@
 					</div>
 				{/if}
 			</div>
+			</div>
 		</div>
 	{/if}
 
