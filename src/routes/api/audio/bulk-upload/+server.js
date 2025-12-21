@@ -83,12 +83,8 @@ export const POST = async ({ request, cookies }) => {
 				
 				const filePath = join(uploadPath, safeFilename);
 
-				// Check if file already exists
-				if (existsSync(filePath)) {
-					// Option: overwrite or skip
-					// For now, we'll overwrite but could add option to skip
-					console.log(`File ${safeFilename} already exists, overwriting...`);
-				}
+				// Check if file already exists (before writing)
+				const fileExists = existsSync(filePath);
 
 				// Save file
 				const arrayBuffer = await file.arrayBuffer();
@@ -104,7 +100,7 @@ export const POST = async ({ request, cookies }) => {
 					audioUrl,
 					size: file.size,
 					sizeFormatted: formatBytes(file.size),
-					overwritten: existsSync(filePath) // This will be true after write, but we check before
+					overwritten: fileExists
 				});
 
 				totalSize += file.size;
