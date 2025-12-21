@@ -20,6 +20,14 @@
 	let savingSettings = false;
 	let settingsSaved = false;
 	let showSettings = false;
+	
+	// Migration state
+	let migrating = false;
+	let migrationResult = null;
+	let migrationError = null;
+	let downloading = false;
+	let downloadResult = null;
+	let downloadError = null;
 
 	onMount(async () => {
 		await loadPodcasts();
@@ -234,6 +242,52 @@
 			savingSettings = false;
 		}
 	}
+
+	async function migrateAudioFiles() {
+		migrating = true;
+		migrationResult = null;
+		migrationError = null;
+		try {
+			const response = await fetch('/api/audio/migrate', {
+				method: 'POST'
+			});
+			const result = await response.json();
+			if (response.ok) {
+				migrationResult = result;
+				// Reload podcasts to see any updates
+				await loadPodcasts();
+			} else {
+				migrationError = result.error || 'Migration failed';
+			}
+		} catch (error) {
+			migrationError = error.message || 'Failed to migrate files';
+		} finally {
+			migrating = false;
+		}
+	}
+
+	async function downloadExternalAudio() {
+		downloading = true;
+		downloadResult = null;
+		downloadError = null;
+		try {
+			const response = await fetch('/api/audio/download-external', {
+				method: 'POST'
+			});
+			const result = await response.json();
+			if (response.ok) {
+				downloadResult = result;
+				// Reload podcasts to see any updates
+				await loadPodcasts();
+			} else {
+				downloadError = result.error || 'Download failed';
+			}
+		} catch (error) {
+			downloadError = error.message || 'Failed to download files';
+		} finally {
+			downloading = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -250,7 +304,7 @@
 	{/if}
 
 	<!-- Settings Toggle Button -->
-	<div class="mb-6">
+	<div class="mb-6 flex gap-4">
 		<button
 			on:click={() => (showSettings = !showSettings)}
 			class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors flex items-center gap-2"
@@ -265,6 +319,104 @@
 			</svg>
 			Settings
 		</button>
+	</div>
+
+	<!-- Audio Migration Tools -->
+	<div class="bg-white p-6 rounded-lg shadow mb-8">
+		<h2 class="text-2xl font-bold mb-4">Audio File Migration</h2>
+		<p class="text-sm text-gray-600 mb-4">
+			Migrate audio files to the Railway volume for persistent storage across deployments.
+		</p>
+		
+		<div class="space-y-4">
+			<!-- Migrate from static directory -->
+			<div class="border rounded-lg p-4">
+				<h3 class="font-semibold mb-2">1. Migrate Files from Static Directory</h3>
+				<p class="text-sm text-gray-600 mb-3">
+					Copy audio files from the static directory to the volume storage.
+				</p>
+				<button
+					on:click={migrateAudioFiles}
+					disabled={migrating}
+					class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+				>
+					{migrating ? 'Migrating...' : 'Migrate Files'}
+				</button>
+				
+				{#if migrationResult}
+					<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+						<p class="font-semibold text-green-800">Migration Complete!</p>
+						<p class="text-sm text-green-700">
+							✅ Migrated: {migrationResult.migrated} file(s)<br>
+							⏭️ Skipped: {migrationResult.skipped} file(s)<br>
+							❌ Errors: {migrationResult.errors} file(s)<br>
+							📦 Total size: {migrationResult.totalSizeFormatted || '0 Bytes'}
+						</p>
+						{#if migrationResult.errorDetails && migrationResult.errorDetails.length > 0}
+							<details class="mt-2">
+								<summary class="text-sm text-green-700 cursor-pointer">Error Details</summary>
+								<ul class="text-xs text-green-600 mt-1 list-disc list-inside">
+									{#each migrationResult.errorDetails as error}
+										<li>{error}</li>
+									{/each}
+								</ul>
+							</details>
+						{/if}
+					</div>
+				{/if}
+				
+				{#if migrationError}
+					<div class="mt-4 p-3 bg-red-50 border border-red-200 rounded">
+						<p class="font-semibold text-red-800">Migration Failed</p>
+						<p class="text-sm text-red-700">{migrationError}</p>
+					</div>
+				{/if}
+			</div>
+
+			<!-- Download external files -->
+			<div class="border rounded-lg p-4">
+				<h3 class="font-semibold mb-2">2. Download External Audio Files</h3>
+				<p class="text-sm text-gray-600 mb-3">
+					Download audio files from external URLs (e.g., egcc.co.uk) and save them to the volume.
+				</p>
+				<button
+					on:click={downloadExternalAudio}
+					disabled={downloading}
+					class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+				>
+					{downloading ? 'Downloading...' : 'Download External Files'}
+				</button>
+				
+				{#if downloadResult}
+					<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+						<p class="font-semibold text-green-800">Download Complete!</p>
+						<p class="text-sm text-green-700">
+							✅ Downloaded: {downloadResult.downloaded} file(s)<br>
+							⏭️ Skipped: {downloadResult.skipped} file(s)<br>
+							❌ Errors: {downloadResult.errors} file(s)<br>
+							📦 Total size: {downloadResult.totalSizeFormatted || '0 Bytes'}
+						</p>
+						{#if downloadResult.errorDetails && downloadResult.errorDetails.length > 0}
+							<details class="mt-2">
+								<summary class="text-sm text-green-700 cursor-pointer">Error Details</summary>
+								<ul class="text-xs text-green-600 mt-1 list-disc list-inside">
+									{#each downloadResult.errorDetails as error}
+										<li>{error}</li>
+									{/each}
+								</ul>
+							</details>
+						{/if}
+					</div>
+				{/if}
+				
+				{#if downloadError}
+					<div class="mt-4 p-3 bg-red-50 border border-red-200 rounded">
+						<p class="font-semibold text-red-800">Download Failed</p>
+						<p class="text-sm text-red-700">{downloadError}</p>
+					</div>
+				{/if}
+			</div>
+		</div>
 	</div>
 
 	<!-- Podcast RSS Feed Settings -->
