@@ -71,9 +71,12 @@ export const POST = async ({ request, cookies }) => {
 		let totalSize = 0;
 		const errors = [];
 
-		// Process each file
-		for (const file of files) {
+		// Process each file sequentially (one at a time)
+		for (let i = 0; i < files.length; i++) {
+			const file = files[i];
 			try {
+				console.log(`Processing file ${i + 1}/${files.length}: ${file.name}`);
+				
 				// Preserve original filename (sanitize for filesystem safety)
 				const originalFilename = file.name;
 				// Remove any path components and sanitize
@@ -86,10 +89,18 @@ export const POST = async ({ request, cookies }) => {
 				// Check if file already exists (before writing)
 				const fileExists = existsSync(filePath);
 
-				// Save file
+				// Save file - process one at a time to avoid memory issues
+				console.log(`Reading file ${i + 1}/${files.length}: ${file.name} (${formatBytes(file.size)})`);
 				const arrayBuffer = await file.arrayBuffer();
 				const buffer = Buffer.from(arrayBuffer);
+				
+				console.log(`Writing file ${i + 1}/${files.length} to: ${filePath}`);
 				writeFileSync(filePath, buffer);
+				
+				// Verify file was written
+				if (!existsSync(filePath)) {
+					throw new Error('File was not created after write');
+				}
 
 				const audioUrl = `/audio/uploaded/${safeFilename}`;
 
@@ -104,10 +115,12 @@ export const POST = async ({ request, cookies }) => {
 				});
 
 				totalSize += file.size;
+				console.log(`✅ Successfully uploaded file ${i + 1}/${files.length}: ${safeFilename}`);
 			} catch (error) {
+				console.error(`❌ Error uploading file ${i + 1}/${files.length} (${file.name}):`, error);
 				errors.push({
 					filename: file.name,
-					error: error.message
+					error: error.message || 'Unknown error'
 				});
 			}
 		}
