@@ -16,4 +16,5 @@ data/database.json
 
 # Audio files - should not be in git (too large)
 static/audio/uploaded/
+data/audio/uploaded/
 

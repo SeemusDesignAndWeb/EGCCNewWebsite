@@ -469,8 +469,8 @@
 			</p>
 			
 			<div class="space-y-4">
-			<!-- Bulk Upload Files -->
-			<div class="border rounded-lg p-4">
+				<!-- Bulk Upload Files -->
+				<div class="border rounded-lg p-4">
 				<h3 class="font-semibold mb-2">0. Upload Multiple Audio Files</h3>
 				<p class="text-sm text-gray-600 mb-3">
 					Upload multiple audio files directly to the volume storage. Files will be saved with unique names.
@@ -558,94 +558,94 @@
 						</div>
 					{/if}
 				</div>
-			</div>
-			<!-- Migrate from static directory -->
-			<div class="border rounded-lg p-4">
-				<h3 class="font-semibold mb-2">1. Migrate Files from Static Directory</h3>
-				<p class="text-sm text-gray-600 mb-3">
-					Copy audio files from the static directory to the volume storage.
-				</p>
-				<button
-					on:click={migrateAudioFiles}
-					disabled={migrating}
-					class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					{migrating ? 'Migrating...' : 'Migrate Files'}
-				</button>
-				
-				{#if migrationResult}
-					<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded">
-						<p class="font-semibold text-green-800">Migration Complete!</p>
-						<p class="text-sm text-green-700">
-							✅ Migrated: {migrationResult.migrated} file(s)<br>
-							⏭️ Skipped: {migrationResult.skipped} file(s)<br>
-							❌ Errors: {migrationResult.errors} file(s)<br>
-							📦 Total size: {migrationResult.totalSizeFormatted || '0 Bytes'}
-						</p>
-						{#if migrationResult.errorDetails && migrationResult.errorDetails.length > 0}
-							<details class="mt-2">
-								<summary class="text-sm text-green-700 cursor-pointer">Error Details</summary>
-								<ul class="text-xs text-green-600 mt-1 list-disc list-inside">
-									{#each migrationResult.errorDetails as error}
-										<li>{error}</li>
-									{/each}
-								</ul>
-							</details>
-						{/if}
-					</div>
-				{/if}
-				
-				{#if migrationError}
-					<div class="mt-4 p-3 bg-red-50 border border-red-200 rounded">
-						<p class="font-semibold text-red-800">Migration Failed</p>
-						<p class="text-sm text-red-700">{migrationError}</p>
-					</div>
-				{/if}
-			</div>
+				</div>
+				<!-- Migrate from static directory -->
+				<div class="border rounded-lg p-4">
+					<h3 class="font-semibold mb-2">1. Migrate Files from Static Directory</h3>
+					<p class="text-sm text-gray-600 mb-3">
+						Copy audio files from the static directory to the volume storage.
+					</p>
+					<button
+						on:click={migrateAudioFiles}
+						disabled={migrating}
+						class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						{migrating ? 'Migrating...' : 'Migrate Files'}
+					</button>
+					
+					{#if migrationResult}
+						<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+							<p class="font-semibold text-green-800">Migration Complete!</p>
+							<p class="text-sm text-green-700">
+								✅ Migrated: {migrationResult.migrated} file(s)<br>
+								⏭️ Skipped: {migrationResult.skipped} file(s)<br>
+								❌ Errors: {migrationResult.errors} file(s)<br>
+								📦 Total size: {migrationResult.totalSizeFormatted || '0 Bytes'}
+							</p>
+							{#if migrationResult.errorDetails && migrationResult.errorDetails.length > 0}
+								<details class="mt-2">
+									<summary class="text-sm text-green-700 cursor-pointer">Error Details</summary>
+									<ul class="text-xs text-green-600 mt-1 list-disc list-inside">
+										{#each migrationResult.errorDetails as error}
+											<li>{error}</li>
+										{/each}
+									</ul>
+								</details>
+							{/if}
+						</div>
+					{/if}
+					
+					{#if migrationError}
+						<div class="mt-4 p-3 bg-red-50 border border-red-200 rounded">
+							<p class="font-semibold text-red-800">Migration Failed</p>
+							<p class="text-sm text-red-700">{migrationError}</p>
+						</div>
+					{/if}
+				</div>
 
-			<!-- Download external files -->
-			<div class="border rounded-lg p-4">
-				<h3 class="font-semibold mb-2">2. Download External Audio Files</h3>
-				<p class="text-sm text-gray-600 mb-3">
-					Download audio files from external URLs (e.g., egcc.co.uk) and save them to the volume.
-				</p>
-				<button
-					on:click={downloadExternalAudio}
-					disabled={downloading}
-					class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					{downloading ? 'Downloading...' : 'Download External Files'}
-				</button>
-				
-				{#if downloadResult}
-					<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded">
-						<p class="font-semibold text-green-800">Download Complete!</p>
-						<p class="text-sm text-green-700">
-							✅ Downloaded: {downloadResult.downloaded} file(s)<br>
-							⏭️ Skipped: {downloadResult.skipped} file(s)<br>
-							❌ Errors: {downloadResult.errors} file(s)<br>
-							📦 Total size: {downloadResult.totalSizeFormatted || '0 Bytes'}
-						</p>
-						{#if downloadResult.errorDetails && downloadResult.errorDetails.length > 0}
-							<details class="mt-2">
-								<summary class="text-sm text-green-700 cursor-pointer">Error Details</summary>
-								<ul class="text-xs text-green-600 mt-1 list-disc list-inside">
-									{#each downloadResult.errorDetails as error}
-										<li>{error}</li>
-									{/each}
-								</ul>
-							</details>
-						{/if}
-					</div>
-				{/if}
-				
-				{#if downloadError}
-					<div class="mt-4 p-3 bg-red-50 border border-red-200 rounded">
-						<p class="font-semibold text-red-800">Download Failed</p>
-						<p class="text-sm text-red-700">{downloadError}</p>
-					</div>
-				{/if}
-			</div>
+				<!-- Download external files -->
+				<div class="border rounded-lg p-4">
+					<h3 class="font-semibold mb-2">2. Download External Audio Files</h3>
+					<p class="text-sm text-gray-600 mb-3">
+						Download audio files from external URLs (e.g., egcc.co.uk) and save them to the volume.
+					</p>
+					<button
+						on:click={downloadExternalAudio}
+						disabled={downloading}
+						class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						{downloading ? 'Downloading...' : 'Download External Files'}
+					</button>
+					
+					{#if downloadResult}
+						<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+							<p class="font-semibold text-green-800">Download Complete!</p>
+							<p class="text-sm text-green-700">
+								✅ Downloaded: {downloadResult.downloaded} file(s)<br>
+								⏭️ Skipped: {downloadResult.skipped} file(s)<br>
+								❌ Errors: {downloadResult.errors} file(s)<br>
+								📦 Total size: {downloadResult.totalSizeFormatted || '0 Bytes'}
+							</p>
+							{#if downloadResult.errorDetails && downloadResult.errorDetails.length > 0}
+								<details class="mt-2">
+									<summary class="text-sm text-green-700 cursor-pointer">Error Details</summary>
+									<ul class="text-xs text-green-600 mt-1 list-disc list-inside">
+										{#each downloadResult.errorDetails as error}
+											<li>{error}</li>
+										{/each}
+									</ul>
+								</details>
+							{/if}
+						</div>
+					{/if}
+					
+					{#if downloadError}
+						<div class="mt-4 p-3 bg-red-50 border border-red-200 rounded">
+							<p class="font-semibold text-red-800">Download Failed</p>
+							<p class="text-sm text-red-700">{downloadError}</p>
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
 	{/if}
