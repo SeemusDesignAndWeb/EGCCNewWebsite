@@ -20,15 +20,36 @@ const DB_PATH = process.env.DATABASE_PATH || './data/database.json';
 const DEST_DIR = process.env.AUDIO_UPLOAD_DIR || '/data/audio/uploaded';
 
 function getDbPath() {
+	let finalPath;
 	if (DB_PATH.startsWith('./') || DB_PATH.startsWith('../')) {
-		return join(process.cwd(), DB_PATH);
+		// Relative path - resolve from project root
+		finalPath = join(process.cwd(), DB_PATH);
+	} else {
+		// Absolute path (e.g., /data/database.json for Railway volume)
+		finalPath = DB_PATH;
+		// If absolute path doesn't exist, try relative fallback
+		if (!existsSync(finalPath)) {
+			const fallbackPath = join(process.cwd(), './data/database.json');
+			if (existsSync(fallbackPath)) {
+				console.log(`⚠️  Volume path ${finalPath} not found, using fallback: ${fallbackPath}`);
+				return fallbackPath;
+			}
+		}
 	}
-	return DB_PATH;
+	return finalPath;
 }
 
 function getDestPath() {
 	if (DEST_DIR.startsWith('./') || DEST_DIR.startsWith('../')) {
 		return join(process.cwd(), DEST_DIR);
+	}
+	// If absolute path doesn't exist, try relative fallback
+	if (!existsSync(DEST_DIR)) {
+		const fallbackPath = join(process.cwd(), './data/audio/uploaded');
+		if (existsSync(dirname(fallbackPath))) {
+			console.log(`⚠️  Volume path ${DEST_DIR} not found, using fallback: ${fallbackPath}`);
+			return fallbackPath;
+		}
 	}
 	return DEST_DIR;
 }
