@@ -43,7 +43,7 @@ const defaultDatabase = {
 		phone: '020 8850 1331',
 		email: 'enquiries@egcc.co.uk',
 		googleMapsUrl:
-			'https://www.google.com/maps/place/Eltham+Green+Community+Church/@51.4551128,0.0400237,15z'
+			'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2486.165401148919!2d0.03745377659428357!3d51.45511957180136!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47d8a9a3cf8f6109%3A0xd441aa85176eadf7!2sEltham%20Green%20Community%20Church!5e0!3m2!1sen!2suk!4v1767649840277!5m2!1sen!2suk'
 	},
 	serviceTimes: {
 		sunday: '11:00 AM (Doors open at 10:30 AM)',

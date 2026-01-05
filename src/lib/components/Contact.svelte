@@ -192,11 +192,12 @@
 							allowfullscreen
 							loading="lazy"
 							referrerpolicy="no-referrer-when-downgrade"
+							allow="geolocation"
 							class="w-full rounded"
 						></iframe>
 					{:else}
 						<iframe
-							src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2487.1234567890!2d0.0488!3d51.4523!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTHCsDI3JzA4LjMiTiAwwrAwMic1NS43IkU!5e0!3m2!1sen!2suk!4v1234567890123"
+							src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2486.165401148919!2d0.03745377659428357!3d51.45511957180136!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47d8a9a3cf8f6109%3A0xd441aa85176eadf7!2sEltham%20Green%20Community%20Church!5e0!3m2!1sen!2suk!4v1767649840277!5m2!1sen!2suk"
 							width="100%"
 							height="200"
 							style="border:0;"
@@ -204,6 +205,7 @@
 							allowfullscreen
 							loading="lazy"
 							referrerpolicy="no-referrer-when-downgrade"
+							allow="geolocation"
 							class="w-full rounded"
 						></iframe>
 					{/if}
