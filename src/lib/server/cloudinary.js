@@ -166,10 +166,10 @@ export async function deleteImage(publicId) {
 
 /**
  * Get Cloudinary URL for an image
- * Automatically applies optimization parameters (w_1000/f_auto/q_auto) unless overridden
+ * Automatically applies optimisation parameters (w_1000/f_auto/q_auto) unless overridden
  * @param {string} publicId - Cloudinary public ID
  * @param {object} options - Transformation options
- * @returns {string} Cloudinary URL with optimization
+ * @returns {string} Cloudinary URL with optimisation
  */
 export function getImageUrl(publicId, options = {}) {
 	if (!publicId) return '';

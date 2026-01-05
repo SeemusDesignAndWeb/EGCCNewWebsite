@@ -9,7 +9,6 @@
 	import LatestMessagePopup from '$lib/components/LatestMessagePopup.svelte';
 
 	export let data;
-	export let params = {};
 
 	let showLatestMessage = false;
 

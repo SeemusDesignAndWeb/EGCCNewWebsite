@@ -1,8 +1,8 @@
 /**
- * Optimize an existing Cloudinary URL by adding optimization parameters
+ * Optimise an existing Cloudinary URL by adding optimisation parameters
  * Adds w_1000/f_auto/q_auto if not already present
  * @param {string} url - Cloudinary URL
- * @returns {string} Optimized Cloudinary URL
+ * @returns {string} Optimised Cloudinary URL
  */
 export function optimizeCloudinaryUrl(url) {
 	if (!url || !isCloudinaryUrl(url)) return url;
@@ -22,15 +22,15 @@ export function optimizeCloudinaryUrl(url) {
 	// Parse existing transformations
 	const existing = existingTransforms ? existingTransforms.split(',').filter(t => t.trim()) : [];
 	
-	// Check what optimization params already exist
+	// Check what optimisation params already exist
 	const hasWidth = existing.some(t => t.startsWith('w_'));
 	const hasFormat = existing.some(t => t.startsWith('f_'));
 	const hasQuality = existing.some(t => t.startsWith('q_'));
-	
+
 	// Build final transformations array
 	const finalTransforms = [...existing];
-	
-	// Add missing optimization params
+
+	// Add missing optimisation params
 	if (!hasWidth) finalTransforms.push('w_1000');
 	if (!hasFormat) finalTransforms.push('f_auto');
 	if (!hasQuality) finalTransforms.push('q_auto');
@@ -41,14 +41,14 @@ export function optimizeCloudinaryUrl(url) {
 
 /**
  * Get the full image URL, handling both Cloudinary URLs and local paths
- * Automatically applies Cloudinary optimization parameters (w_1000/f_auto/q_auto)
+ * Automatically applies Cloudinary optimisation parameters (w_1000/f_auto/q_auto)
  * @param {string} path - Image path (Cloudinary URL or local path)
- * @returns {string} Full image URL with optimization
+ * @returns {string} Full image URL with optimisation
  */
 export function getImageUrl(path) {
 	if (!path) return '';
 
-	// If it's already a full Cloudinary URL, optimize it
+	// If it's already a full Cloudinary URL, optimise it
 	if (path.startsWith('http') && isCloudinaryUrl(path)) {
 		return optimizeCloudinaryUrl(path);
 	}
@@ -59,7 +59,7 @@ export function getImageUrl(path) {
 		return path;
 	}
 
-	// If it's a Cloudinary public ID (without folder), construct optimized URL
+	// If it's a Cloudinary public ID (without folder), construct optimised URL
 	if (!path.includes('/') && !path.includes('.')) {
 		return `https://res.cloudinary.com/dl8kjhwjs/image/upload/w_1000,f_auto,q_auto/${path}`;
 	}
@@ -69,11 +69,11 @@ export function getImageUrl(path) {
 }
 
 /**
- * Get optimized Cloudinary image URL with transformations
- * Automatically includes default optimization parameters (w_1000/f_auto/q_auto) unless overridden
+ * Get optimised Cloudinary image URL with transformations
+ * Automatically includes default optimisation parameters (w_1000/f_auto/q_auto) unless overridden
  * @param {string} path - Cloudinary URL or public ID
  * @param {object} options - Transformation options (width, height, quality, format, etc.)
- * @returns {string} Optimized Cloudinary URL
+ * @returns {string} Optimised Cloudinary URL
  */
 export function getOptimizedImageUrl(path, options = {}) {
 	if (!path) return '';
@@ -94,7 +94,7 @@ export function getOptimizedImageUrl(path, options = {}) {
 	// Build transformation string with defaults
 	const transformations = [];
 	
-	// Default optimizations (unless overridden)
+	// Default optimisations (unless overridden)
 	if (!options.width) transformations.push('w_1000');
 	else transformations.push(`w_${options.width}`);
 	

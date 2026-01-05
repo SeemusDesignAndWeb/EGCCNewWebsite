@@ -16,7 +16,7 @@
 			role: 'Church Member'
 		},
 		{
-			text: 'The youth program has been amazing for my teenagers. They\'ve made great friends and are excited about coming to church. Thank you for creating such a positive environment.',
+			text: 'The youth programme has been amazing for my teenagers. They\'ve made great friends and are excited about coming to church. Thank you for creating such a positive environment.',
 			author: 'Lisa Chen',
 			role: 'Parent & Member'
 		}

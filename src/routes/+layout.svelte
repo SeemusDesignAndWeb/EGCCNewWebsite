@@ -8,27 +8,31 @@
 	import { page } from '$app/stores';
 
 	export let data;
-	export let params = {};
 
 	let showPreloader = true;
 	let showHighlightBanner = false;
 
-	// Don't show navbar, banner, or preloader in admin area
+	// Don't show navbar, banner, or preloader in admin or HUB areas
+	// But DO show navbar for public signup pages (rota and event signups)
+	// Don't show banner on signup pages
 	$: isAdminArea = $page.url.pathname.startsWith('/admin');
-	$: showWebsiteNavbar = !isAdminArea;
-	$: showWebsiteBanner = !isAdminArea && showHighlightBanner;
+	$: isHubArea = $page.url.pathname.startsWith('/hub');
+	$: isSignupPage = $page.url.pathname.startsWith('/signup/rota') || $page.url.pathname.startsWith('/signup/event');
+	$: hideWebsiteElements = isAdminArea || isHubArea;
+	$: showWebsiteNavbar = !hideWebsiteElements || isSignupPage;
+	$: showWebsiteBanner = !hideWebsiteElements && !isSignupPage && showHighlightBanner;
 
 	// Share banner visibility with child components via store
 	const bannerVisibleStore = writable(false);
 	setContext('bannerVisible', bannerVisibleStore);
 	
-	$: if (!isAdminArea) {
+	$: if (!hideWebsiteElements) {
 		bannerVisibleStore.set(showHighlightBanner);
 	}
 
 	onMount(() => {
-		// Don't show preloader or banner in admin area
-		if (isAdminArea) {
+		// Don't show preloader or banner in admin or CRM areas
+		if (hideWebsiteElements) {
 			showPreloader = false;
 			return;
 		}
@@ -47,7 +51,7 @@
 	});
 </script>
 
-{#if showPreloader && !isAdminArea}
+{#if showPreloader && !hideWebsiteElements}
 	<Preloader />
 {/if}
 
@@ -63,11 +67,11 @@
 
 <!-- Website Navbar - only show outside admin area -->
 {#if showWebsiteNavbar}
-	<Navbar bannerVisible={showHighlightBanner} class="gallery-hide-when-fullscreen" />
+	<Navbar bannerVisible={showHighlightBanner && !isSignupPage} class="gallery-hide-when-fullscreen" />
 {/if}
 
 <!-- Page Content with dynamic padding to account for fixed navbar and banner -->
-<div class="transition-all duration-300" class:pt-[110px]={showHighlightBanner && !isAdminArea} class:pt-[80px]={!showHighlightBanner && !isAdminArea} class:pt-0={isAdminArea}>
+<div class="transition-all duration-300" class:pt-[110px]={showHighlightBanner && !hideWebsiteElements && !isSignupPage} class:pt-[80px]={!showHighlightBanner && !hideWebsiteElements && !isSignupPage} class:pt-0={hideWebsiteElements || isSignupPage}>
 	<slot />
 </div>
 

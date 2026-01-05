@@ -1,0 +1,627 @@
+<script>
+	import { enhance } from '$app/forms';
+	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
+	import { invalidateAll } from '$app/navigation';
+	import FormField from '$lib/crm/components/FormField.svelte';
+	import HtmlEditor from '$lib/crm/components/HtmlEditor.svelte';
+	import Table from '$lib/crm/components/Table.svelte';
+	import { notifications } from '$lib/crm/stores/notifications.js';
+	import { dialog } from '$lib/crm/stores/notifications.js';
+
+	$: rota = $page.data?.rota;
+	$: rawRota = $page.data?.rawRota || rota; // Raw rota with original assignees format
+	$: event = $page.data?.event;
+	$: occurrence = $page.data?.occurrence;
+	$: eventOccurrences = $page.data?.eventOccurrences || [];
+	$: assigneesByOccurrence = $page.data?.assigneesByOccurrence || {};
+	$: availableContacts = $page.data?.availableContacts || [];
+	$: signupLink = $page.data?.signupLink || '';
+	$: csrfToken = $page.data?.csrfToken || '';
+	$: formResult = $page.form;
+	
+	import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
+
+	let linkCopied = false;
+
+	async function copySignupLink() {
+		if (!signupLink) return;
+		try {
+			await navigator.clipboard.writeText(signupLink);
+			linkCopied = true;
+			notifications.success('Signup link copied to clipboard!');
+			setTimeout(() => {
+				linkCopied = false;
+			}, 2000);
+		} catch (error) {
+			notifications.error('Failed to copy link');
+		}
+	}
+	
+	// Show notifications from form results
+	$: if (formResult?.success && browser) {
+		if (formResult?.type === 'addAssignees' || formResult?.type === 'removeAssignee') {
+			notifications.success(formResult.type === 'addAssignees' ? 'Assignees added successfully' : 'Assignee removed successfully');
+			// Reload to refresh the assignee list - only on client
+			if (browser) {
+				setTimeout(() => {
+					invalidateAll();
+				}, 500);
+			}
+		} else {
+		notifications.success('Rota updated successfully');
+		}
+	}
+	$: if (formResult?.error && browser) {
+		notifications.error(formResult.error);
+	}
+
+	let editing = false;
+	let notes = rota?.notes || '';
+	let formData = {
+		role: rota?.role || '',
+		capacity: rota?.capacity || 1
+	};
+
+	$: if (rota) {
+		formData = {
+			role: rota.role || '',
+			capacity: rota.capacity || 1
+		};
+		notes = rota.notes || '';
+	}
+
+	async function handleDelete() {
+		const confirmed = await dialog.confirm('Are you sure you want to delete this rota?', 'Delete Rota');
+		if (confirmed) {
+			const form = document.createElement('form');
+			form.method = 'POST';
+			form.action = '?/delete';
+			
+			const csrfInput = document.createElement('input');
+			csrfInput.type = 'hidden';
+			csrfInput.name = '_csrf';
+			csrfInput.value = csrfToken;
+			form.appendChild(csrfInput);
+			
+			document.body.appendChild(form);
+			form.submit();
+		}
+	}
+
+	const assigneeColumns = [
+		{ 
+			key: 'name', 
+			label: 'Name',
+			render: (val, row) => {
+				if (row.id) {
+					return `<a href="/hub/contacts/${row.id}" class="text-brand-green hover:text-primary-dark underline">${val || 'Unknown'}</a>`;
+				}
+				return val || 'Unknown';
+			}
+		},
+		{ key: 'email', label: 'Email' }
+	];
+
+	let showAddAssignees = false;
+	let searchTerm = '';
+	let selectedContactIds = new Set();
+	let selectedOccurrenceId = '';
+	
+	// Initialize selected occurrence reactively
+	$: selectedOccurrenceId = rota?.occurrenceId || (eventOccurrences && eventOccurrences.length > 0 ? eventOccurrences[0].id : '') || '';
+	
+	$: filteredAvailableContacts = searchTerm
+		? availableContacts.filter(c => 
+			(c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+			(c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+			(c.lastName || '').toLowerCase().includes(searchTerm.toLowerCase())
+		)
+		: availableContacts;
+	
+	function toggleContactSelection(contactId) {
+		if (selectedContactIds.has(contactId)) {
+			selectedContactIds.delete(contactId);
+		} else {
+			selectedContactIds.add(contactId);
+		}
+		selectedContactIds = selectedContactIds; // Trigger reactivity
+	}
+	
+	async function handleAddAssignees() {
+		if (selectedContactIds.size === 0) {
+			await dialog.alert('Please select at least one contact to assign', 'No Contacts Selected');
+			return;
+		}
+		
+		const form = document.createElement('form');
+		form.method = 'POST';
+		form.action = '?/addAssignees';
+		
+		const csrfInput = document.createElement('input');
+		csrfInput.type = 'hidden';
+		csrfInput.name = '_csrf';
+		csrfInput.value = csrfToken;
+		form.appendChild(csrfInput);
+		
+		const contactIdsInput = document.createElement('input');
+		contactIdsInput.type = 'hidden';
+		contactIdsInput.name = 'contactIds';
+		contactIdsInput.value = JSON.stringify(Array.from(selectedContactIds));
+		form.appendChild(contactIdsInput);
+		
+		// Add occurrenceId if rota is for all occurrences
+		if (!rota.occurrenceId && selectedOccurrenceId) {
+			const occurrenceIdInput = document.createElement('input');
+			occurrenceIdInput.type = 'hidden';
+			occurrenceIdInput.name = 'occurrenceId';
+			occurrenceIdInput.value = selectedOccurrenceId;
+			form.appendChild(occurrenceIdInput);
+		}
+		
+		document.body.appendChild(form);
+		form.submit();
+	}
+
+	async function handleRemoveAssignee(assignee) {
+		const confirmed = await dialog.confirm('Are you sure you want to remove this assignee?', 'Remove Assignee');
+		if (confirmed) {
+			console.log('[REMOVE ASSIGNEE] Starting removal process');
+			console.log('[REMOVE ASSIGNEE] Assignee to remove:', JSON.stringify(assignee, null, 2));
+			
+			// Find the assignee in the original rota.assignees array
+			// Use the raw rota data with original assignees format
+			const rawAssignees = rawRota?.assignees || [];
+			console.log('[REMOVE ASSIGNEE] Raw assignees array:', JSON.stringify(rawAssignees, null, 2));
+			console.log('[REMOVE ASSIGNEE] Rota occurrenceId:', rota?.occurrenceId);
+			console.log('[REMOVE ASSIGNEE] Raw rota object:', JSON.stringify(rawRota, null, 2));
+			
+			let originalIndex = -1;
+			
+			// Normalize occurrenceId for comparison
+			const assigneeOccId = (assignee.occurrenceId === null || assignee.occurrenceId === undefined) ? null : assignee.occurrenceId;
+			console.log('[REMOVE ASSIGNEE] Normalized assignee occurrenceId:', assigneeOccId);
+			
+			originalIndex = rawAssignees.findIndex((a, index) => {
+				console.log(`[REMOVE ASSIGNEE] Checking index ${index}:`, JSON.stringify(a, null, 2));
+				
+				// Match by id/contactId/email and occurrenceId
+				if (typeof a === 'string') {
+					console.log(`[REMOVE ASSIGNEE] Index ${index}: Old format (string), value: "${a}", assignee.id: "${assignee.id}"`);
+					// Old format - string is the contact ID
+					// For old format, if rota has occurrenceId, use it; otherwise match any occurrenceId
+					if (assignee.id && a === assignee.id) {
+						console.log(`[REMOVE ASSIGNEE] Index ${index}: ID matches!`);
+						// If rota is for a specific occurrence, check it matches
+						if (rota.occurrenceId !== null && rota.occurrenceId !== undefined) {
+							const matches = rota.occurrenceId === assigneeOccId;
+							console.log(`[REMOVE ASSIGNEE] Index ${index}: Rota has occurrenceId ${rota.occurrenceId}, assignee has ${assigneeOccId}, match: ${matches}`);
+							return matches;
+						}
+						// If rota is for all occurrences, match if assigneeOccId is null or matches rota's default
+						const matches = assigneeOccId === null || assigneeOccId === rota.occurrenceId;
+						console.log(`[REMOVE ASSIGNEE] Index ${index}: Rota for all occurrences, match: ${matches}`);
+						return matches;
+					}
+					console.log(`[REMOVE ASSIGNEE] Index ${index}: ID does not match`);
+					return false;
+				}
+				if (a && typeof a === 'object') {
+					console.log(`[REMOVE ASSIGNEE] Index ${index}: New format (object)`);
+					// New format - could be { contactId, occurrenceId } or { name, email, occurrenceId } for public signups
+					const aOccurrenceId = (a.occurrenceId === null || a.occurrenceId === undefined) ? null : a.occurrenceId;
+					console.log(`[REMOVE ASSIGNEE] Index ${index}: Object occurrenceId: ${aOccurrenceId}, assignee occurrenceId: ${assigneeOccId}`);
+					
+					// First check occurrenceId matches
+					if (aOccurrenceId !== assigneeOccId) {
+						console.log(`[REMOVE ASSIGNEE] Index ${index}: OccurrenceId does not match`);
+						return false;
+					}
+					
+					// Check if contactId is a string (contact) or object (public signup)
+					if (typeof a.contactId === 'string') {
+						// This is a contact assignee - contactId is a string ID
+						if (assignee.id !== null && assignee.id !== undefined) {
+							const aId = a.contactId || a.id;
+							console.log(`[REMOVE ASSIGNEE] Index ${index}: Contact assignee - aId: "${aId}", assignee.id: "${assignee.id}"`);
+							if (aId === assignee.id) {
+								console.log(`[REMOVE ASSIGNEE] Index ${index}: Contact ID matches!`);
+								return true;
+							}
+							console.log(`[REMOVE ASSIGNEE] Index ${index}: Contact ID does not match`);
+						}
+					} else if (a.contactId && typeof a.contactId === 'object') {
+						// This is a public signup - contactId is an object with { name, email }
+						if (assignee.id === null || assignee.id === undefined) {
+							const aEmail = a.contactId.email || a.email;
+							const aName = a.contactId.name || a.name;
+							console.log(`[REMOVE ASSIGNEE] Index ${index}: Public signup - a.contactId.email: "${aEmail}", assignee.email: "${assignee.email}"`);
+							if (aEmail && assignee.email) {
+								const emailMatch = aEmail.toLowerCase() === assignee.email.toLowerCase();
+								const nameMatch = (aName || '') === (assignee.name || '');
+								console.log(`[REMOVE ASSIGNEE] Index ${index}: Email match: ${emailMatch}, Name match: ${nameMatch}`);
+								if (emailMatch && nameMatch) {
+									console.log(`[REMOVE ASSIGNEE] Index ${index}: Public signup matches!`);
+									return true;
+								}
+							}
+							console.log(`[REMOVE ASSIGNEE] Index ${index}: Public signup does not match`);
+						}
+					} else if (a.email && a.name) {
+						// Legacy format: { name, email, occurrenceId } directly on the object
+						if (assignee.id === null || assignee.id === undefined) {
+							console.log(`[REMOVE ASSIGNEE] Index ${index}: Legacy public signup format - a.email: "${a.email}", assignee.email: "${assignee.email}"`);
+							if (a.email && assignee.email) {
+								const emailMatch = a.email.toLowerCase() === assignee.email.toLowerCase();
+								const nameMatch = (a.name || '') === (assignee.name || '');
+								console.log(`[REMOVE ASSIGNEE] Index ${index}: Email match: ${emailMatch}, Name match: ${nameMatch}`);
+								if (emailMatch && nameMatch) {
+									console.log(`[REMOVE ASSIGNEE] Index ${index}: Legacy public signup matches!`);
+									return true;
+								}
+							}
+						}
+					}
+					return false;
+				}
+				console.log(`[REMOVE ASSIGNEE] Index ${index}: Unknown format`);
+				return false;
+			});
+			
+			console.log('[REMOVE ASSIGNEE] Final index found:', originalIndex);
+			
+			if (originalIndex === -1) {
+				console.error('[REMOVE ASSIGNEE] Could not find assignee to remove');
+				console.error('[REMOVE ASSIGNEE] Assignee object:', JSON.stringify(assignee, null, 2));
+				console.error('[REMOVE ASSIGNEE] Raw assignees:', JSON.stringify(rawAssignees, null, 2));
+				console.error('[REMOVE ASSIGNEE] Rota occurrenceId:', rota?.occurrenceId);
+				console.error('[REMOVE ASSIGNEE] Assignee occurrenceId:', assigneeOccId);
+				notifications.error('Could not find assignee to remove. Check console for details.');
+				return;
+			}
+			
+			const form = document.createElement('form');
+			form.method = 'POST';
+			form.action = '?/removeAssignee';
+			
+			const csrfInput = document.createElement('input');
+			csrfInput.type = 'hidden';
+			csrfInput.name = '_csrf';
+			csrfInput.value = csrfToken;
+			form.appendChild(csrfInput);
+			
+			// Pass the index for removal
+			const indexInput = document.createElement('input');
+			indexInput.type = 'hidden';
+			indexInput.name = 'index';
+			indexInput.value = originalIndex;
+			form.appendChild(indexInput);
+			
+			document.body.appendChild(form);
+			form.submit();
+		}
+	}
+</script>
+
+{#if rota}
+	<div class="bg-white shadow rounded-lg p-6 mb-6">
+		<div class="flex justify-between items-center mb-6">
+			<h2 class="text-2xl font-bold text-gray-900">Rota Details</h2>
+			<div class="flex gap-2">
+				{#if editing}
+					<button
+						on:click={() => editing = false}
+						class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+					>
+						Cancel
+					</button>
+				{:else}
+					<button
+						on:click={() => editing = true}
+						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+					>
+						Edit
+					</button>
+					<button
+						on:click={handleDelete}
+						class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+					>
+						Delete
+					</button>
+				{/if}
+			</div>
+		</div>
+
+		{#if editing}
+			<form method="POST" action="?/update" use:enhance>
+				<input type="hidden" name="_csrf" value={csrfToken} />
+				<input type="hidden" name="notes" value={notes} />
+				<FormField label="Role" name="role" bind:value={formData.role} required />
+				<FormField label="Capacity" name="capacity" type="number" bind:value={formData.capacity} required />
+				<div class="mb-4">
+					<label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+					<HtmlEditor bind:value={notes} name="notes" />
+				</div>
+				<button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+					Save Changes
+				</button>
+			</form>
+		{:else}
+			<dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+				<div>
+					<dt class="text-sm font-medium text-gray-500">Event</dt>
+					<dd class="mt-1 text-sm text-gray-900">{event?.title || 'Unknown'}</dd>
+				</div>
+				<div>
+					<dt class="text-sm font-medium text-gray-500">Role</dt>
+					<dd class="mt-1 text-sm text-gray-900">{rota.role}</dd>
+				</div>
+				<div>
+					<dt class="text-sm font-medium text-gray-500">Capacity per Occurrence</dt>
+					<dd class="mt-1 text-sm text-gray-900">{rota.capacity} {rota.capacity === 1 ? 'person' : 'people'}</dd>
+				</div>
+				<div>
+					<dt class="text-sm font-medium text-gray-500">Total Assigned</dt>
+					<dd class="mt-1 text-sm text-gray-900">{Array.isArray(rota.assignees) ? rota.assignees.length : 0} across {Object.keys(assigneesByOccurrence).length} {Object.keys(assigneesByOccurrence).length === 1 ? 'occurrence' : 'occurrences'}</dd>
+				</div>
+				{#if rota.notes}
+					<div class="sm:col-span-2 lg:col-span-4">
+						<dt class="text-sm font-medium text-gray-500">Notes</dt>
+						<dd class="mt-1 text-sm text-gray-900">{@html rota.notes}</dd>
+					</div>
+				{/if}
+			</dl>
+		{/if}
+	</div>
+
+	{#if signupLink}
+		<div class="bg-white shadow rounded-lg p-6 mb-6">
+			<h3 class="text-xl font-bold text-gray-900 mb-4">Public Signup Link</h3>
+			<p class="text-sm text-gray-600 mb-3">
+				Share this link with volunteers to allow them to sign up for this rota. No login required.
+			</p>
+			<div class="flex gap-2 items-center">
+				<input
+					type="text"
+					readonly
+					value={signupLink}
+					class="flex-1 rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4 bg-gray-50 text-sm"
+				/>
+				<button
+					on:click={copySignupLink}
+					class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
+				>
+					{#if linkCopied}
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+						</svg>
+						Copied!
+					{:else}
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+						</svg>
+						Copy Link
+					{/if}
+				</button>
+			</div>
+			<a
+				href={signupLink}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800 underline"
+			>
+				Open signup page in new tab
+			</a>
+		</div>
+	{/if}
+
+	<div class="bg-white shadow rounded-lg p-6">
+		<div class="flex justify-between items-center mb-4">
+			<h3 class="text-xl font-bold text-gray-900">Assignees by Occurrence</h3>
+			<button
+				on:click={() => showAddAssignees = true}
+				class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+			>
+				+ Add Assignees
+			</button>
+		</div>
+		{#if eventOccurrences.length > 0}
+			<div class="space-y-6">
+				{#each eventOccurrences as occ}
+					{@const occAssignees = assigneesByOccurrence[occ.id] || []}
+					{@const isFull = occAssignees.length >= rota.capacity}
+					<div class="border border-gray-200 rounded-lg p-4">
+						<div class="flex justify-between items-center mb-3">
+							<div>
+								<h4 class="font-semibold text-gray-900">{formatDateTimeUK(occ.startsAt)}</h4>
+							</div>
+							<div class="text-right">
+								<span class="text-sm font-medium {isFull ? 'text-red-600' : 'text-gray-700'}">
+									{occAssignees.length} / {rota.capacity}
+								</span>
+								{#if isFull}
+									<span class="ml-2 text-xs text-red-600 font-medium">Full</span>
+								{/if}
+							</div>
+						</div>
+						{#if occAssignees.length > 0}
+							<div class="space-y-2">
+								{#each occAssignees as assignee}
+									<div class="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+										<div class="flex-1">
+											{#if assignee.id}
+												<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium">
+													{assignee.name || 'Unknown'}
+												</a>
+											{:else}
+												<span class="font-medium">{assignee.name || 'Unknown'}</span>
+												<span class="text-xs text-gray-400 ml-2">(Public signup)</span>
+											{/if}
+											<span class="text-sm text-gray-500 ml-2">{assignee.email}</span>
+										</div>
+										<button
+											on:click={() => handleRemoveAssignee(assignee)}
+											class="text-red-600 hover:text-red-800 px-2 py-1 rounded text-sm"
+											title="Remove assignee"
+										>
+											Remove
+										</button>
+									</div>
+								{/each}
+							</div>
+						{:else}
+							<p class="text-sm text-gray-400 italic">No assignees for this occurrence</p>
+						{/if}
+					</div>
+				{/each}
+				
+				{#if assigneesByOccurrence['unassigned'] && assigneesByOccurrence['unassigned'].length > 0}
+					<div class="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
+						<div class="flex justify-between items-center mb-3">
+							<div>
+								<h4 class="font-semibold text-gray-900">Unassigned to Specific Occurrence</h4>
+								<p class="text-sm text-gray-500">These assignees need to be assigned to a specific occurrence</p>
+							</div>
+							<div class="text-right">
+								<span class="text-sm font-medium text-gray-700">
+									{assigneesByOccurrence['unassigned'].length}
+								</span>
+							</div>
+						</div>
+						<div class="space-y-2">
+							{#each assigneesByOccurrence['unassigned'] as assignee}
+								<div class="flex items-center justify-between p-2 bg-white rounded-md">
+									<div class="flex-1">
+										{#if assignee.id}
+											<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium">
+												{assignee.name || 'Unknown'}
+											</a>
+										{:else}
+											<span class="font-medium">{assignee.name || 'Unknown'}</span>
+											<span class="text-xs text-gray-400 ml-2">(Public signup)</span>
+										{/if}
+										<span class="text-sm text-gray-500 ml-2">{assignee.email}</span>
+									</div>
+									<button
+										on:click={() => handleRemoveAssignee(assignee)}
+										class="text-red-600 hover:text-red-800 px-2 py-1 rounded text-sm"
+										title="Remove assignee"
+									>
+										Remove
+									</button>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</div>
+		{:else if (rota.assignees || []).length > 0}
+			<div class="space-y-2">
+				{#each rota.assignees as assignee, index}
+					<div class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+						<div class="flex-1">
+							{#if assignee.id}
+								<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium">
+									{assignee.name || 'Unknown'}
+								</a>
+							{:else}
+								<span class="font-medium">{assignee.name || 'Unknown'}</span>
+								<span class="text-xs text-gray-400 ml-2">(Public signup)</span>
+							{/if}
+							<span class="text-sm text-gray-500 ml-2">{assignee.email}</span>
+						</div>
+						<button
+							on:click={() => handleRemoveAssignee(assignee, index)}
+							class="text-red-600 hover:text-red-800 px-2 py-1 rounded"
+							title="Remove assignee"
+						>
+							Remove
+						</button>
+					</div>
+				{/each}
+			</div>
+		{:else}
+			<p class="text-gray-500">No assignees yet. Click "Add Assignees" to assign people to this rota.</p>
+		{/if}
+	</div>
+
+	{#if showAddAssignees}
+		<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" on:click={() => showAddAssignees = false}>
+			<div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] flex flex-col" on:click|stopPropagation>
+				<!-- Header (fixed) -->
+				<div class="p-6 border-b border-gray-200">
+					<h3 class="text-xl font-bold text-gray-900 mb-4">Add Assignees</h3>
+					
+					{#if !rota.occurrenceId && eventOccurrences.length > 0}
+						<div class="mb-4">
+							<label class="block text-sm font-medium text-gray-700 mb-1">Occurrence</label>
+							<select bind:value={selectedOccurrenceId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4">
+								{#each eventOccurrences as occ}
+									{@const occAssignees = assigneesByOccurrence[occ.id] || []}
+									{@const isFull = occAssignees.length >= rota.capacity}
+									<option value={occ.id}>
+										{formatDateTimeUK(occ.startsAt)} {isFull ? '(Full)' : `(${occAssignees.length}/${rota.capacity})`}
+									</option>
+								{/each}
+							</select>
+							<p class="mt-1 text-xs text-gray-500">Select which occurrence to assign these contacts to</p>
+						</div>
+					{/if}
+					
+					<div>
+						<input
+							type="text"
+							bind:value={searchTerm}
+							placeholder="Search contacts..."
+							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4"
+						/>
+					</div>
+				</div>
+
+				<!-- Scrollable content area -->
+				<div class="flex-1 overflow-y-auto p-6">
+					{#if filteredAvailableContacts.length > 0}
+						<div class="space-y-2">
+							{#each filteredAvailableContacts as contact}
+								<label class="flex items-center p-3 bg-gray-50 rounded-md hover:bg-gray-100 cursor-pointer">
+									<input
+										type="checkbox"
+										checked={selectedContactIds.has(contact.id)}
+										on:change={() => toggleContactSelection(contact.id)}
+										class="mr-3"
+									/>
+									<div class="flex-1">
+										<div class="font-medium">
+											{`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email}
+										</div>
+										<div class="text-sm text-gray-500">{contact.email}</div>
+									</div>
+								</label>
+							{/each}
+						</div>
+					{:else}
+						<p class="text-gray-500">No available contacts to assign.</p>
+					{/if}
+				</div>
+
+				<!-- Footer with buttons (fixed at bottom) -->
+				<div class="p-6 border-t border-gray-200 flex gap-2 justify-end">
+					<button
+						on:click={() => { showAddAssignees = false; searchTerm = ''; selectedContactIds = new Set(); }}
+						class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+					>
+						Cancel
+					</button>
+					<button
+						on:click={handleAddAssignees}
+						disabled={selectedContactIds.size === 0}
+						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
+					>
+						Add Selected ({selectedContactIds.size})
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
+{/if}
+
