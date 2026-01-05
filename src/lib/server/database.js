@@ -37,6 +37,7 @@ const defaultDatabase = {
 	podcasts: [],
 	communityGroups: [],
 	events: [],
+	categories: [],
 	contact: {
 		address: '542 Westhorne Avenue, Eltham, London, SE9 6RR',
 		phone: '020 8850 1331',
@@ -507,6 +508,53 @@ export function deleteEvent(id) {
 	const db = readDatabase();
 	if (db.events) {
 		db.events = db.events.filter((e) => e.id !== id);
+		writeDatabase(db);
+	}
+}
+
+// CRUD operations for Categories
+export function getCategories() {
+	const db = readDatabase();
+	// Initialize categories array if it doesn't exist
+	if (!db.categories) {
+		db.categories = [];
+		writeDatabase(db);
+	}
+	// Also extract unique categories from existing podcasts
+	const podcastCategories = new Set();
+	if (db.podcasts) {
+		db.podcasts.forEach(podcast => {
+			if (podcast.categories && Array.isArray(podcast.categories)) {
+				podcast.categories.forEach(cat => {
+					if (cat && typeof cat === 'string') {
+						podcastCategories.add(cat.trim());
+					}
+				});
+			}
+		});
+	}
+	// Merge stored categories with podcast categories
+	const allCategories = new Set([...db.categories, ...podcastCategories]);
+	return Array.from(allCategories).sort();
+}
+
+export function saveCategory(category) {
+	const db = readDatabase();
+	if (!db.categories) {
+		db.categories = [];
+	}
+	// Add category if it doesn't exist
+	if (!db.categories.includes(category)) {
+		db.categories.push(category);
+		writeDatabase(db);
+	}
+	return category;
+}
+
+export function deleteCategory(category) {
+	const db = readDatabase();
+	if (db.categories) {
+		db.categories = db.categories.filter((c) => c !== category);
 		writeDatabase(db);
 	}
 }
