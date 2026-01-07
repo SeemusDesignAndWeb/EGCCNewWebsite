@@ -249,7 +249,7 @@ export function personalizeContent(content, contact, upcomingRotas = [], upcomin
 			// HTML version
 			personalized = personalized.replace(/\{\{rotaLinks\}\}/g, () => {
 				if (upcomingRotas.length === 0) {
-					return '<p style="color: #666; font-size: 14px;">You have no upcoming rotas in the next 7 days.</p>';
+					return '<p style="color: #333; font-size: 14px;">You have no upcoming rotas in the next 7 days.</p>';
 				}
 
 				let html = '';
@@ -266,8 +266,8 @@ export function personalizeContent(content, contact, upcomingRotas = [], upcomin
 					});
 
 					html += '<div style="margin-bottom: 15px; border-bottom: 1px solid #e5e7eb;">';
-					html += `<p style="margin: 0 0 5px 0; color: #333; font-size: 16px; font-weight: 600;">${eventData.title} - ${rota.role}</p>`;
-					html += `<p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">${dateStr}</p>`;
+					html += `<p style="margin: 0 0 5px 0; color: #333; font-size: 16px; font-weight: 600;">${eventData.title} - <strong>${rota.role}</strong></p>`;
+					html += `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px;">${dateStr}</p>`;
 					if (signupUrl) {
 						html += `<a href="${signupUrl}" style="display: inline-block; background: #4A97D2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 14px; margin-top: 5px;">View Rota Details</a>`;
 					}
@@ -311,7 +311,7 @@ export function personalizeContent(content, contact, upcomingRotas = [], upcomin
 		// HTML version
 		personalized = personalized.replace(/\{\{upcomingEvents\}\}/g, () => {
 			if (upcomingEvents.length === 0) {
-				return '<p style="color: #666; font-size: 14px;">There are no upcoming events in the next 7 days.</p>';
+				return '<p style="color: #333; font-size: 14px;">There are no upcoming events in the next 7 days.</p>';
 			}
 
 			let html = '';
@@ -327,8 +327,8 @@ export function personalizeContent(content, contact, upcomingRotas = [], upcomin
 					minute: '2-digit'
 				});
 
-				// Format: Title - Date/Time - Location (all on same line, same size)
-				let line = eventData.title;
+				// Format: Title (bold) - Date/Time - Location (all on same line, same size)
+				let line = `<strong>${eventData.title}</strong>`;
 				line += ` - ${dateStr}`;
 				if (occurrence.location) {
 					line += ` - ${occurrence.location}`;
