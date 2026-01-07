@@ -85,53 +85,6 @@
 							</p>
 						{/if}
 					</div>
-
-					<!-- Occurrence Details (if one is selected) -->
-					{#if selectedOccurrence}
-						{@const effectiveMaxSpaces = selectedOccurrence.maxSpaces !== null && selectedOccurrence.maxSpaces !== undefined 
-							? selectedOccurrence.maxSpaces 
-							: (event?.maxSpaces || null)}
-						<div class="bg-white shadow rounded-lg p-6">
-							<h2 class="text-2xl font-bold text-gray-900 mb-4">Selected Date</h2>
-							<div class="space-y-3">
-								<div>
-									<h3 class="text-lg font-semibold text-gray-900">
-										{formatDate(selectedOccurrence.startsAt)}
-									</h3>
-									<p class="text-sm text-gray-600">
-										{formatTime(selectedOccurrence.startsAt)} - {formatTime(selectedOccurrence.endsAt)}
-									</p>
-									{#if selectedOccurrence.location}
-										<p class="text-sm text-gray-600 mt-1">
-											📍 {selectedOccurrence.location}
-										</p>
-									{/if}
-								</div>
-								{#if effectiveMaxSpaces}
-									<div class="pt-3 border-t border-gray-200">
-										<div class="text-sm">
-											<span class="font-medium text-gray-900">
-												{selectedOccurrence.totalAttendees || 0}
-											</span>
-											<span class="text-gray-500"> / {effectiveMaxSpaces} spots</span>
-										</div>
-										<div class="text-xs text-gray-500 mt-1">
-											{#if selectedOccurrence.isFull}
-												<span class="text-red-600 font-medium">Full</span>
-											{:else if selectedOccurrence.availableSpots !== null}
-												<span class="text-green-600">{selectedOccurrence.availableSpots} available</span>
-											{/if}
-										</div>
-									</div>
-								{/if}
-								{#if selectedOccurrence.information}
-									<div class="pt-3 border-t border-gray-200 text-sm text-gray-700 prose prose-sm max-w-none">
-										{@html selectedOccurrence.information}
-									</div>
-								{/if}
-							</div>
-						</div>
-					{/if}
 				</div>
 
 				<!-- Right Side: Signup Form -->
