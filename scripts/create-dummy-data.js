@@ -3,7 +3,19 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import { ulid } from 'ulid';
 
-const DATA_DIR = join(process.cwd(), 'data');
+// Get data directory from environment variable or default to ./data
+// In production (Railway), set CRM_DATA_DIR=/data to use the persistent volume
+function getDataDir() {
+	const envDataDir = process.env.CRM_DATA_DIR;
+	if (envDataDir) {
+		// Use environment variable if set (absolute path for production)
+		return envDataDir;
+	}
+	// Default to ./data for local development
+	return join(process.cwd(), 'data');
+}
+
+const DATA_DIR = getDataDir();
 
 // Ensure data directory exists
 async function ensureDir() {

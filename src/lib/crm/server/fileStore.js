@@ -1,20 +1,41 @@
 import { writeFile, readFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { generateId } from './ids.js';
+import { env } from '$env/dynamic/private';
 
-const DATA_DIR = join(process.cwd(), 'data');
+// Get data directory from environment variable or default to ./data
+// In production (Railway), set CRM_DATA_DIR=/data to use the persistent volume
+function getDataDir() {
+	const envDataDir = env.CRM_DATA_DIR;
+	if (envDataDir) {
+		// Use environment variable if set (absolute path for production)
+		return envDataDir;
+	}
+	// Default to ./data for local development
+	return join(process.cwd(), 'data');
+}
+
+const DATA_DIR = getDataDir();
 const UPLOADS_DIR = join(DATA_DIR, 'uploads');
 
 // Ensure data directory exists (lazy initialization)
 let dirsInitialized = false;
 async function ensureDirs() {
 	if (dirsInitialized) return;
-	if (!existsSync(DATA_DIR)) {
-		await mkdir(DATA_DIR, { recursive: true });
-	}
-	if (!existsSync(UPLOADS_DIR)) {
-		await mkdir(UPLOADS_DIR, { recursive: true });
+	try {
+		if (!existsSync(DATA_DIR)) {
+			await mkdir(DATA_DIR, { recursive: true });
+		}
+		if (!existsSync(UPLOADS_DIR)) {
+			await mkdir(UPLOADS_DIR, { recursive: true });
+		}
+	} catch (error) {
+		console.error('[fileStore] Error creating data directories:', error);
+		console.error('[fileStore] DATA_DIR:', DATA_DIR);
+		// In production, if volume is not mounted, this will fail
+		// We'll let the error propagate so it's clear what's wrong
+		throw error;
 	}
 	dirsInitialized = true;
 }
