@@ -3,6 +3,71 @@ import { getEventTokenByToken, getOccurrenceTokenByToken } from '$lib/crm/server
 import { findById, findMany, readCollection } from '$lib/crm/server/fileStore.js';
 import { getCsrfToken } from '$lib/crm/server/auth.js';
 
+// Simple in-memory rate limiting (in production, use Redis or similar)
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+const MAX_SIGNUPS_PER_WINDOW = 5;
+
+// Get client IP address
+function getClientIp(request) {
+	try {
+		// Try to get from headers (for reverse proxy setups)
+		const forwarded = request.headers.get('x-forwarded-for');
+		if (forwarded) {
+			return forwarded.split(',')[0].trim();
+		}
+		const realIp = request.headers.get('x-real-ip');
+		if (realIp) {
+			return realIp;
+		}
+	} catch (e) {
+		// Fallback
+	}
+	return 'unknown';
+}
+
+// Rate limiting check
+function checkRateLimit(ip) {
+	const now = Date.now();
+	const userSignups = rateLimitMap.get(ip) || [];
+	
+	// Remove old signups outside the window
+	const recentSignups = userSignups.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
+	
+	if (recentSignups.length >= MAX_SIGNUPS_PER_WINDOW) {
+		return false; // Rate limit exceeded
+	}
+	
+	// Add current signup
+	recentSignups.push(now);
+	rateLimitMap.set(ip, recentSignups);
+	
+	// Clean up old entries periodically
+	if (rateLimitMap.size > 1000) {
+		for (const [key, signups] of rateLimitMap.entries()) {
+			const filtered = signups.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
+			if (filtered.length === 0) {
+				rateLimitMap.delete(key);
+			} else {
+				rateLimitMap.set(key, filtered);
+			}
+		}
+	}
+	
+	return true; // Within rate limit
+}
+
+// Sanitize name field (remove HTML tags and dangerous characters)
+function sanitizeName(name) {
+	if (!name || typeof name !== 'string') return '';
+	// Remove HTML tags
+	let sanitized = name.replace(/<[^>]*>/g, '');
+	// Remove control characters except newlines and tabs
+	sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+	// Trim and limit length
+	return sanitized.trim().substring(0, 200);
+}
+
 export async function load({ params, cookies }) {
 	// Try to get occurrence token first, then event token
 	let token = await getOccurrenceTokenByToken(params.token);
@@ -63,6 +128,13 @@ export const actions = {
 		const { isValidEmail } = await import('$lib/crm/server/validators.js');
 		const { sendEventSignupConfirmation } = await import('$lib/crm/server/email.js');
 		
+		// Rate limiting check
+		const clientIp = getClientIp(request);
+		if (!checkRateLimit(clientIp)) {
+			console.warn('Rate limit exceeded for IP:', clientIp);
+			return fail(429, { error: 'Too many signup attempts. Please try again later.' });
+		}
+		
 		const data = await request.formData();
 		const csrfToken = data.get('_csrf');
 
@@ -87,9 +159,9 @@ export const actions = {
 			}
 
 			const occurrenceId = data.get('occurrenceId');
-			const name = data.get('name') || '';
+			let name = data.get('name') || '';
 			const email = data.get('email') || '';
-			const guestCount = parseInt(data.get('guestCount') || '0', 10);
+			let guestCount = parseInt(data.get('guestCount') || '0', 10);
 
 			if (!occurrenceId) {
 				return fail(400, { error: 'Please select a date' });
@@ -99,8 +171,22 @@ export const actions = {
 				return fail(400, { error: 'Name and email are required' });
 			}
 
+			// Sanitize and validate name
+			name = sanitizeName(name);
+			if (!name || name.length === 0) {
+				return fail(400, { error: 'Name is required and cannot be empty' });
+			}
+			if (name.length > 200) {
+				return fail(400, { error: 'Name must be less than 200 characters' });
+			}
+
 			if (!isValidEmail(email)) {
 				return fail(400, { error: 'Invalid email address' });
+			}
+
+			// Validate guest count bounds
+			if (isNaN(guestCount) || guestCount < 0 || guestCount > 50) {
+				return fail(400, { error: 'Number of guests must be between 0 and 50' });
 			}
 
 			// Check if occurrence exists and is not full
@@ -137,13 +223,13 @@ export const actions = {
 				}
 			}
 
-			// Create signup
+			// Create signup (name already sanitized)
 			const signup = await create('event_signups', {
 				eventId: event.id,
 				occurrenceId: occurrenceId,
-				name: name.trim(),
+				name: name, // Already sanitized
 				email: email.trim().toLowerCase(),
-				guestCount: guestCount || 0
+				guestCount: guestCount
 			});
 
 			// Send confirmation email
