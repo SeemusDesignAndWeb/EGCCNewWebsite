@@ -265,9 +265,14 @@ export function personalizeContent(content, contact, upcomingRotas = [], upcomin
 						minute: '2-digit'
 					});
 
-					html += '<div style="margin-bottom: 15px; border-bottom: 1px solid #e5e7eb;">';
-					html += `<p style="margin: 0 0 5px 0; color: #333; font-size: 16px; font-weight: 600;">${eventData.title} - <strong>${rota.role}</strong></p>`;
-					html += `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px;">${dateStr}</p>`;
+					// Format: Event Title (bold) - Role (bold) - Date/Time - Location (all on same line, same size)
+					let line = `<strong>${eventData.title}</strong> - <strong>${rota.role}</strong> - ${dateStr}`;
+					if (occurrence.location) {
+						line += ` - ${occurrence.location}`;
+					}
+					
+					html += '<div style="margin-bottom: 15px;">';
+					html += `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px;">${line}</p>`;
 					if (signupUrl) {
 						html += `<a href="${signupUrl}" style="display: inline-block; background: #4A97D2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 14px; margin-top: 5px;">View Rota Details</a>`;
 					}
