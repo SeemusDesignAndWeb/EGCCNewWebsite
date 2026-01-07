@@ -30,10 +30,12 @@
 	let selectedEvent = null;
 	let selectedEventOccurrences = [];
 	let selectedEventLink = '';
+	let selectedOccurrence = null;
 
 	function openEventModal(occ) {
 		if (!occ.event) return;
 		selectedEvent = occ.event;
+		selectedOccurrence = occ;
 		// Get all occurrences for this event
 		selectedEventOccurrences = occurrences.filter(o => o.eventId === occ.eventId)
 			.sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
@@ -46,6 +48,7 @@
 		selectedEvent = null;
 		selectedEventOccurrences = [];
 		selectedEventLink = '';
+		selectedOccurrence = null;
 	}
 
 	// Get current month/year from URL params or use current date
@@ -559,6 +562,7 @@
 	event={selectedEvent} 
 	occurrences={selectedEventOccurrences}
 	eventLink={selectedEventLink}
+	selectedOccurrence={selectedOccurrence}
 	bind:open={modalOpen}
 />
 
