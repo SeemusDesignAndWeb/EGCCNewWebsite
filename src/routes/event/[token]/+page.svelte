@@ -135,9 +135,25 @@
 				</div>
 
 				<!-- Right Side: Signup Form -->
-				{#if event.enableSignup}
+				<div class="space-y-6">
+					<!-- View Calendar Button -->
 					<div class="bg-white shadow rounded-lg p-6">
-						<h2 class="text-2xl font-bold text-gray-900 mb-4">Sign Up for This Event</h2>
+						<div class="flex justify-end">
+							<a
+								href="/events/calendar"
+								class="inline-flex items-center gap-2 px-3 py-2 bg-brand-blue text-white rounded-md hover:bg-opacity-90 font-medium text-sm transition-all shadow-sm"
+							>
+								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+								</svg>
+								View Calendar
+							</a>
+						</div>
+					</div>
+
+					{#if event.enableSignup}
+						<div class="bg-white shadow rounded-lg p-6">
+							<h2 class="text-2xl font-bold text-gray-900 mb-4">Sign Up for This Event</h2>
 						<form 
 							method="POST" 
 							action="?/signup" 
@@ -223,8 +239,9 @@
 							Sign Up
 						</button>
 					</form>
-					</div>
-				{/if}
+						</div>
+					{/if}
+				</div>
 			</div>
 		{/if}
 	</div>
