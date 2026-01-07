@@ -121,10 +121,18 @@
 			<div class="flex gap-2">
 				{#if editing}
 					<button
+						type="submit"
+						form="contact-edit-form"
+						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+					>
+						Save Changes
+					</button>
+					<button
+						type="button"
 						on:click={() => editing = false}
 						class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
 					>
-						Cancel
+						Back
 					</button>
 				{:else}
 					<button
@@ -144,7 +152,7 @@
 		</div>
 
 		{#if editing}
-			<form method="POST" action="?/update" use:enhance>
+			<form id="contact-edit-form" method="POST" action="?/update" use:enhance>
 				<input type="hidden" name="_csrf" value={csrfToken} />
 				<input type="hidden" name="servingAreas" value={JSON.stringify(formData.servingAreas)} />
 				<input type="hidden" name="giftings" value={JSON.stringify(formData.giftings)} />
@@ -287,18 +295,6 @@
 							
 							<FormField label="Notes" name="notes" type="textarea" rows="4" bind:value={formData.notes} />
 						</div>
-					</div>
-				</div>
-
-				<!-- Action Buttons -->
-				<div class="bg-white border-2 border-gray-200 rounded-lg shadow-md p-6 mt-6">
-					<div class="flex gap-3 justify-end">
-						<button type="submit" class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 font-medium inline-flex items-center gap-2">
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-							</svg>
-							Save Changes
-						</button>
 					</div>
 				</div>
 			</form>
