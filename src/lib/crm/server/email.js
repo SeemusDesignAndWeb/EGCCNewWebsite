@@ -298,17 +298,12 @@ export function personalizeContent(content, contact, upcomingRotas = [], upcomin
 					minute: '2-digit'
 				});
 
-				text += `\n- ${eventData.title}\n  ${dateStr}`;
+				// Format: Title - Date/Time - Location (all on same line)
+				let line = `${eventData.title} - ${dateStr}`;
 				if (occurrence.location) {
-					text += `\n  Location: ${occurrence.location}`;
+					line += ` - ${occurrence.location}`;
 				}
-				if (eventData.description) {
-					const desc = eventData.description.replace(/<[^>]*>/g, '').substring(0, 100);
-					if (desc) {
-						text += `\n  ${desc}${desc.length >= 100 ? '...' : ''}`;
-					}
-				}
-				text += '\n';
+				text += `\n- ${line}`;
 			}
 			return text;
 		});
@@ -332,18 +327,15 @@ export function personalizeContent(content, contact, upcomingRotas = [], upcomin
 					minute: '2-digit'
 				});
 
-				html += '<div style="margin-bottom: 15px;">';
-				html += `<p style="margin: 0 0 5px 0; color: #333; font-size: 16px; font-weight: 600;">${eventData.title}</p>`;
-				html += `<p style="margin: 0 0 5px 0; color: #666; font-size: 14px;">${dateStr}</p>`;
+				// Format: Title - Date/Time - Location (all on same line, same size)
+				let line = eventData.title;
+				line += ` - ${dateStr}`;
 				if (occurrence.location) {
-					html += `<p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">📍 ${occurrence.location}</p>`;
+					line += ` - ${occurrence.location}`;
 				}
-				if (eventData.description) {
-					const desc = eventData.description.replace(/<[^>]*>/g, '').substring(0, 150);
-					if (desc) {
-						html += `<p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">${desc}${desc.length >= 150 ? '...' : ''}</p>`;
-					}
-				}
+				
+				html += '<div style="margin-bottom: 15px;">';
+				html += `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px;">${line}</p>`;
 				html += '</div>';
 			}
 			
