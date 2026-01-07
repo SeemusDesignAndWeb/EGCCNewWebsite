@@ -129,6 +129,7 @@ export const actions = {
 				description: sanitized,
 				location: data.get('location'),
 				visibility: data.get('visibility') === 'public' ? 'public' : 'private',
+				enableSignup: data.get('enableSignup') === 'on' || data.get('enableSignup') === 'true',
 				maxSpaces: data.get('maxSpaces') ? parseInt(data.get('maxSpaces')) : null
 			};
 

@@ -1,6 +1,7 @@
 import { readCollection } from '$lib/crm/server/fileStore.js';
 import { ensureEventToken } from '$lib/crm/server/tokens.js';
 import { env } from '$env/dynamic/private';
+import { getPage } from '$lib/server/database.js';
 
 export async function load({ url }) {
 	const events = await readCollection('events');
@@ -33,10 +34,24 @@ export async function load({ url }) {
 		}
 	}
 
+	// Load page data for the banner
+	const page = getPage('events-calendar');
+	const fallbackPage = {
+		id: 'events-calendar',
+		title: 'Event Calendar',
+		heroTitle: 'Event Calendar',
+		heroSubtitle: 'View our upcoming public events and activities',
+		heroImage: '',
+		heroOverlay: 40,
+		heroButtons: [],
+		metaDescription: 'View our upcoming public events and activities'
+	};
+
 	return {
 		events: publicEvents,
 		occurrences: enrichedOccurrences,
-		eventLinks: Object.fromEntries(eventLinks)
+		eventLinks: Object.fromEntries(eventLinks),
+		page: page || fallbackPage
 	};
 }
 

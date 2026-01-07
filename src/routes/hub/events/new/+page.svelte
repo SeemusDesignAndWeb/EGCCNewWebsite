@@ -29,6 +29,7 @@
 		title: '',
 		location: '',
 		visibility: 'private',
+		enableSignup: false,
 		repeatType: 'none',
 		repeatInterval: 1,
 		repeatEndType: 'never',
@@ -71,6 +72,18 @@
 							<option value="public">Public</option>
 						</select>
 					</div>
+				</div>
+				<div class="flex items-center">
+					<input
+						type="checkbox"
+						id="enableSignup"
+						name="enableSignup"
+						bind:checked={formData.enableSignup}
+						class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+					/>
+					<label for="enableSignup" class="ml-2 block text-sm text-gray-700">
+						Add Signup to this event
+					</label>
 				</div>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Description</label>

@@ -65,6 +65,7 @@
 		title: event?.title || '',
 		location: event?.location || '',
 		visibility: event?.visibility || 'private',
+		enableSignup: event?.enableSignup || false,
 		maxSpaces: ''
 	};
 
@@ -73,6 +74,7 @@
 			title: event.title || '',
 			location: event.location || '',
 			visibility: event.visibility || 'private',
+			enableSignup: event.enableSignup || false,
 			maxSpaces: event.maxSpaces ? event.maxSpaces.toString() : ''
 		};
 		description = event.description || '';
@@ -312,6 +314,18 @@
 							help="Default maximum number of people who can sign up for occurrences of this event (can be overridden per occurrence, leave empty for unlimited)"
 						/>
 					</div>
+					<div class="mt-4 flex items-center">
+						<input
+							type="checkbox"
+							id="enableSignup"
+							name="enableSignup"
+							bind:checked={formData.enableSignup}
+							class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+						/>
+						<label for="enableSignup" class="ml-2 block text-sm text-gray-700">
+							Add Signup to this event
+						</label>
+					</div>
 				</div>
 				
 				<!-- Description Panel -->
@@ -341,6 +355,10 @@
 						<div>
 							<dt class="text-sm font-medium text-gray-500">Visibility</dt>
 							<dd class="mt-1 text-sm text-gray-900 capitalize">{event.visibility || 'private'}</dd>
+						</div>
+						<div>
+							<dt class="text-sm font-medium text-gray-500">Signup Enabled</dt>
+							<dd class="mt-1 text-sm text-gray-900">{event.enableSignup ? 'Yes' : 'No'}</dd>
 						</div>
 						{#if event.maxSpaces !== null && event.maxSpaces !== undefined}
 							<div>

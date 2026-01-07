@@ -116,6 +116,7 @@ export function validateEvent(data) {
 		description: validateString(data.description || '', 'Description', 10000),
 		location: validateString(data.location || '', 'Location', 500),
 		visibility: data.visibility === 'public' ? 'public' : 'private',
+		enableSignup: data.enableSignup === true || data.enableSignup === 'true' || data.enableSignup === 'on',
 		maxSpaces: typeof data.maxSpaces === 'number' && data.maxSpaces > 0 ? data.maxSpaces : (data.maxSpaces ? parseInt(data.maxSpaces) || null : null),
 		// Recurrence fields
 		repeatType: ['none', 'daily', 'weekly', 'monthly', 'yearly'].includes(data.repeatType) ? data.repeatType : 'none',

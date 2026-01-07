@@ -135,13 +135,14 @@
 				</div>
 
 				<!-- Right Side: Signup Form -->
-				<div class="bg-white shadow rounded-lg p-6">
-					<h2 class="text-2xl font-bold text-gray-900 mb-4">Sign Up for This Event</h2>
-					<form 
-						method="POST" 
-						action="?/signup" 
-						use:enhance={handleEnhance}
-					>
+				{#if event.enableSignup}
+					<div class="bg-white shadow rounded-lg p-6">
+						<h2 class="text-2xl font-bold text-gray-900 mb-4">Sign Up for This Event</h2>
+						<form 
+							method="POST" 
+							action="?/signup" 
+							use:enhance={handleEnhance}
+						>
 						<input type="hidden" name="_csrf" value={csrfToken} />
 						
 						<div class="mb-4">
@@ -222,7 +223,8 @@
 							Sign Up
 						</button>
 					</form>
-				</div>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>

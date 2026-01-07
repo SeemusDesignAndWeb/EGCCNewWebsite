@@ -77,6 +77,28 @@
 				loadedPages = [...loadedPages, defaultEventsPage];
 			}
 			
+			// Ensure events-calendar page exists in the list
+			const eventsCalendarPageExists = loadedPages.some(p => p.id === 'events-calendar');
+			if (!eventsCalendarPageExists) {
+				// Create default events-calendar page
+				const defaultEventsCalendarPage = {
+					id: 'events-calendar',
+					title: 'Event Calendar',
+					heroTitle: 'Event Calendar',
+					heroSubtitle: 'View our upcoming public events and activities',
+					heroButtons: [],
+					heroImage: '',
+					heroOverlay: 40,
+					sections: [],
+					metaDescription: 'View our upcoming public events and activities',
+					showInNavigation: false,
+					navigationLabel: ''
+				};
+				
+				// Add to the list
+				loadedPages = [...loadedPages, defaultEventsCalendarPage];
+			}
+			
 			// Sort pages by navigationOrder, then by title
 			pages = loadedPages.sort((a, b) => {
 				const orderA = a.navigationOrder !== undefined ? a.navigationOrder : 999;
@@ -471,7 +493,7 @@
 						+ Add Button
 					</button>
 				</div>
-				{#if editing.id !== 'events'}
+				{#if editing.id !== 'events' && editing.id !== 'events-calendar'}
 					<div>
 						<label class="block text-sm font-medium mb-1">Hero Messages (Rotating Subtitles)</label>
 						<p class="text-xs text-gray-500 mb-2">

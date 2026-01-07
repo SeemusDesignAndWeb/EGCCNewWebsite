@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import Footer from '$lib/components/Footer.svelte';
 	import { getContext } from 'svelte';
+	import EventModal from './EventModal.svelte';
 
 	export let data;
 
@@ -23,6 +24,29 @@
 	$: events = data?.events || [];
 	$: occurrences = data?.occurrences || [];
 	$: eventLinks = data?.eventLinks || {};
+
+	// Modal state
+	let modalOpen = false;
+	let selectedEvent = null;
+	let selectedEventOccurrences = [];
+	let selectedEventLink = '';
+
+	function openEventModal(occ) {
+		if (!occ.event) return;
+		selectedEvent = occ.event;
+		// Get all occurrences for this event
+		selectedEventOccurrences = occurrences.filter(o => o.eventId === occ.eventId)
+			.sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
+		selectedEventLink = eventLinks[occ.eventId] || '';
+		modalOpen = true;
+	}
+
+	function closeModal() {
+		modalOpen = false;
+		selectedEvent = null;
+		selectedEventOccurrences = [];
+		selectedEventLink = '';
+	}
 
 	// Get current month/year from URL params or use current date
 	let viewMode = $page.url.searchParams.get('view') || 'month';
@@ -162,23 +186,77 @@
 </script>
 
 <svelte:head>
-	<title>Event Calendar - Eltham Green Community Church</title>
-	<meta name="description" content="View our upcoming public events and activities" />
+	<title>{data.page?.title || 'Event Calendar'} - Eltham Green Community Church</title>
+	<meta name="description" content={data.page?.metaDescription || 'View our upcoming public events and activities'} />
 </svelte:head>
 
 <!-- Hero Section -->
-<section class="bg-gradient-to-r from-primary to-brand-blue py-20" class:mt-[5px]={bannerVisible}>
-	<div class="container mx-auto px-4">
-		<div class="max-w-2xl">
-			<h1 class="text-white text-4xl md:text-5xl font-bold mb-4">
-				Event Calendar
-			</h1>
-			<p class="text-white text-lg md:text-xl">
-				View our upcoming public events and activities
-			</p>
+{#if data.page?.heroImage}
+	<section
+		id="hero"
+		class="relative h-[35vh] overflow-hidden transition-all duration-300"
+		class:mt-[5px]={bannerVisible}
+		style="background-image: url('{data.page.heroImage}'); background-size: cover; background-position: center;"
+	>
+		<div
+			class="absolute inset-0 bg-black"
+			style="opacity: {(data.page.heroOverlay || 40) / 100};"
+		></div>
+		<div class="relative h-full flex items-end pb-12">
+			<div class="container mx-auto px-4">
+				<div class="max-w-2xl">
+					{#if data.page.heroTitle}
+						<h1 class="text-white text-4xl md:text-5xl font-bold mb-3 animate-fade-in">
+							{@html data.page.heroTitle}
+						</h1>
+					{/if}
+					{#if data.page.heroSubtitle}
+						<p class="text-white text-lg md:text-xl mb-4 animate-fade-in">{data.page.heroSubtitle}</p>
+					{/if}
+					{#if data.page.heroButtons && data.page.heroButtons.length > 0}
+						<div class="flex flex-wrap gap-3 mt-4">
+							{#each data.page.heroButtons as button}
+								<a
+									href={button.link}
+									target={button.target || '_self'}
+									class="px-6 py-3 {button.style === 'secondary' ? 'bg-white text-brand-blue hover:bg-gray-100' : 'bg-brand-blue text-white hover:bg-opacity-90'} rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg text-sm"
+								>
+									{button.text}
+								</a>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</div>
 		</div>
-	</div>
-</section>
+	</section>
+{:else}
+	<section class="bg-gradient-to-r from-primary to-brand-blue py-20" class:mt-[5px]={bannerVisible}>
+		<div class="container mx-auto px-4">
+			<div class="max-w-2xl">
+				<h1 class="text-white text-4xl md:text-5xl font-bold mb-4">
+					{data.page?.heroTitle || 'Event Calendar'}
+				</h1>
+				{#if data.page?.heroSubtitle}
+					<p class="text-white text-lg md:text-xl mb-6">{data.page.heroSubtitle}</p>
+				{/if}
+				{#if data.page?.heroButtons && data.page.heroButtons.length > 0}
+					<div class="flex flex-wrap gap-3 mt-4">
+						{#each data.page.heroButtons as button}
+							<a
+								href={button.link}
+								target={button.target || '_self'}
+								class="px-6 py-3 {button.style === 'secondary' ? 'bg-white text-brand-blue hover:bg-gray-100' : 'bg-brand-blue text-white hover:bg-opacity-90'} rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg text-sm"
+							>
+								{button.text}
+							</a>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		</div>
+	</section>
+{/if}
 
 <!-- Calendar Section -->
 <section class="py-20 bg-white">
@@ -316,12 +394,16 @@
 							<div class="text-xs text-gray-500 mb-2">
 								{monthOccurrences.length} {monthOccurrences.length === 1 ? 'event' : 'events'}
 							</div>
-							<div class="space-y-1">
-								{#each monthOccurrences.slice(0, 3) as occ}
-									<div class="text-xs px-2 py-1 rounded bg-purple-100 text-purple-800 truncate" title="{occ.event?.title || 'Event'}">
-										{new Date(occ.startsAt).getDate()} - {occ.event?.title || 'Event'}
-									</div>
-								{/each}
+								<div class="space-y-1">
+									{#each monthOccurrences.slice(0, 3) as occ}
+										<button
+											on:click={() => openEventModal(occ)}
+											class="w-full text-left text-xs px-2 py-1 rounded bg-purple-100 text-purple-800 hover:bg-purple-200 truncate transition-colors"
+											title="{occ.event?.title || 'Event'}"
+										>
+											{new Date(occ.startsAt).getDate()} - {occ.event?.title || 'Event'}
+										</button>
+									{/each}
 								{#if monthOccurrences.length > 3}
 									<div class="text-xs text-gray-500 px-2">
 										+{monthOccurrences.length - 3} more
@@ -355,23 +437,13 @@
 								</div>
 								<div class="space-y-1">
 									{#each dayOccurrences.slice(0, 3) as occ}
-										{@const eventLink = eventLinks[occ.eventId]}
-										{#if eventLink}
-											<a
-												href={eventLink}
-												class="block text-xs px-2 py-1 rounded bg-purple-100 text-purple-800 hover:bg-purple-200 truncate"
-												title="{occ.event?.title || 'Event'}"
-											>
-												{new Date(occ.startsAt).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} {occ.event?.title || 'Event'}
-											</a>
-										{:else}
-											<div
-												class="block text-xs px-2 py-1 rounded bg-purple-100 text-purple-800 truncate"
-												title="{occ.event?.title || 'Event'}"
-											>
-												{new Date(occ.startsAt).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} {occ.event?.title || 'Event'}
-											</div>
-										{/if}
+										<button
+											on:click={() => openEventModal(occ)}
+											class="w-full text-left text-xs px-2 py-1 rounded bg-purple-100 text-purple-800 hover:bg-purple-200 truncate transition-colors"
+											title="{occ.event?.title || 'Event'}"
+										>
+											{new Date(occ.startsAt).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} {occ.event?.title || 'Event'}
+										</button>
 									{/each}
 									{#if dayOccurrences.length > 3}
 										<div class="text-xs text-gray-500 px-2">
@@ -418,31 +490,17 @@
 								{@const endTime = new Date(occ.endsAt)}
 								{@const startHour = startTime.getHours() + startTime.getMinutes() / 60}
 								{@const duration = (endTime - startTime) / (1000 * 60 * 60)}
-								{@const eventLink = eventLinks[occ.eventId]}
-								{#if eventLink}
-									<a
-										href={eventLink}
-										class="absolute left-1 right-1 rounded px-2 py-1 bg-purple-100 text-purple-800 hover:bg-purple-200 text-xs block"
-										style="top: {startHour * 24}px; height: {Math.max(duration * 24, 20)}px;"
-										title="{occ.event?.title || 'Event'}"
-									>
-										<div class="font-medium truncate">{occ.event?.title || 'Event'}</div>
-										<div class="text-xs opacity-75">
-											{startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - {endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-										</div>
-									</a>
-								{:else}
-									<div
-										class="absolute left-1 right-1 rounded px-2 py-1 bg-purple-100 text-purple-800 text-xs block"
-										style="top: {startHour * 24}px; height: {Math.max(duration * 24, 20)}px;"
-										title="{occ.event?.title || 'Event'}"
-									>
-										<div class="font-medium truncate">{occ.event?.title || 'Event'}</div>
-										<div class="text-xs opacity-75">
-											{startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - {endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-										</div>
+								<button
+									on:click={() => openEventModal(occ)}
+									class="absolute left-1 right-1 rounded px-2 py-1 bg-purple-100 text-purple-800 hover:bg-purple-200 text-xs block cursor-pointer transition-colors"
+									style="top: {startHour * 24}px; height: {Math.max(duration * 24, 20)}px;"
+									title="{occ.event?.title || 'Event'}"
+								>
+									<div class="font-medium truncate">{occ.event?.title || 'Event'}</div>
+									<div class="text-xs opacity-75">
+										{startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - {endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
 									</div>
-								{/if}
+								</button>
 							{/each}
 						</div>
 					{/each}
@@ -462,59 +520,32 @@
 						{#each agendaOccurrences as occ}
 							{@const occDate = new Date(occ.startsAt)}
 							{@const occEnd = new Date(occ.endsAt)}
-							{@const eventLink = eventLinks[occ.eventId]}
-							{#if eventLink}
-								<a
-									href={eventLink}
-									class="block p-4 hover:bg-gray-50 transition-colors"
-								>
-									<div class="flex items-start gap-4">
-										<div class="flex-shrink-0 w-20 text-center">
-											<div class="text-sm font-semibold text-gray-900">
-												{occDate.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
-											</div>
-											<div class="text-xs text-gray-500">
-												{occDate.toLocaleDateString('en-GB', { weekday: 'short' })}
-											</div>
+							<button
+								on:click={() => openEventModal(occ)}
+								class="w-full text-left block p-4 hover:bg-gray-50 transition-colors"
+							>
+								<div class="flex items-start gap-4">
+									<div class="flex-shrink-0 w-20 text-center">
+										<div class="text-sm font-semibold text-gray-900">
+											{occDate.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
 										</div>
-										<div class="flex-1 min-w-0">
-											<div class="font-medium text-gray-900 mb-1">
-												{occ.event?.title || 'Event'}
-											</div>
-											<div class="text-sm text-gray-600">
-												{occDate.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} - {occEnd.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}
-												{#if occ.location}
-													<span class="ml-2">• {occ.location}</span>
-												{/if}
-											</div>
+										<div class="text-xs text-gray-500">
+											{occDate.toLocaleDateString('en-GB', { weekday: 'short' })}
 										</div>
 									</div>
-								</a>
-							{:else}
-								<div class="block p-4">
-									<div class="flex items-start gap-4">
-										<div class="flex-shrink-0 w-20 text-center">
-											<div class="text-sm font-semibold text-gray-900">
-												{occDate.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
-											</div>
-											<div class="text-xs text-gray-500">
-												{occDate.toLocaleDateString('en-GB', { weekday: 'short' })}
-											</div>
+									<div class="flex-1 min-w-0">
+										<div class="font-medium text-gray-900 mb-1">
+											{occ.event?.title || 'Event'}
 										</div>
-										<div class="flex-1 min-w-0">
-											<div class="font-medium text-gray-900 mb-1">
-												{occ.event?.title || 'Event'}
-											</div>
-											<div class="text-sm text-gray-600">
-												{occDate.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} - {occEnd.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}
-												{#if occ.location}
-													<span class="ml-2">• {occ.location}</span>
-												{/if}
-											</div>
+										<div class="text-sm text-gray-600">
+											{occDate.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} - {occEnd.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}
+											{#if occ.location}
+												<span class="ml-2">• {occ.location}</span>
+											{/if}
 										</div>
 									</div>
 								</div>
-							{/if}
+							</button>
 						{/each}
 					</div>
 				{/if}
@@ -522,6 +553,14 @@
 		{/if}
 	</div>
 </section>
+
+<!-- Event Details Modal -->
+<EventModal 
+	event={selectedEvent} 
+	occurrences={selectedEventOccurrences}
+	eventLink={selectedEventLink}
+	bind:open={modalOpen}
+/>
 
 <Footer />
 
