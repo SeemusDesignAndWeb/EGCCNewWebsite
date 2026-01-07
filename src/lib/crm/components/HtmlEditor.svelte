@@ -146,10 +146,11 @@
 
 			// Track if we're handling a paste operation
 			let isPasting = false;
+			let isUpdatingFromExternal = false;
 			
 			quill.on('text-change', (delta, oldDelta, source) => {
 				// Only update if change came from user input, not programmatic changes
-				if (source === 'user') {
+				if (source === 'user' && !isUpdatingFromExternal) {
 					// Check if this is a paste operation (large delta change)
 					const isLargeChange = delta.ops && delta.ops.some(op => 
 						op.insert && typeof op.insert === 'string' && op.insert.length > 10
@@ -175,8 +176,8 @@
 						}, 0);
 					}
 					
-					// Preserve cursor position (but not during paste, let paste handler manage it)
-					const selection = quill.getSelection();
+					// Don't get selection here - Quill automatically maintains cursor position during typing
+					// Manually restoring it causes the cursor to jump
 					
 					const html = quill.root.innerHTML;
 					// Sanitize on input (DOMPurify works in browser)
@@ -187,25 +188,24 @@
 							'*': ['ql-align-center', 'ql-align-right', 'ql-align-justify', 'ql-align-left']
 						}
 					});
-					value = sanitized;
 					
-					// Update hidden input directly to ensure form submission works
-					const hiddenInput = quillContainer.parentElement?.querySelector(`input[name="${name}"]`);
-					if (hiddenInput) {
-						hiddenInput.value = sanitized;
+					// Only update if content actually changed (avoid unnecessary updates)
+					if (sanitized !== value) {
+						value = sanitized;
+						
+						// Update hidden input directly to ensure form submission works
+						const hiddenInput = quillContainer.parentElement?.querySelector(`input[name="${name}"]`);
+						if (hiddenInput) {
+							hiddenInput.value = sanitized;
+						}
+						
+						// DO NOT manually restore cursor position - Quill handles it automatically
+						// Manually restoring causes the cursor to jump to the top
+						
+						// Dispatch custom event
+						const event = new CustomEvent('change', { detail: { value: sanitized } });
+						quillContainer.dispatchEvent(event);
 					}
-					
-					// Restore cursor position if it was set (but not during paste)
-					if (selection && !isPasting) {
-						// Use setTimeout to ensure DOM is updated
-						setTimeout(() => {
-							quill.setSelection(selection);
-						}, 0);
-					}
-					
-					// Dispatch custom event
-					const event = new CustomEvent('change', { detail: { value: sanitized } });
-					quillContainer.dispatchEvent(event);
 				}
 			});
 			
@@ -244,11 +244,15 @@
 		}
 	});
 
-	$: if (value !== initialValue && quill && loaded) {
+	$: if (value !== initialValue && quill && loaded && !isUpdatingFromExternal) {
 		const current = quill.root.innerHTML;
 		if (current !== value && value) {
+			// Mark that we're updating from external source to prevent text-change handler from interfering
+			isUpdatingFromExternal = true;
+			
 			// Preserve cursor position when updating content
 			const selection = quill.getSelection();
+			const cursorIndex = selection ? selection.index : 0;
 			
 			// Use Quill's clipboard to properly parse HTML
 			try {
@@ -260,11 +264,19 @@
 				quill.root.innerHTML = value;
 			}
 			
-			// Restore cursor position if it was set
+			// Restore cursor position if it was set, but only if it's still valid
 			if (selection) {
-				setTimeout(() => {
-					quill.setSelection(selection);
-				}, 0);
+				requestAnimationFrame(() => {
+					if (quill) {
+						const length = quill.getLength();
+						// Only restore if cursor position is still within bounds
+						const newIndex = Math.min(cursorIndex, length - 1);
+						quill.setSelection(newIndex, 'api');
+					}
+					isUpdatingFromExternal = false;
+				});
+			} else {
+				isUpdatingFromExternal = false;
 			}
 		}
 		initialValue = value;
