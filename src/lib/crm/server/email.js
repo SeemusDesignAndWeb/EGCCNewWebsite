@@ -15,6 +15,30 @@ function getBaseUrl(event) {
 }
 
 /**
+ * Clean up empty paragraphs and other Quill artifacts from HTML
+ * @param {string} html - HTML content
+ * @returns {string} Cleaned HTML
+ */
+function cleanNewsletterHtml(html) {
+	if (!html) return '';
+	
+	// Remove empty paragraphs: <p><br></p>, <p></p>, <p> </p>, <p>&nbsp;</p>
+	let cleaned = html
+		.replace(/<p[^>]*>\s*<br\s*\/?>\s*<\/p>/gi, '') // <p><br></p> or <p><br/></p>
+		.replace(/<p[^>]*>\s*<\/p>/gi, '') // <p></p>
+		.replace(/<p[^>]*>\s*&nbsp;\s*<\/p>/gi, '') // <p>&nbsp;</p>
+		.replace(/<p[^>]*>\s+<\/p>/gi, ''); // <p> </p> (whitespace only)
+	
+	// Remove multiple consecutive empty paragraphs (in case some weren't caught)
+	cleaned = cleaned.replace(/(<p[^>]*>\s*<br\s*\/?>\s*<\/p>\s*){2,}/gi, '');
+	
+	// Clean up any remaining empty divs that might have been created
+	cleaned = cleaned.replace(/<div[^>]*>\s*<\/div>/gi, '');
+	
+	return cleaned;
+}
+
+/**
  * Get unsubscribe link for a contact
  * @param {string} contactIdOrEmail - Contact ID or email
  * @param {object} event - SvelteKit event object (for base URL)
@@ -359,6 +383,10 @@ export async function sendNewsletterEmail({ newsletterId, to, name, contact }, e
 	const contactData = contact || { email: to, firstName: name, lastName: '', phone: '' };
 	const personalizedSubject = personalizeContent(newsletter.subject, contactData, upcomingRotas, upcomingEvents, event, false);
 	let personalizedHtml = personalizeContent(newsletter.htmlContent, contactData, upcomingRotas, upcomingEvents, event, false);
+	
+	// Clean up empty paragraphs and Quill artifacts before sending
+	personalizedHtml = cleanNewsletterHtml(personalizedHtml);
+	
 	let personalizedText = personalizeContent(
 		newsletter.textContent || newsletter.htmlContent.replace(/<[^>]*>/g, ''), 
 		contactData, 
