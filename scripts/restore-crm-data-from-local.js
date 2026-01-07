@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * Script to upload CRM data files to Railway via API endpoint
- * This uses the /api/init-crm-data endpoint to upload files
+ * Script to restore CRM data files from local backup to Railway via API
+ * This uploads your local data files to restore production
  * 
  * Usage:
- *   node scripts/upload-crm-data-via-api.js
+ *   node scripts/restore-crm-data-from-local.js
  * 
  * Requires:
- *   - ADMIN_PASSWORD environment variable or in .env
- *   - Production URL (defaults to https://new.egcc.co.uk)
+ *   - ADMIN_PASSWORD in .env
+ *   - Local data files in ./data directory
  */
 
 import { readFileSync, existsSync } from 'fs';
@@ -27,7 +27,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 const LOCAL_DATA_DIR = join(__dirname, '../data');
 
-// CRM data files to upload
+// CRM data files to restore
 const CRM_DATA_FILES = [
 	'admins',
 	'contacts',
@@ -46,9 +46,9 @@ const CRM_DATA_FILES = [
 	'audit_logs'
 ];
 
-async function uploadCrmDataViaApi() {
+async function restoreCrmDataFromLocal() {
 	try {
-		console.log('🔄 Uploading CRM data files to Railway via API...\n');
+		console.log('🔄 Restoring CRM data from local files to Railway...\n');
 
 		if (!ADMIN_PASSWORD) {
 			console.error('❌ ADMIN_PASSWORD not found!');
@@ -63,9 +63,7 @@ async function uploadCrmDataViaApi() {
 		}
 
 		// Read all data files
-		// Note: This will only work if files don't exist (safety check)
-		// To overwrite existing files, use restore-crm-data-from-local.js instead
-		const dataPayload = {};
+		const dataPayload = { force: true }; // Force overwrite to restore
 		let foundCount = 0;
 
 		for (const fileKey of CRM_DATA_FILES) {
@@ -90,13 +88,15 @@ async function uploadCrmDataViaApi() {
 		}
 
 		if (foundCount === 0) {
-			console.error('\n❌ No data files found to upload!');
+			console.error('\n❌ No data files found to restore!');
 			process.exit(1);
 		}
 
-		console.log(`\n📤 Uploading ${foundCount} files to ${PROD_URL}/api/init-crm-data...`);
+		console.log(`\n⚠️  WARNING: This will OVERWRITE existing data on Railway!`);
+		console.log(`📤 Uploading ${foundCount} files to ${PROD_URL}/api/init-crm-data...`);
+		console.log('   (This may take a moment...)\n');
 
-		// Upload via API
+		// Upload via API with force flag
 		const response = await fetch(`${PROD_URL}/api/init-crm-data`, {
 			method: 'POST',
 			headers: {
@@ -112,11 +112,16 @@ async function uploadCrmDataViaApi() {
 			console.error('\n❌ Upload failed:');
 			console.error('   Status:', response.status);
 			console.error('   Error:', result.error || result.message);
+			if (result.existingFiles) {
+				console.error('   Existing files:', result.existingFiles.join(', '));
+				console.error('   Add "force": true to overwrite');
+			}
 			process.exit(1);
 		}
 
-		console.log('\n✅ Upload successful!');
+		console.log('\n✅ Restore successful!');
 		console.log('   Written:', result.results?.written?.length || 0, 'files');
+		console.log('   Overwritten:', result.results?.overwritten?.length || 0, 'files');
 		console.log('   Skipped:', result.results?.skipped?.length || 0, 'files');
 		if (result.results?.errors?.length > 0) {
 			console.log('   Errors:', result.results.errors.length);
@@ -124,11 +129,11 @@ async function uploadCrmDataViaApi() {
 				console.log(`      - ${err.file}: ${err.error}`);
 			});
 		}
-		console.log('\n✅ CRM data successfully uploaded to Railway!');
-		console.log('   Your production application should now be able to read the CRM data.\n');
+		console.log('\n✅ CRM data successfully restored to Railway!');
+		console.log('   Your production application should now have the restored data.\n');
 
 	} catch (error) {
-		console.error('\n❌ Error uploading CRM data:', error.message);
+		console.error('\n❌ Error restoring CRM data:', error.message);
 		if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
 			console.error('   Could not connect to production server.');
 			console.error(`   Check that ${PROD_URL} is accessible.\n`);
@@ -137,6 +142,6 @@ async function uploadCrmDataViaApi() {
 	}
 }
 
-// Run the upload
-uploadCrmDataViaApi();
+// Run the restore
+restoreCrmDataFromLocal();
 

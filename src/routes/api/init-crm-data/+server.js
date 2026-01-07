@@ -42,10 +42,33 @@ export async function POST({ request }) {
 			'event_tokens', 'occurrence_tokens', 'rota_tokens', 'sessions', 'audit_logs'
 		];
 
+		// Check if force flag is set
+		const force = body.force === true || body.force === 'true';
+		
+		// Check if any files already exist (unless force is true)
+		if (!force) {
+			const existingFiles = [];
+			for (const fileKey of crmFiles) {
+				const filePath = join(DATA_DIR, `${fileKey}.ndjson`);
+				if (existsSync(filePath)) {
+					existingFiles.push(fileKey);
+				}
+			}
+			
+			if (existingFiles.length > 0) {
+				return json({ 
+					error: 'Files already exist. Use force=true to overwrite.',
+					existingFiles,
+					message: 'To prevent accidental data loss, this endpoint will not overwrite existing files. Add "force": true to the request body to overwrite.'
+				}, { status: 409 });
+			}
+		}
+
 		const results = {
 			written: [],
 			skipped: [],
-			errors: []
+			errors: [],
+			overwritten: []
 		};
 
 		// Write each file
@@ -65,8 +88,14 @@ export async function POST({ request }) {
 				}
 
 				const filePath = join(DATA_DIR, `${fileKey}.ndjson`);
+				const fileExists = existsSync(filePath);
 				writeFileSync(filePath, fileContent, 'utf-8');
-				results.written.push(fileKey);
+				
+				if (fileExists) {
+					results.overwritten.push(fileKey);
+				} else {
+					results.written.push(fileKey);
+				}
 			} catch (error) {
 				results.errors.push({ file: fileKey, error: error.message });
 			}
