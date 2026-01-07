@@ -87,16 +87,95 @@
 				quill.root.setAttribute('dir', 'ltr');
 			}
 
+			// Handle paste events to ensure LTR direction
+			// Override clipboard matcher to strip RTL direction from pasted content
+			quill.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
+				// Remove RTL direction attributes from pasted elements
+				if (node.hasAttribute && node.hasAttribute('dir')) {
+					const dir = node.getAttribute('dir');
+					if (dir === 'rtl') {
+						node.removeAttribute('dir');
+						node.setAttribute('dir', 'ltr');
+					}
+				}
+				// Also check style attribute for direction
+				if (node.style && node.style.direction === 'rtl') {
+					node.style.direction = 'ltr';
+				}
+				return delta;
+			});
+
+			// Handle paste event to fix direction after paste
+			quill.root.addEventListener('paste', (e) => {
+				// Get current selection before paste
+				const selection = quill.getSelection();
+				const cursorIndex = selection ? selection.index : 0;
+				
+				// Let Quill handle the paste first, then fix direction
+				setTimeout(() => {
+					if (quill && quill.root) {
+						// Ensure root has LTR
+						quill.root.setAttribute('dir', 'ltr');
+						
+						// Find and fix all elements with RTL direction
+						const allElements = quill.root.querySelectorAll('*');
+						allElements.forEach(el => {
+							if (el.hasAttribute('dir') && el.getAttribute('dir') === 'rtl') {
+								el.setAttribute('dir', 'ltr');
+							}
+							if (el.style && el.style.direction === 'rtl') {
+								el.style.direction = 'ltr';
+							}
+						});
+						
+						// Restore cursor position after paste (at end of pasted content)
+						if (selection) {
+							const newLength = quill.getLength();
+							const pastedLength = newLength - (quill.getText(0, cursorIndex).length);
+							quill.setSelection(cursorIndex + pastedLength, 'api');
+						}
+					}
+				}, 10);
+			});
+
 			if (initialValue) {
 				// Use Quill's clipboard to properly parse HTML
 				const delta = quill.clipboard.convert({ html: initialValue });
 				quill.setContents(delta);
 			}
 
+			// Track if we're handling a paste operation
+			let isPasting = false;
+			
 			quill.on('text-change', (delta, oldDelta, source) => {
 				// Only update if change came from user input, not programmatic changes
 				if (source === 'user') {
-					// Preserve cursor position
+					// Check if this is a paste operation (large delta change)
+					const isLargeChange = delta.ops && delta.ops.some(op => 
+						op.insert && typeof op.insert === 'string' && op.insert.length > 10
+					);
+					
+					if (isLargeChange) {
+						isPasting = true;
+						// Fix direction after paste
+						setTimeout(() => {
+							if (quill && quill.root) {
+								quill.root.setAttribute('dir', 'ltr');
+								const allElements = quill.root.querySelectorAll('*');
+								allElements.forEach(el => {
+									if (el.hasAttribute('dir') && el.getAttribute('dir') === 'rtl') {
+										el.setAttribute('dir', 'ltr');
+									}
+									if (el.style && el.style.direction === 'rtl') {
+										el.style.direction = 'ltr';
+									}
+								});
+							}
+							isPasting = false;
+						}, 0);
+					}
+					
+					// Preserve cursor position (but not during paste, let paste handler manage it)
 					const selection = quill.getSelection();
 					
 					const html = quill.root.innerHTML;
@@ -116,8 +195,8 @@
 						hiddenInput.value = sanitized;
 					}
 					
-					// Restore cursor position if it was set
-					if (selection) {
+					// Restore cursor position if it was set (but not during paste)
+					if (selection && !isPasting) {
 						// Use setTimeout to ensure DOM is updated
 						setTimeout(() => {
 							quill.setSelection(selection);
