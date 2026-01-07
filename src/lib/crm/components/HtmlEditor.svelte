@@ -17,6 +17,7 @@
 	let images = [];
 	let loadingImages = false;
 	let imageSearchTerm = '';
+	let isUpdatingFromExternal = false; // Track if we're updating from external source (reactive statement)
 
 	const placeholders = [
 		{ value: '{{firstName}}', label: 'First Name' },
@@ -146,7 +147,6 @@
 
 			// Track if we're handling a paste operation
 			let isPasting = false;
-			let isUpdatingFromExternal = false;
 			
 			quill.on('text-change', (delta, oldDelta, source) => {
 				// Only update if change came from user input, not programmatic changes
