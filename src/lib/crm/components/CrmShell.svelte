@@ -7,6 +7,8 @@
 	export let admin = null;
 	
 	$: isAuthPage = $page.url.pathname.startsWith('/hub/auth/');
+	
+	let mobileMenuOpen = false;
 </script>
 
 <div class="min-h-screen bg-gray-50">
@@ -41,11 +43,49 @@
 						{#if admin}
 							<a href="/hub/profile" class="text-sm text-white hidden sm:block hover:underline">{admin.name || admin.email}</a>
 						{/if}
-						<a href="/hub/auth/logout" class="px-4 py-2 bg-white text-blue-500 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium">
+						<a href="/hub/auth/logout" class="hidden md:block px-4 py-2 bg-white text-blue-500 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium">
 							Logout
 						</a>
+						<!-- Mobile menu button -->
+						<button
+							on:click={() => mobileMenuOpen = !mobileMenuOpen}
+							class="md:hidden p-2 text-white hover:bg-blue-600 rounded-lg"
+							aria-label="Toggle menu"
+						>
+							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d={mobileMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'}
+								></path>
+							</svg>
+						</button>
 					</div>
 				</div>
+				
+				<!-- Mobile menu -->
+				{#if mobileMenuOpen}
+					<div class="md:hidden pb-4 border-t border-blue-400 mt-4 pt-4">
+						<nav class="flex flex-col space-y-2">
+							<a href="/hub" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {($page.url.pathname === '/hub' || $page.url.pathname === '/hub/') ? 'bg-blue-600' : ''}">Dashboard</a>
+							<a href="/hub/contacts" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/contacts') ? 'bg-blue-600' : ''}">Contacts</a>
+							<a href="/hub/lists" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/lists') ? 'bg-blue-600' : ''}">Lists</a>
+							<a href="/hub/newsletters" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/newsletters') ? 'bg-blue-600' : ''}">Newsletters</a>
+							<a href="/hub/events/calendar" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/events') ? 'bg-blue-600' : ''}">Events</a>
+							<a href="/hub/rotas" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/rotas') ? 'bg-blue-600' : ''}">Rotas</a>
+							<a href="/hub/forms" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/forms') ? 'bg-blue-600' : ''}">Forms</a>
+							<a href="/hub/users" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/users') ? 'bg-blue-600' : ''}">Users</a>
+							<a href="/hub/help" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/help') ? 'bg-blue-600' : ''}">Help</a>
+							{#if admin}
+								<a href="/hub/profile" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600">Profile</a>
+							{/if}
+							<a href="/hub/auth/logout" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 border-t border-blue-400 pt-2 mt-2">
+								Logout
+							</a>
+						</nav>
+					</div>
+				{/if}
 			</div>
 		</header>
 	{/if}
