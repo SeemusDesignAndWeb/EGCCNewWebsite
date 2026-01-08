@@ -1,7 +1,7 @@
 # CRM Security Audit Report
 
-**Date:** 2025-01-05  
-**Last Updated:** 2025-01-05  
+**Date:** 2025-01-27  
+**Last Updated:** 2025-01-27  
 **Scope:** CRM Module (`/hub` routes and `/signup/rota` routes)
 
 ## Executive Summary
@@ -102,6 +102,24 @@ All critical, high-priority, medium-priority, and most low-priority security iss
 
 *Note: All other low-priority security recommendations have been implemented.*
 
+### 17. HTML Content Rendering in Help Page
+**Status:** ✅ **ACCEPTABLE RISK**  
+**Details:** The help page uses `{@html}` to render HTML documentation files.  
+**Risk Assessment:**
+- **Risk Level:** LOW
+- **Reasoning:** 
+  - HTML files are static files served from `/static/docs/` directory
+  - Files are controlled by the application maintainers, not user input
+  - No user-controllable content is rendered
+  - Files are not dynamically generated from user input
+- **Mitigation:** 
+  - HTML files are version-controlled and reviewed
+  - Static file serving prevents injection attacks
+  - Content is extracted using DOMParser before rendering
+- **Recommendation:** Continue current approach. If HTML files are ever generated from user input, implement DOMPurify sanitization before rendering.
+
+**Note:** The innerHTML usage in event pages (lines 212, 220) is safe as it only contains hardcoded SVG markup for UI icons.
+
 ---
 
 ## Implementation Priority
@@ -142,9 +160,39 @@ Ensure these are set in production:
 
 ---
 
+## Recent Security Review (January 2025)
+
+### New Features Reviewed:
+1. **HTML User Guide Display** - Help page now displays HTML version of user guide
+   - ✅ Static file serving (no user input)
+   - ✅ Content extraction via DOMParser
+   - ✅ No dynamic content generation
+   - **Status:** Secure implementation
+
+2. **Rota Owner Search** - Search functionality added to rota owner field
+   - ✅ Server-side validation maintained
+   - ✅ Input sanitization in place
+   - **Status:** No security concerns
+
+3. **Rota Email Notifications** - Enhanced with assignee details
+   - ✅ Email content properly escaped
+   - ✅ No user-controlled content in email templates
+   - **Status:** Secure implementation
+
+### Code Review Findings:
+- ✅ All `{@html}` usage reviewed:
+  - Help page: Static HTML files (low risk, acceptable)
+  - Event descriptions: Sanitized via DOMPurify on save
+  - Newsletter content: Sanitized via DOMPurify on save
+  - Page content: Admin-controlled, sanitized on save
+- ✅ No new XSS vectors introduced
+- ✅ Input validation remains comprehensive
+- ✅ File upload security maintained
+- ✅ Authentication mechanisms unchanged
+
 ## Conclusion
 
-The CRM module has a solid security foundation with proper password hashing, CSRF protection, and session management. All critical, high-priority, medium-priority, and most low-priority security issues have been addressed, significantly improving the security posture, particularly around authentication security, input validation, operational security, auditability, and account protection. The only remaining recommendation is optional 2FA implementation for enhanced security.
+The CRM module has a solid security foundation with proper password hashing, CSRF protection, and session management. All critical, high-priority, medium-priority, and most low-priority security issues have been addressed, significantly improving the security posture, particularly around authentication security, input validation, operational security, auditability, and account protection. Recent feature additions have been implemented securely with no new vulnerabilities introduced.
 
-**Overall Security Rating:** 🟢 **Excellent** (all critical, high-priority, medium-priority, and most low-priority issues fixed, 2FA optional enhancement available)
+**Overall Security Rating:** 🟢 **Excellent** (all critical, high-priority, medium-priority, and most low-priority issues fixed, 2FA optional enhancement available, recent features reviewed and secure)
 
