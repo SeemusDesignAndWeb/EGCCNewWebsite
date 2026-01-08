@@ -117,7 +117,7 @@ export function validateEvent(data) {
 		title: validateString(data.title, 'Title', 200),
 		description: validateString(data.description || '', 'Description', 10000),
 		location: validateString(data.location || '', 'Location', 500),
-		visibility: data.visibility === 'public' ? 'public' : 'private',
+		visibility: ['public', 'private', 'internal'].includes(data.visibility) ? data.visibility : 'private',
 		enableSignup: data.enableSignup === true || data.enableSignup === 'true' || data.enableSignup === 'on',
 		maxSpaces: typeof data.maxSpaces === 'number' && data.maxSpaces > 0 ? data.maxSpaces : (data.maxSpaces ? parseInt(data.maxSpaces) || null : null),
 		// Recurrence fields
@@ -205,7 +205,8 @@ export function validateRota(data) {
 		role: validateString(data.role, 'Role', 100),
 		capacity: typeof data.capacity === 'number' && data.capacity > 0 ? data.capacity : 1,
 		assignees: validatedAssignees,
-		notes: validateString(data.notes || '', 'Notes', 10000)
+		notes: validateString(data.notes || '', 'Notes', 10000),
+		ownerId: data.ownerId ? validateString(data.ownerId, 'Owner ID', 50) : null
 	};
 }
 

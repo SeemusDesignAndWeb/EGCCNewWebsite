@@ -28,7 +28,7 @@ export const actions = {
 				title: data.get('title'),
 				description: sanitized,
 				location: data.get('location'),
-				visibility: data.get('visibility') === 'public' ? 'public' : 'private',
+				visibility: ['public', 'private', 'internal'].includes(data.get('visibility')) ? data.get('visibility') : 'private',
 				enableSignup: data.get('enableSignup') === 'on' || data.get('enableSignup') === 'true',
 				// Recurrence fields
 				repeatType: data.get('repeatType') || 'none',

@@ -310,6 +310,7 @@
 							<label class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
 							<select name="visibility" bind:value={formData.visibility} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
 								<option value="private">Private</option>
+								<option value="internal">Internal</option>
 								<option value="public">Public</option>
 							</select>
 						</div>

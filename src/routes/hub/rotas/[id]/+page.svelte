@@ -16,6 +16,7 @@
 	$: eventOccurrences = $page.data?.eventOccurrences || [];
 	$: assigneesByOccurrence = $page.data?.assigneesByOccurrence || {};
 	$: availableContacts = $page.data?.availableContacts || [];
+	$: owner = $page.data?.owner || null;
 	$: signupLink = $page.data?.signupLink || '';
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
@@ -48,8 +49,16 @@
 					invalidateAll();
 				}, 500);
 			}
-		} else {
-		notifications.success('Rota updated successfully');
+		} else if (formResult?.type !== 'addAssignees' && formResult?.type !== 'removeAssignee') {
+			notifications.success('Rota updated successfully');
+			// Exit editing mode after successful save
+			editing = false;
+			// Invalidate to get fresh data, but preserve formData until data loads
+			if (browser) {
+				setTimeout(() => {
+					invalidateAll();
+				}, 100);
+			}
 		}
 	}
 	$: if (formResult?.error && browser) {
@@ -58,18 +67,60 @@
 
 	let editing = false;
 	let notes = rota?.notes || '';
+	let ownerSearchTerm = '';
+	let filteredOwnerContacts = [];
 	let formData = {
 		role: rota?.role || '',
-		capacity: rota?.capacity || 1
+		capacity: rota?.capacity || 1,
+		ownerId: rota?.ownerId || ''
 	};
 
-	$: if (rota) {
-		formData = {
-			role: rota.role || '',
-			capacity: rota.capacity || 1
-		};
-		notes = rota.notes || '';
+	// Only update formData when rota changes AND we're not editing
+	// This prevents the form from being cleared after a successful save
+	$: if (rota && !editing) {
+		// Only update if the values have actually changed to avoid unnecessary resets
+		if (formData.role !== rota.role || 
+		    formData.capacity !== rota.capacity || 
+		    formData.ownerId !== rota.ownerId ||
+		    notes !== rota.notes) {
+			formData = {
+				role: rota.role || '',
+				capacity: rota.capacity || 1,
+				ownerId: rota.ownerId || ''
+			};
+			notes = rota.notes || '';
+		}
 	}
+
+	$: filteredOwnerContacts = (() => {
+		if (!availableContacts || availableContacts.length === 0) {
+			return [];
+		}
+		
+		// Start with all contacts or filtered by search term
+		let filtered = ownerSearchTerm
+			? availableContacts.filter(c => 
+				(c.email || '').toLowerCase().includes(ownerSearchTerm.toLowerCase()) ||
+				(c.firstName || '').toLowerCase().includes(ownerSearchTerm.toLowerCase()) ||
+				(c.lastName || '').toLowerCase().includes(ownerSearchTerm.toLowerCase())
+			)
+			: [...availableContacts]; // Create a copy to avoid mutation issues
+		
+		// Always include the currently selected owner if they exist, even if they don't match the search
+		if (formData.ownerId) {
+			const selectedOwner = availableContacts.find(c => c.id === formData.ownerId);
+			if (selectedOwner) {
+				// Check if selected owner is already in the filtered list
+				const isInFiltered = filtered.some(c => c.id === selectedOwner.id);
+				if (!isInFiltered) {
+					// Add selected owner at the beginning
+					filtered = [selectedOwner, ...filtered];
+				}
+			}
+		}
+		
+		return filtered;
+	})();
 
 	async function handleDelete() {
 		const confirmed = await dialog.confirm('Are you sure you want to delete this rota?', 'Delete Rota');
@@ -310,10 +361,18 @@
 			<div class="flex gap-2">
 				{#if editing}
 					<button
+						type="submit"
+						form="rota-edit-form"
+						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+					>
+						Save Changes
+					</button>
+					<button
+						type="button"
 						on:click={() => editing = false}
 						class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
 					>
-						Cancel
+						Back
 					</button>
 				{:else}
 					<button
@@ -333,18 +392,62 @@
 		</div>
 
 		{#if editing}
-			<form method="POST" action="?/update" use:enhance>
+			<form id="rota-edit-form" method="POST" action="?/update" use:enhance>
 				<input type="hidden" name="_csrf" value={csrfToken} />
 				<input type="hidden" name="notes" value={notes} />
-				<FormField label="Role" name="role" bind:value={formData.role} required />
-				<FormField label="Capacity" name="capacity" type="number" bind:value={formData.capacity} required />
-				<div class="mb-4">
-					<label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-					<HtmlEditor bind:value={notes} name="notes" />
+				
+				<!-- Basic Information Panel -->
+				<div class="border border-gray-200 rounded-lg p-6 mb-6">
+					<h3 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<FormField label="Role" name="role" bind:value={formData.role} required />
+						<FormField label="Capacity" name="capacity" type="number" bind:value={formData.capacity} required />
+					</div>
 				</div>
-				<button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
-					Save Changes
-				</button>
+
+				<!-- Owner Panel -->
+				<div class="border border-gray-200 rounded-lg p-6 mb-6">
+					<h3 class="text-lg font-semibold text-gray-900 mb-4">Owner</h3>
+					<div class="space-y-4">
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-1">Search Owner (optional)</label>
+							<input
+								type="text"
+								bind:value={ownerSearchTerm}
+								placeholder="Search by name or email..."
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
+							/>
+						</div>
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-1">Select Owner</label>
+							<select 
+								name="ownerId" 
+								value={formData.ownerId || ''}
+								on:change={(e) => {
+									formData.ownerId = e.target.value || '';
+								}}
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
+							>
+								<option value="">No owner</option>
+								{#each filteredOwnerContacts as contact (contact.id)}
+									{@const contactId = String(contact.id || '')}
+									<option value={contactId} selected={formData.ownerId === contactId}>
+										{`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email} {contact.email ? `(${contact.email})` : ''}
+									</option>
+								{/each}
+							</select>
+							<p class="mt-1 text-xs text-gray-500">The owner will be notified when this rota is updated</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Notes Panel -->
+				<div class="border border-gray-200 rounded-lg p-6 mb-6">
+					<h3 class="text-lg font-semibold text-gray-900 mb-4">Notes</h3>
+					<div>
+						<HtmlEditor bind:value={notes} name="notes" />
+					</div>
+				</div>
 			</form>
 		{:else}
 			<dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -364,6 +467,16 @@
 					<dt class="text-sm font-medium text-gray-500">Total Assigned</dt>
 					<dd class="mt-1 text-sm text-gray-900">{Array.isArray(rota.assignees) ? rota.assignees.length : 0} across {Object.keys(assigneesByOccurrence).length} {Object.keys(assigneesByOccurrence).length === 1 ? 'occurrence' : 'occurrences'}</dd>
 				</div>
+				{#if owner}
+					<div>
+						<dt class="text-sm font-medium text-gray-500">Owner</dt>
+						<dd class="mt-1 text-sm text-gray-900">
+							<a href="/hub/contacts/{owner.id}" class="text-brand-green hover:text-primary-dark underline">
+								{`${owner.firstName || ''} ${owner.lastName || ''}`.trim() || owner.email}
+							</a>
+						</dd>
+					</div>
+				{/if}
 				{#if rota.notes}
 					<div class="sm:col-span-2 lg:col-span-4">
 						<dt class="text-sm font-medium text-gray-500">Notes</dt>

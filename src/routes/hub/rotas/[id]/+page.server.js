@@ -131,6 +131,12 @@ export async function load({ params, cookies, url }) {
 		// Continue without signup link if token generation fails
 	}
 
+	// Load owner contact if rota has an owner
+	let owner = null;
+	if (rota.ownerId) {
+		owner = await findById('contacts', rota.ownerId);
+	}
+
 	const csrfToken = getCsrfToken(cookies) || '';
 	return { 
 		rota: { ...rota, assignees: processedAssignees }, 
@@ -140,13 +146,14 @@ export async function load({ params, cookies, url }) {
 		eventOccurrences,
 		assigneesByOccurrence,
 		availableContacts, 
+		owner,
 		signupLink, 
 		csrfToken 
 	};
 }
 
 export const actions = {
-	update: async ({ request, params, cookies }) => {
+	update: async ({ request, params, cookies, url }) => {
 		const data = await request.formData();
 		const csrfToken = data.get('_csrf');
 
@@ -167,11 +174,35 @@ export const actions = {
 				role: data.get('role'),
 				capacity: parseInt(data.get('capacity') || '1', 10),
 				notes: sanitized,
-				assignees: rota.assignees || [] // Preserve existing assignees
+				assignees: rota.assignees || [], // Preserve existing assignees
+				ownerId: data.get('ownerId') || null
 			};
 
 			const validated = validateRota({ ...rotaData, eventId: rota.eventId });
+			const oldOwnerId = rota.ownerId;
 			await update('rotas', params.id, validated);
+
+			// Send notification to owner if rota was updated
+			if (validated.ownerId) {
+				try {
+					const { sendRotaUpdateNotification } = await import('$lib/crm/server/email.js');
+					const updatedRota = await findById('rotas', params.id);
+					const owner = await findById('contacts', validated.ownerId);
+					if (owner) {
+						await sendRotaUpdateNotification({
+							to: owner.email,
+							name: `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || owner.email
+							}, {
+								rota: updatedRota,
+								event,
+								occurrence
+							}, { url: new URL(url.toString(), 'http://localhost') });
+					}
+				} catch (error) {
+					console.error('Error sending rota update notification:', error);
+					// Don't fail the update if notification fails
+				}
+			}
 
 			return { success: true };
 		} catch (error) {
@@ -198,7 +229,7 @@ export const actions = {
 			}
 		},
 
-		addAssignees: async ({ request, params, cookies }) => {
+		addAssignees: async ({ request, params, cookies, url }) => {
 			const data = await request.formData();
 			const csrfToken = data.get('_csrf');
 
@@ -272,6 +303,29 @@ export const actions = {
 				const validated = validateRota(updatedRota);
 				await update('rotas', params.id, validated);
 
+				// Send notification to owner if rota has an owner
+				if (validated.ownerId) {
+					try {
+						const { sendRotaUpdateNotification } = await import('$lib/crm/server/email.js');
+						const event = await findById('events', rota.eventId);
+						const occurrence = targetOccurrenceId ? await findById('occurrences', targetOccurrenceId) : null;
+						const owner = await findById('contacts', validated.ownerId);
+						if (owner) {
+							await sendRotaUpdateNotification({
+								to: owner.email,
+								name: `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || owner.email
+							}, {
+								rota: validated,
+								event,
+								occurrence
+							}, { url: new URL(url.toString(), 'http://localhost') });
+						}
+					} catch (error) {
+						console.error('Error sending rota update notification:', error);
+						// Don't fail the update if notification fails
+					}
+				}
+
 				return { success: true, type: 'addAssignees' };
 			} catch (error) {
 				console.error('Error adding assignees:', error);
@@ -279,7 +333,7 @@ export const actions = {
 			}
 		},
 
-		removeAssignee: async ({ request, params, cookies }) => {
+		removeAssignee: async ({ request, params, cookies, url }) => {
 			console.log('[SERVER] removeAssignee action called');
 			const data = await request.formData();
 			const csrfToken = data.get('_csrf');
@@ -346,6 +400,29 @@ export const actions = {
 				};
 				const validated = validateRota(updatedRota);
 				await update('rotas', params.id, validated);
+
+				// Send notification to owner if rota has an owner
+				if (validated.ownerId) {
+					try {
+						const { sendRotaUpdateNotification } = await import('$lib/crm/server/email.js');
+						const event = await findById('events', rota.eventId);
+						const occurrence = rota.occurrenceId ? await findById('occurrences', rota.occurrenceId) : null;
+						const owner = await findById('contacts', validated.ownerId);
+						if (owner) {
+							await sendRotaUpdateNotification({
+								to: owner.email,
+								name: `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || owner.email
+							}, {
+								rota: validated,
+								event,
+								occurrence
+							}, { url: new URL(url.toString(), 'http://localhost') });
+						}
+					} catch (error) {
+						console.error('Error sending rota update notification:', error);
+						// Don't fail the update if notification fails
+					}
+				}
 
 				console.log('[SERVER] Rota updated successfully');
 				return { success: true, type: 'removeAssignee' };

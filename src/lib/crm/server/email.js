@@ -77,18 +77,18 @@ export async function getUpcomingEvents(event) {
 	const occurrences = await readCollection('occurrences');
 	const baseUrl = getBaseUrl(event);
 
-	// Filter to public events only
-	const publicEvents = events.filter(e => e.visibility === 'public');
-	const publicEventIds = new Set(publicEvents.map(e => e.id));
+	// Filter to public and internal events (internal events are for members/contacts only)
+	const memberEvents = events.filter(e => e.visibility === 'public' || e.visibility === 'internal');
+	const memberEventIds = new Set(memberEvents.map(e => e.id));
 
-	// Get upcoming occurrences for public events
+	// Get upcoming occurrences for public and internal events
 	const upcoming = [];
 	for (const occurrence of occurrences) {
-		if (!publicEventIds.has(occurrence.eventId)) continue;
+		if (!memberEventIds.has(occurrence.eventId)) continue;
 
 		const startDate = new Date(occurrence.startsAt);
 		if (startDate >= now && startDate <= sevenDaysFromNow) {
-			const eventData = publicEvents.find(e => e.id === occurrence.eventId);
+			const eventData = memberEvents.find(e => e.id === occurrence.eventId);
 			if (eventData) {
 				upcoming.push({
 					event: eventData,
@@ -484,10 +484,10 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 
 	// Build upcoming rotas section
 	let upcomingRotasHtml = '';
-	if (otherUpcomingRotas.length > 0) {
+		if (otherUpcomingRotas.length > 0) {
 		upcomingRotasHtml = `
-			<div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #2d7a32;">
-				<h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">Your Other Upcoming Rotas (Next 7 Days)</h3>
+			<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #2d7a32;">
+				<h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; font-weight: 600;">Your Other Upcoming Rotas (Next 7 Days)</h3>
 		`;
 		for (const item of otherUpcomingRotas) {
 			const dateStr = new Date(item.occurrence.startsAt).toLocaleDateString('en-GB', {
@@ -499,11 +499,11 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 				minute: '2-digit'
 			});
 			upcomingRotasHtml += `
-				<div style="border-bottom: 1px solid #e5e7eb; padding: 10px 0; margin-bottom: 10px;">
-					<p style="margin: 0 0 5px 0; color: #333; font-size: 15px; font-weight: 600;">${item.event.title} - ${item.rota.role}</p>
-					<p style="margin: 0 0 5px 0; color: #666; font-size: 14px;">${dateStr}</p>
-					${item.occurrence.location ? `<p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">📍 ${item.occurrence.location}</p>` : ''}
-					${item.signupUrl ? `<a href="${item.signupUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 6px 15px; text-decoration: none; border-radius: 5px; font-size: 13px;">View Rota</a>` : ''}
+				<div style="border-bottom: 1px solid #e5e7eb; padding: 8px 0; margin-bottom: 8px;">
+					<p style="margin: 0 0 4px 0; color: #333; font-size: 14px; font-weight: 600;">${item.event.title} - ${item.rota.role}</p>
+					<p style="margin: 0 0 4px 0; color: #666; font-size: 13px;">${dateStr}</p>
+					${item.occurrence.location ? `<p style="margin: 0 0 8px 0; color: #666; font-size: 13px;">📍 ${item.occurrence.location}</p>` : ''}
+					${item.signupUrl ? `<a href="${item.signupUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;">View Rota</a>` : ''}
 				</div>
 			`;
 		}
@@ -518,36 +518,36 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<title>Volunteer Rota Invitation</title>
 		</head>
-		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-			<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-				<h1 style="color: white; margin: 0; font-size: 24px;">Volunteer Rota Invitation</h1>
+		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
+			<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 20px 15px; border-radius: 8px 8px 0 0; text-align: center;">
+				<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Volunteer Rota Invitation</h1>
 			</div>
 			
-			<div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e5e7eb; border-top: none;">
-				<p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">Hello ${name},</p>
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Hello ${name},</p>
 				
-				<p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">
 					You've been invited to volunteer for <strong>${eventTitle}</strong> as a <strong>${role}</strong>.
 				</p>
 
 				${occurrence ? `
-				<div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-					<p style="margin: 0; color: #666; font-size: 14px;"><strong>Date & Time:</strong></p>
-					<p style="margin: 5px 0 0 0; color: #333; font-size: 16px;">${occurrenceDate}</p>
+				<div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+					<p style="margin: 0 0 5px 0; color: #666; font-size: 13px;"><strong>Date & Time:</strong></p>
+					<p style="margin: 0; color: #333; font-size: 14px;">${occurrenceDate}</p>
 					${occurrence.location ? `
-					<p style="margin: 15px 0 0 0; color: #666; font-size: 14px;"><strong>Location:</strong></p>
-					<p style="margin: 5px 0 0 0; color: #333; font-size: 16px;">${occurrence.location}</p>
+					<p style="margin: 10px 0 5px 0; color: #666; font-size: 13px;"><strong>Location:</strong></p>
+					<p style="margin: 0; color: #333; font-size: 14px;">${occurrence.location}</p>
 					` : ''}
 				</div>
 				` : ''}
 
-				<div style="text-align: center; margin: 30px 0;">
-					<a href="${signupUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 16px;">Accept Invitation</a>
+				<div style="text-align: center; margin: 20px 0;">
+					<a href="${signupUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px;">Accept Invitation</a>
 				</div>
 
-				<p style="color: #666; font-size: 14px; margin: 20px 0 0 0;">
+				<p style="color: #666; font-size: 13px; margin: 15px 0 0 0;">
 					Or copy and paste this link into your browser:<br>
-					<a href="${signupUrl}" style="color: #2d7a32; word-break: break-all;">${signupUrl}</a>
+					<a href="${signupUrl}" style="color: #2d7a32; word-break: break-all; font-size: 12px;">${signupUrl}</a>
 				</p>
 
 				${upcomingRotasHtml}
@@ -662,64 +662,64 @@ export async function sendAdminWelcomeEmail({ to, name, email, verificationToken
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<title>Welcome to TheHUB - Eltham Green Community Church</title>
 		</head>
-		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
-			<div style="background: linear-gradient(135deg, #4A97D2 0%, #3a7ab8 100%); padding: 40px 30px; border-radius: 10px 10px 0 0; text-align: center;">
-				<h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Welcome to TheHUB</h1>
-				<p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Eltham Green Community Church</p>
+		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
+			<div style="background: linear-gradient(135deg, #4A97D2 0%, #3a7ab8 100%); padding: 20px 15px; border-radius: 8px 8px 0 0; text-align: center;">
+				<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Welcome to TheHUB</h1>
+				<p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">Eltham Green Community Church</p>
 			</div>
 			
-			<div style="background: #ffffff; padding: 40px 30px; border-radius: 0 0 10px 10px; border: 1px solid #e5e7eb; border-top: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-				<p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">Hello ${name},</p>
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Hello ${name},</p>
 				
-				<p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">Your admin account has been created for TheHUB, the church management system for Eltham Green Community Church.</p>
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Your admin account has been created for TheHUB, the church management system for Eltham Green Community Church.</p>
 
-				<div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #4BB170;">
-					<h2 style="color: #4BB170; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Your Login Credentials</h2>
+				<div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #4BB170;">
+					<h2 style="color: #4BB170; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Your Login Credentials</h2>
 					<table style="width: 100%; border-collapse: collapse;">
 						<tr>
-							<td style="padding: 8px 0; font-weight: 600; color: #666; width: 100px;">Email:</td>
-							<td style="padding: 8px 0; color: #333;">${email}</td>
+							<td style="padding: 6px 0; font-weight: 600; color: #666; width: 80px; font-size: 13px;">Email:</td>
+							<td style="padding: 6px 0; color: #333; font-size: 13px;">${email}</td>
 						</tr>
 						${password ? `
 						<tr>
-							<td style="padding: 8px 0; font-weight: 600; color: #666;">Password:</td>
-							<td style="padding: 8px 0; color: #333; font-family: monospace;">${password}</td>
+							<td style="padding: 6px 0; font-weight: 600; color: #666; font-size: 13px;">Password:</td>
+							<td style="padding: 6px 0; color: #333; font-family: monospace; font-size: 13px;">${password}</td>
 						</tr>
 						` : ''}
 					</table>
 					${password ? `
-					<p style="color: #A62524; font-size: 14px; margin: 15px 0 0 0; font-weight: 600;">⚠️ Please change your password after your first login for security.</p>
+					<p style="color: #A62524; font-size: 13px; margin: 12px 0 0 0; font-weight: 600;">⚠️ Please change your password after your first login for security.</p>
 					` : ''}
 				</div>
 
-				<div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #4A97D2;">
-					<h2 style="color: #4A97D2; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Verify Your Email Address</h2>
-					<p style="color: #333; font-size: 14px; margin: 0 0 20px 0;">Please verify your email address to complete your account setup. This link will expire in 7 days.</p>
-					<a href="${verificationLink}" style="display: inline-block; background: #4A97D2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: 600; margin: 10px 0;">Verify Email Address</a>
-					<p style="color: #666; font-size: 12px; margin: 15px 0 0 0;">Or copy and paste this link into your browser:</p>
-					<p style="color: #4A97D2; font-size: 12px; margin: 5px 0 0 0; word-break: break-all;">${verificationLink}</p>
+				<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #4A97D2;">
+					<h2 style="color: #4A97D2; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Verify Your Email Address</h2>
+					<p style="color: #333; font-size: 13px; margin: 0 0 15px 0;">Please verify your email address to complete your account setup. This link will expire in 7 days.</p>
+					<a href="${verificationLink}" style="display: inline-block; background: #4A97D2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: 600; margin: 8px 0;">Verify Email Address</a>
+					<p style="color: #666; font-size: 12px; margin: 12px 0 0 0;">Or copy and paste this link into your browser:</p>
+					<p style="color: #4A97D2; font-size: 11px; margin: 4px 0 0 0; word-break: break-all;">${verificationLink}</p>
 				</div>
 
-				<div style="background: white; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #e5e7eb;">
-					<h2 style="color: #333; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Getting Started</h2>
-					<p style="color: #333; font-size: 14px; margin: 0 0 15px 0;">Once your email is verified, you can access TheHUB at:</p>
-					<a href="${hubLoginLink}" style="display: inline-block; background: #4BB170; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: 600; margin: 10px 0;">Login to TheHUB</a>
-					<p style="color: #666; font-size: 12px; margin: 15px 0 0 0; word-break: break-all;">${hubLoginLink}</p>
+				<div style="background: white; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #e5e7eb;">
+					<h2 style="color: #333; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Getting Started</h2>
+					<p style="color: #333; font-size: 13px; margin: 0 0 12px 0;">Once your email is verified, you can access TheHUB at:</p>
+					<a href="${hubLoginLink}" style="display: inline-block; background: #4BB170; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: 600; margin: 8px 0;">Login to TheHUB</a>
+					<p style="color: #666; font-size: 12px; margin: 12px 0 0 0; word-break: break-all;">${hubLoginLink}</p>
 				</div>
 
-				<div style="background: #fffbf0; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #E6A324;">
-					<h2 style="color: #E6A324; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Security Reminders</h2>
-					<ul style="color: #333; font-size: 14px; margin: 0; padding-left: 20px;">
-						<li style="margin: 8px 0;">Keep your login credentials secure and never share them</li>
-						<li style="margin: 8px 0;">Use a strong, unique password</li>
-						<li style="margin: 8px 0;">Log out when you're finished using TheHUB</li>
-						<li style="margin: 8px 0;">Contact the system administrator if you notice any suspicious activity</li>
+				<div style="background: #fffbf0; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #E6A324;">
+					<h2 style="color: #E6A324; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Security Reminders</h2>
+					<ul style="color: #333; font-size: 13px; margin: 0; padding-left: 18px;">
+						<li style="margin: 6px 0;">Keep your login credentials secure and never share them</li>
+						<li style="margin: 6px 0;">Use a strong, unique password</li>
+						<li style="margin: 6px 0;">Log out when you're finished using TheHUB</li>
+						<li style="margin: 6px 0;">Contact the system administrator if you notice any suspicious activity</li>
 					</ul>
 				</div>
 
-				<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #666; font-size: 12px;">
+				<div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; text-align: center; color: #666; font-size: 12px;">
 					<p style="margin: 0;">If you have any questions or need assistance, please contact the system administrator.</p>
-					<p style="margin: 10px 0 0 0;">
+					<p style="margin: 8px 0 0 0;">
 						<a href="${baseUrl}" style="color: #4A97D2; text-decoration: none;">Visit Eltham Green Community Church Website</a>
 					</p>
 				</div>
@@ -813,37 +813,37 @@ export async function sendPasswordResetEmail({ to, name, resetToken }, event) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<title>Reset Your Password - TheHUB</title>
 		</head>
-		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
-			<div style="background: linear-gradient(135deg, #4A97D2 0%, #3a7ab8 100%); padding: 40px 30px; border-radius: 10px 10px 0 0; text-align: center;">
-				<h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Reset Your Password</h1>
-				<p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">TheHUB - Eltham Green Community Church</p>
+		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
+			<div style="background: linear-gradient(135deg, #4A97D2 0%, #3a7ab8 100%); padding: 20px 15px; border-radius: 8px 8px 0 0; text-align: center;">
+				<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Reset Your Password</h1>
+				<p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">TheHUB - Eltham Green Community Church</p>
 			</div>
 			
-			<div style="background: #ffffff; padding: 40px 30px; border-radius: 0 0 10px 10px; border: 1px solid #e5e7eb; border-top: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-				<p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">Hello ${name},</p>
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Hello ${name},</p>
 				
-				<p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">We received a request to reset your password for your TheHUB admin account.</p>
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">We received a request to reset your password for your TheHUB admin account.</p>
 
-				<div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #4A97D2;">
-					<p style="color: #333; font-size: 14px; margin: 0 0 20px 0;">Click the button below to reset your password. This link will expire in 24 hours.</p>
-					<a href="${resetLink}" style="display: inline-block; background: #4A97D2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: 600; margin: 10px 0;">Reset Password</a>
-					<p style="color: #666; font-size: 12px; margin: 15px 0 0 0;">Or copy and paste this link into your browser:</p>
-					<p style="color: #4A97D2; font-size: 12px; margin: 5px 0 0 0; word-break: break-all;">${resetLink}</p>
+				<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #4A97D2;">
+					<p style="color: #333; font-size: 13px; margin: 0 0 15px 0;">Click the button below to reset your password. This link will expire in 24 hours.</p>
+					<a href="${resetLink}" style="display: inline-block; background: #4A97D2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: 600; margin: 8px 0;">Reset Password</a>
+					<p style="color: #666; font-size: 12px; margin: 12px 0 0 0;">Or copy and paste this link into your browser:</p>
+					<p style="color: #4A97D2; font-size: 11px; margin: 4px 0 0 0; word-break: break-all;">${resetLink}</p>
 				</div>
 
-				<div style="background: #fffbf0; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #E6A324;">
-					<h2 style="color: #E6A324; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">Security Notice</h2>
-					<ul style="color: #333; font-size: 14px; margin: 0; padding-left: 20px;">
-						<li style="margin: 8px 0;">If you didn't request this password reset, please ignore this email</li>
-						<li style="margin: 8px 0;">Your password will not be changed until you click the link above</li>
-						<li style="margin: 8px 0;">This link expires in 24 hours for security</li>
-						<li style="margin: 8px 0;">For security, all active sessions will be logged out after password reset</li>
+				<div style="background: #fffbf0; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #E6A324;">
+					<h2 style="color: #E6A324; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Security Notice</h2>
+					<ul style="color: #333; font-size: 13px; margin: 0; padding-left: 18px;">
+						<li style="margin: 6px 0;">If you didn't request this password reset, please ignore this email</li>
+						<li style="margin: 6px 0;">Your password will not be changed until you click the link above</li>
+						<li style="margin: 6px 0;">This link expires in 24 hours for security</li>
+						<li style="margin: 6px 0;">For security, all active sessions will be logged out after password reset</li>
 					</ul>
 				</div>
 
-				<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #666; font-size: 12px;">
+				<div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; text-align: center; color: #666; font-size: 12px;">
 					<p style="margin: 0;">If you have any questions or need assistance, please contact the system administrator.</p>
-					<p style="margin: 10px 0 0 0;">
+					<p style="margin: 8px 0 0 0;">
 						<a href="${baseUrl}" style="color: #4A97D2; text-decoration: none;">Visit Eltham Green Community Church Website</a>
 					</p>
 				</div>
@@ -937,56 +937,54 @@ export async function sendEventSignupConfirmation({ to, name, event, occurrence,
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<title>Event Signup Confirmation</title>
 		</head>
-		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-			<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-				<h1 style="color: white; margin: 0; font-size: 24px;">Event Signup Confirmed!</h1>
+		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
+			<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 20px 15px; border-radius: 8px 8px 0 0; text-align: center;">
+				<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Event Signup Confirmed!</h1>
 			</div>
 			
-			<div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e5e7eb; border-top: none;">
-				<div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-					<p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">
-						Hi ${name},
-					</p>
-					<p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">
-						Thank you for signing up for <strong>${event.title}</strong>!
-					</p>
-					
-					<div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-						<h2 style="color: #2d7a32; margin-top: 0; font-size: 18px; border-bottom: 2px solid #2d7a32; padding-bottom: 10px;">Event Details</h2>
-						<table style="width: 100%; border-collapse: collapse;">
-							<tr>
-								<td style="padding: 8px 0; font-weight: 600; color: #666; width: 120px;">Date:</td>
-								<td style="padding: 8px 0; color: #333;">${eventDate}</td>
-							</tr>
-							<tr>
-								<td style="padding: 8px 0; font-weight: 600; color: #666;">Time:</td>
-								<td style="padding: 8px 0; color: #333;">${eventTime}</td>
-							</tr>
-							${occurrence.location ? `
-							<tr>
-								<td style="padding: 8px 0; font-weight: 600; color: #666;">Location:</td>
-								<td style="padding: 8px 0; color: #333;">${occurrence.location}</td>
-							</tr>
-							` : ''}
-							<tr>
-								<td style="padding: 8px 0; font-weight: 600; color: #666;">Attendees:</td>
-								<td style="padding: 8px 0; color: #333;">
-									${totalAttendees === 1 
-										? 'Just you' 
-										: `You + ${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} (${totalAttendees} total)`}
-								</td>
-							</tr>
-						</table>
-					</div>
-					
-					<p style="color: #666; font-size: 14px; margin: 20px 0 0 0;">
-						We look forward to seeing you there!
-					</p>
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">
+					Hi ${name},
+				</p>
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">
+					Thank you for signing up for <strong>${event.title}</strong>!
+				</p>
+				
+				<div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 15px 0;">
+					<h2 style="color: #2d7a32; margin: 0 0 12px 0; font-size: 16px; font-weight: 600; border-bottom: 2px solid #2d7a32; padding-bottom: 8px;">Event Details</h2>
+					<table style="width: 100%; border-collapse: collapse;">
+						<tr>
+							<td style="padding: 6px 0; font-weight: 600; color: #666; width: 100px; font-size: 13px;">Date:</td>
+							<td style="padding: 6px 0; color: #333; font-size: 13px;">${eventDate}</td>
+						</tr>
+						<tr>
+							<td style="padding: 6px 0; font-weight: 600; color: #666; font-size: 13px;">Time:</td>
+							<td style="padding: 6px 0; color: #333; font-size: 13px;">${eventTime}</td>
+						</tr>
+						${occurrence.location ? `
+						<tr>
+							<td style="padding: 6px 0; font-weight: 600; color: #666; font-size: 13px;">Location:</td>
+							<td style="padding: 6px 0; color: #333; font-size: 13px;">${occurrence.location}</td>
+						</tr>
+						` : ''}
+						<tr>
+							<td style="padding: 6px 0; font-weight: 600; color: #666; font-size: 13px;">Attendees:</td>
+							<td style="padding: 6px 0; color: #333; font-size: 13px;">
+								${totalAttendees === 1 
+									? 'Just you' 
+									: `You + ${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} (${totalAttendees} total)`}
+							</td>
+						</tr>
+					</table>
 				</div>
 				
-				<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #666; font-size: 12px;">
+				<p style="color: #666; font-size: 13px; margin: 15px 0 0 0;">
+					We look forward to seeing you there!
+				</p>
+				
+				<div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; text-align: center; color: #666; font-size: 12px;">
 					<p style="margin: 0;">Eltham Green Community Church</p>
-					<p style="margin: 5px 0 0 0;">542 Westhorne Avenue, Eltham, London, SE9 6RR</p>
+					<p style="margin: 4px 0 0 0;">542 Westhorne Avenue, Eltham, London, SE9 6RR</p>
 				</div>
 			</div>
 		</body>
@@ -1026,6 +1024,110 @@ Eltham Green Community Church
 		return result;
 	} catch (error) {
 		console.error('Failed to send event signup confirmation email:', error);
+		throw error;
+	}
+}
+
+/**
+ * Send rota update notification to owner
+ * @param {object} options - Email options
+ * @param {string} options.to - Owner email address
+ * @param {string} options.name - Owner name
+ * @param {object} rotaData - Rota, event, occurrence data
+ * @param {object} event - SvelteKit event object (for base URL)
+ * @returns {Promise<object>} Resend response
+ */
+export async function sendRotaUpdateNotification({ to, name }, rotaData, event) {
+	const { rota, event: eventData, occurrence } = rotaData;
+	const baseUrl = getBaseUrl(event);
+	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const hubUrl = `${baseUrl}/hub/rotas/${rota.id}`;
+
+	const eventTitle = eventData?.title || 'Event';
+	const role = rota?.role || 'Volunteer';
+
+	// Count assignees by occurrence
+	const assigneesByOcc = {};
+	const allOccurrences = await readCollection('occurrences');
+	const eventOccurrences = allOccurrences.filter(o => o.eventId === rota.eventId);
+	
+	(rota.assignees || []).forEach(assignee => {
+		let occId = null;
+		if (typeof assignee === 'string') {
+			occId = rota.occurrenceId;
+		} else if (assignee && typeof assignee === 'object') {
+			occId = assignee.occurrenceId || rota.occurrenceId;
+		}
+		if (!assigneesByOcc[occId || 'all']) {
+			assigneesByOcc[occId || 'all'] = [];
+		}
+		assigneesByOcc[occId || 'all'].push(assignee);
+	});
+
+	const html = `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta charset="utf-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>Rota Updated</title>
+		</head>
+		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
+			<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 20px 15px; border-radius: 8px 8px 0 0; text-align: center;">
+				<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Rota Updated</h1>
+			</div>
+			
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Hello ${name},</p>
+				
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">
+					The rota <strong>${role}</strong> for <strong>${eventTitle}</strong> has been updated.
+				</p>
+
+				<div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 15px 0;">
+					<h2 style="color: #2d7a32; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">Rota Details</h2>
+					<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Role:</strong> ${role}</p>
+					<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Event:</strong> ${eventTitle}</p>
+					<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Capacity:</strong> ${rota.capacity} per occurrence</p>
+					<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Total Assignees:</strong> ${(rota.assignees || []).length}</p>
+				</div>
+
+				<div style="text-align: center; margin: 20px 0;">
+					<a href="${hubUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px;">View Rota</a>
+				</div>
+			</div>
+		</body>
+		</html>
+	`;
+
+	const text = `
+Rota Updated
+
+Hello ${name},
+
+The rota ${role} for ${eventTitle} has been updated.
+
+Rota Details:
+Role: ${role}
+Event: ${eventTitle}
+Capacity: ${rota.capacity} per occurrence
+Total Assignees: ${(rota.assignees || []).length}
+
+View the rota: ${hubUrl}
+	`.trim();
+
+	try {
+		const result = await resend.emails.send({
+			from: fromEmail,
+			to: [to],
+			subject: `Rota Updated: ${role} - ${eventTitle}`,
+			html,
+			text
+		});
+
+		return result;
+	} catch (error) {
+		console.error('Failed to send rota update notification:', error);
 		throw error;
 	}
 }

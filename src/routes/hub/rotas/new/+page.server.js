@@ -8,9 +8,10 @@ export async function load({ url, cookies }) {
 	const eventId = url.searchParams.get('eventId') || '';
 	const events = await readCollection('events');
 	const occurrences = await readCollection('occurrences');
+	const contacts = await readCollection('contacts');
 	
 	const csrfToken = getCsrfToken(cookies) || '';
-	return { events, occurrences, eventId, csrfToken };
+	return { events, occurrences, eventId, contacts, csrfToken };
 }
 
 export const actions = {
@@ -32,7 +33,8 @@ export const actions = {
 				role: data.get('role'),
 				capacity: parseInt(data.get('capacity') || '1', 10),
 				assignees: [],
-				notes: sanitized
+				notes: sanitized,
+				ownerId: data.get('ownerId') || null
 			};
 
 			const validated = validateRota(rotaData);

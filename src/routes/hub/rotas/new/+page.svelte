@@ -9,6 +9,7 @@
 	$: data = $page.data || {};
 	$: events = data.events || [];
 	$: occurrences = data.occurrences || [];
+	$: contacts = data.contacts || [];
 	$: formResult = $page.form;
 	$: csrfToken = data.csrfToken || '';
 	
@@ -18,11 +19,14 @@
 	}
 
 	let notes = '';
+	let ownerSearchTerm = '';
+	let filteredOwnerContacts = [];
 	let formData = {
 		eventId: '',
 		occurrenceId: '',
 		role: '',
-		capacity: 1
+		capacity: 1,
+		ownerId: ''
 	};
 	
 	// Initialize formData.eventId from URL parameter only once, not reactively
@@ -35,6 +39,41 @@
 	$: filteredOccurrences = formData.eventId
 		? occurrences.filter(o => o.eventId === formData.eventId)
 		: [];
+
+	$: filteredOwnerContacts = (() => {
+		if (!contacts || contacts.length === 0) {
+			return [];
+		}
+		
+		// Start with all contacts or filtered by search term
+		let filtered = ownerSearchTerm
+			? contacts.filter(c => 
+				(c.email || '').toLowerCase().includes(ownerSearchTerm.toLowerCase()) ||
+				(c.firstName || '').toLowerCase().includes(ownerSearchTerm.toLowerCase()) ||
+				(c.lastName || '').toLowerCase().includes(ownerSearchTerm.toLowerCase())
+			)
+			: [...contacts]; // Create a copy to avoid mutation issues
+		
+		// Always include the currently selected owner if they exist, even if they don't match the search
+		if (formData.ownerId) {
+			const selectedOwner = contacts.find(c => c.id === formData.ownerId);
+			if (selectedOwner) {
+				// Check if selected owner is already in the filtered list
+				const isInFiltered = filtered.some(c => c.id === selectedOwner.id);
+				if (!isInFiltered) {
+					// Add selected owner at the beginning
+					filtered = [selectedOwner, ...filtered];
+				}
+			}
+		}
+		
+		return filtered;
+	})();
+	
+	// Log when ownerId changes
+	$: if (formData.ownerId) {
+		console.log('[Rota New] formData.ownerId changed to:', formData.ownerId);
+	}
 
 	function handleEnhance() {
 		return async ({ update, result }) => {
@@ -54,32 +93,80 @@
 	<form method="POST" action="?/create" use:enhance={handleEnhance}>
 		<input type="hidden" name="_csrf" value={csrfToken} />
 		<input type="hidden" name="notes" bind:value={notes} />
-		<div class="mb-4">
-			<label class="block text-sm font-medium text-gray-700 mb-1">Event</label>
-			<select name="eventId" bind:value={formData.eventId} required class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
-				<option value="">Select an event</option>
-				{#each events as event}
-					<option value={event.id}>{event.title}</option>
-				{/each}
-			</select>
-		</div>
-		{#if filteredOccurrences.length > 0}
-			<div class="mb-4">
-				<label class="block text-sm font-medium text-gray-700 mb-1">Occurrence (optional)</label>
-				<select name="occurrenceId" bind:value={formData.occurrenceId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
-					<option value="">All occurrences (recurring)</option>
-					{#each filteredOccurrences as occurrence}
-						<option value={occurrence.id}>{formatDateTimeUK(occurrence.startsAt)}</option>
-					{/each}
-				</select>
+		
+		<!-- Basic Information Panel -->
+		<div class="border border-gray-200 rounded-lg p-6 mb-6">
+			<h3 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div class="md:col-span-2">
+					<label class="block text-sm font-medium text-gray-700 mb-1">Event</label>
+					<select name="eventId" bind:value={formData.eventId} required class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+						<option value="">Select an event</option>
+						{#each events as event}
+							<option value={event.id}>{event.title}</option>
+						{/each}
+					</select>
+				</div>
+				{#if filteredOccurrences.length > 0}
+					<div class="md:col-span-2">
+						<label class="block text-sm font-medium text-gray-700 mb-1">Occurrence (optional)</label>
+						<select name="occurrenceId" bind:value={formData.occurrenceId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+							<option value="">All occurrences (recurring)</option>
+							{#each filteredOccurrences as occurrence}
+								<option value={occurrence.id}>{formatDateTimeUK(occurrence.startsAt)}</option>
+							{/each}
+						</select>
+					</div>
+				{/if}
+				<FormField label="Role" name="role" bind:value={formData.role} required />
+				<FormField label="Capacity" name="capacity" type="number" bind:value={formData.capacity} required />
 			</div>
-		{/if}
-		<FormField label="Role" name="role" bind:value={formData.role} required />
-		<FormField label="Capacity" name="capacity" type="number" bind:value={formData.capacity} required />
-		<div class="mb-4">
-			<label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-			<HtmlEditor bind:value={notes} name="notes" />
 		</div>
+
+		<!-- Owner Panel -->
+		<div class="border border-gray-200 rounded-lg p-6 mb-6">
+			<h3 class="text-lg font-semibold text-gray-900 mb-4">Owner</h3>
+			<div class="space-y-4">
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">Search Owner (optional)</label>
+					<input
+						type="text"
+						bind:value={ownerSearchTerm}
+						placeholder="Search by name or email..."
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
+					/>
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">Select Owner</label>
+					<select 
+						name="ownerId" 
+						value={formData.ownerId || ''}
+						on:change={(e) => {
+							formData.ownerId = e.target.value || '';
+						}}
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
+					>
+						<option value="">No owner</option>
+						{#each filteredOwnerContacts as contact (contact.id)}
+							{@const contactId = String(contact.id || '')}
+							<option value={contactId} selected={formData.ownerId === contactId}>
+								{`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email} {contact.email ? `(${contact.email})` : ''}
+							</option>
+						{/each}
+					</select>
+					<p class="mt-1 text-xs text-gray-500">The owner will be notified when this rota is updated</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Notes Panel -->
+		<div class="border border-gray-200 rounded-lg p-6 mb-6">
+			<h3 class="text-lg font-semibold text-gray-900 mb-4">Notes</h3>
+			<div>
+				<HtmlEditor bind:value={notes} name="notes" />
+			</div>
+		</div>
+
 		<div class="flex gap-2">
 			<button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
 				Create Rota

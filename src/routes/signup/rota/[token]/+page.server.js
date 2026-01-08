@@ -18,8 +18,11 @@ export async function load({ params, cookies }) {
 	// Get all occurrences for this event
 	const occurrences = await findMany('occurrences', o => o.eventId === event.id);
 	
-	// Get all rotas for this event (not just the one from the token)
-	const rotas = await findMany('rotas', r => r.eventId === event.id);
+	// Get rotas - if token has a rotaId, only show that specific rota
+	// Otherwise (for backward compatibility), show all rotas for the event
+	const rotas = token.rotaId 
+		? await findMany('rotas', r => r.eventId === event.id && r.id === token.rotaId)
+		: await findMany('rotas', r => r.eventId === event.id);
 	
 	// Load contacts to enrich assignees
 	const contacts = await readCollection('contacts');
