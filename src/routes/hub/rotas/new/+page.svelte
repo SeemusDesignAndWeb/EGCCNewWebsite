@@ -26,7 +26,8 @@
 		occurrenceId: '',
 		role: '',
 		capacity: 1,
-		ownerId: ''
+		ownerId: '',
+		visibility: 'public'
 	};
 	
 	// Initialize formData.eventId from URL parameter only once, not reactively
@@ -120,6 +121,14 @@
 				{/if}
 				<FormField label="Role" name="role" bind:value={formData.role} required />
 				<FormField label="Capacity" name="capacity" type="number" bind:value={formData.capacity} required />
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
+					<select name="visibility" bind:value={formData.visibility} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+						<option value="public">Public</option>
+						<option value="internal">Internal</option>
+					</select>
+					<p class="mt-1 text-xs text-gray-500">Public rotas can be accessed via signup links. Internal rotas are only visible to admins.</p>
+				</div>
 			</div>
 		</div>
 

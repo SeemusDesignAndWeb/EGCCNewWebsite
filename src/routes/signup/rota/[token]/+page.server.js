@@ -20,9 +20,13 @@ export async function load({ params, cookies }) {
 	
 	// Get rotas - if token has a rotaId, only show that specific rota
 	// Otherwise (for backward compatibility), show all rotas for the event
-	const rotas = token.rotaId 
+	// Only show public rotas on public signup pages
+	const allRotas = token.rotaId 
 		? await findMany('rotas', r => r.eventId === event.id && r.id === token.rotaId)
 		: await findMany('rotas', r => r.eventId === event.id);
+	
+	// Filter to only show public rotas (internal rotas are not accessible via public signup)
+	const rotas = allRotas.filter(r => (r.visibility || 'public') === 'public');
 	
 	// Load contacts to enrich assignees
 	const contacts = await readCollection('contacts');

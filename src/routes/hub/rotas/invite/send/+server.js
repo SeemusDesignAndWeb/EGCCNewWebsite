@@ -1,8 +1,9 @@
 import { json, error } from '@sveltejs/kit';
 import { findById, readCollection, findMany } from '$lib/crm/server/fileStore.js';
-import { ensureRotaTokens } from '$lib/crm/server/tokens.js';
-import { sendBulkRotaInvites } from '$lib/crm/server/email.js';
+import { ensureRotaTokens, ensureEventToken } from '$lib/crm/server/tokens.js';
+import { sendCombinedRotaInvites } from '$lib/crm/server/email.js';
 import { verifyCsrfToken } from '$lib/crm/server/auth.js';
+import { env } from '$env/dynamic/private';
 
 export async function POST({ request, cookies, url }) {
 	const data = await request.json();
@@ -53,20 +54,33 @@ export async function POST({ request, cookies, url }) {
 	// Ensure tokens exist
 	const tokens = await ensureRotaTokens(rotaOccurrences);
 
-	// Build invites
-	const invites = [];
+	// Get event page URL
+	let eventPageUrl = null;
+	try {
+		const eventToken = await ensureEventToken(eventId);
+		const baseUrl = env.APP_BASE_URL || url.origin || 'http://localhost:5173';
+		eventPageUrl = `${baseUrl}/event/${eventToken.token}`;
+	} catch (error) {
+		console.error('Error generating event token:', error);
+		// Continue without event page link if token generation fails
+	}
+
+	// Group invites by contact (one email per contact with all rotas)
+	const contactInvitesMap = new Map();
+	
 	for (const contact of listContacts) {
+		if (!contact.email) continue; // Skip contacts without email
+		
+		const contactInvites = [];
+		
 		for (const tokenData of tokens) {
 			const rota = selectedRotas.find(r => r.id === tokenData.rotaId);
 			const occurrence = tokenData.occurrenceId
 				? occurrences.find(o => o.id === tokenData.occurrenceId)
 				: null;
 
-			invites.push({
-				to: contact.email,
-				name: `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email,
+			contactInvites.push({
 				token: tokenData.token,
-				contact: contact, // Pass contact for personalization
 				rotaData: {
 					rota,
 					event,
@@ -74,10 +88,20 @@ export async function POST({ request, cookies, url }) {
 				}
 			});
 		}
+		
+		if (contactInvites.length > 0) {
+			contactInvitesMap.set(contact.id, {
+				contact,
+				invites: contactInvites
+			});
+		}
 	}
 
-	// Send invites
-	const results = await sendBulkRotaInvites(invites, { url });
+	// Convert map to array
+	const contactInvites = Array.from(contactInvitesMap.values());
+
+	// Send combined invites (one email per contact)
+	const results = await sendCombinedRotaInvites(contactInvites, event, eventPageUrl, { url });
 
 	return json({ success: true, results });
 }

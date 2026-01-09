@@ -1,8 +1,10 @@
-import { readCollection } from '$lib/crm/server/fileStore.js';
+import { redirect, fail } from '@sveltejs/kit';
+import { readCollection, remove } from '$lib/crm/server/fileStore.js';
+import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 
 const ITEMS_PER_PAGE = 20;
 
-export async function load({ url }) {
+export async function load({ url, cookies }) {
 	const page = parseInt(url.searchParams.get('page') || '1', 10);
 	const search = url.searchParams.get('search') || '';
 
@@ -30,12 +32,47 @@ export async function load({ url }) {
 		return { ...rota, eventTitle: event?.title || 'Unknown Event' };
 	});
 
+	const csrfToken = getCsrfToken(cookies) || '';
 	return {
 		rotas: enriched,
 		currentPage: page,
 		totalPages: Math.ceil(total / ITEMS_PER_PAGE),
 		total,
-		search
+		search,
+		csrfToken
 	};
 }
+
+export const actions = {
+	delete: async ({ request, cookies, url }) => {
+		const data = await request.formData();
+		const csrfToken = data.get('_csrf');
+		const rotaId = data.get('rotaId');
+
+		if (!csrfToken || !verifyCsrfToken(cookies, csrfToken)) {
+			return fail(403, { error: 'CSRF token validation failed' });
+		}
+
+		if (!rotaId) {
+			return fail(400, { error: 'Rota ID is required' });
+		}
+
+		try {
+			await remove('rotas', rotaId);
+			
+			// Preserve search and page params
+			const page = url.searchParams.get('page') || '1';
+			const search = url.searchParams.get('search') || '';
+			const params = new URLSearchParams();
+			if (search) params.set('search', search);
+			params.set('page', page);
+			
+			throw redirect(302, `/hub/rotas?${params.toString()}`);
+		} catch (error) {
+			if (error.status === 302) throw error; // Re-throw redirects
+			console.error('Error deleting rota:', error);
+			return fail(400, { error: error.message || 'Failed to delete rota' });
+		}
+	}
+};
 

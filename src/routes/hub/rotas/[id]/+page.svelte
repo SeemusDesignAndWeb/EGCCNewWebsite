@@ -16,6 +16,7 @@
 	$: eventOccurrences = $page.data?.eventOccurrences || [];
 	$: assigneesByOccurrence = $page.data?.assigneesByOccurrence || {};
 	$: availableContacts = $page.data?.availableContacts || [];
+	$: lists = $page.data?.lists || [];
 	$: owner = $page.data?.owner || null;
 	$: signupLink = $page.data?.signupLink || '';
 	$: csrfToken = $page.data?.csrfToken || '';
@@ -39,30 +40,37 @@
 		}
 	}
 	
+	// Track last processed form result to avoid duplicate notifications
+	let lastProcessedFormResult = null;
+
 	// Show notifications from form results
-	$: if (formResult?.success && browser) {
-		if (formResult?.type === 'addAssignees' || formResult?.type === 'removeAssignee') {
-			notifications.success(formResult.type === 'addAssignees' ? 'Assignees added successfully' : 'Assignee removed successfully');
-			// Reload to refresh the assignee list - only on client
-			if (browser) {
-				setTimeout(() => {
-					invalidateAll();
-				}, 500);
+	$: if (formResult && browser && formResult !== lastProcessedFormResult) {
+		lastProcessedFormResult = formResult;
+		
+		if (formResult?.success) {
+			if (formResult?.type === 'addAssignees' || formResult?.type === 'removeAssignee') {
+				const message = formResult.message || (formResult.type === 'addAssignees' ? 'Assignees added successfully' : 'Assignee removed successfully');
+				notifications.success(message);
+				// Reload to refresh the assignee list - only on client
+				if (browser) {
+					setTimeout(() => {
+						invalidateAll();
+					}, 500);
+				}
+			} else if (formResult?.type !== 'addAssignees' && formResult?.type !== 'removeAssignee') {
+				notifications.success('Rota updated successfully');
+				// Exit editing mode after successful save
+				editing = false;
+				// Invalidate to get fresh data, but preserve formData until data loads
+				if (browser) {
+					setTimeout(() => {
+						invalidateAll();
+					}, 100);
+				}
 			}
-		} else if (formResult?.type !== 'addAssignees' && formResult?.type !== 'removeAssignee') {
-			notifications.success('Rota updated successfully');
-			// Exit editing mode after successful save
-			editing = false;
-			// Invalidate to get fresh data, but preserve formData until data loads
-			if (browser) {
-				setTimeout(() => {
-					invalidateAll();
-				}, 100);
-			}
+		} else if (formResult?.error) {
+			notifications.error(formResult.error);
 		}
-	}
-	$: if (formResult?.error && browser) {
-		notifications.error(formResult.error);
 	}
 
 	let editing = false;
@@ -72,7 +80,8 @@
 	let formData = {
 		role: rota?.role || '',
 		capacity: rota?.capacity || 1,
-		ownerId: rota?.ownerId || ''
+		ownerId: rota?.ownerId || '',
+		visibility: rota?.visibility || 'public'
 	};
 
 	// Only update formData when rota changes AND we're not editing
@@ -82,11 +91,13 @@
 		if (formData.role !== rota.role || 
 		    formData.capacity !== rota.capacity || 
 		    formData.ownerId !== rota.ownerId ||
+		    formData.visibility !== (rota.visibility || 'public') ||
 		    notes !== rota.notes) {
 			formData = {
 				role: rota.role || '',
 				capacity: rota.capacity || 1,
-				ownerId: rota.ownerId || ''
+				ownerId: rota.ownerId || '',
+				visibility: rota.visibility || 'public'
 			};
 			notes = rota.notes || '';
 		}
@@ -158,17 +169,33 @@
 	let searchTerm = '';
 	let selectedContactIds = new Set();
 	let selectedOccurrenceId = '';
+	let selectedListId = '';
 	
-	// Initialize selected occurrence reactively
-	$: selectedOccurrenceId = rota?.occurrenceId || (eventOccurrences && eventOccurrences.length > 0 ? eventOccurrences[0].id : '') || '';
+	// Initialize selected occurrence reactively (only if not already set)
+	$: if (rota && eventOccurrences && !selectedOccurrenceId) {
+		if (rota.occurrenceId) {
+			selectedOccurrenceId = rota.occurrenceId;
+		} else if (eventOccurrences.length > 0) {
+			selectedOccurrenceId = eventOccurrences[0].id;
+		}
+	}
+	
+	// Filter contacts by list if a list is selected
+	$: contactsFilteredByList = selectedListId
+		? (() => {
+			const selectedList = lists.find(l => l.id === selectedListId);
+			if (!selectedList || !selectedList.contactIds) return availableContacts;
+			return availableContacts.filter(c => selectedList.contactIds.includes(c.id));
+		})()
+		: availableContacts;
 	
 	$: filteredAvailableContacts = searchTerm
-		? availableContacts.filter(c => 
+		? contactsFilteredByList.filter(c => 
 			(c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
 			(c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
 			(c.lastName || '').toLowerCase().includes(searchTerm.toLowerCase())
 		)
-		: availableContacts;
+		: contactsFilteredByList;
 	
 	function toggleContactSelection(contactId) {
 		if (selectedContactIds.has(contactId)) {
@@ -176,6 +203,20 @@
 		} else {
 			selectedContactIds.add(contactId);
 		}
+		selectedContactIds = selectedContactIds; // Trigger reactivity
+	}
+	
+	function selectAllContacts() {
+		filteredAvailableContacts.forEach(contact => {
+			selectedContactIds.add(contact.id);
+		});
+		selectedContactIds = selectedContactIds; // Trigger reactivity
+	}
+	
+	function deselectAllContacts() {
+		filteredAvailableContacts.forEach(contact => {
+			selectedContactIds.delete(contact.id);
+		});
 		selectedContactIds = selectedContactIds; // Trigger reactivity
 	}
 	
@@ -201,13 +242,17 @@
 		contactIdsInput.value = JSON.stringify(Array.from(selectedContactIds));
 		form.appendChild(contactIdsInput);
 		
-		// Add occurrenceId if rota is for all occurrences
-		if (!rota.occurrenceId && selectedOccurrenceId) {
+		// Add occurrenceId if explicitly selected (when rota is for all occurrences, or when adding to a specific occurrence)
+		// Always send it when selectedOccurrenceId is set, so the server knows which occurrence we're targeting
+		if (selectedOccurrenceId) {
 			const occurrenceIdInput = document.createElement('input');
 			occurrenceIdInput.type = 'hidden';
 			occurrenceIdInput.name = 'occurrenceId';
 			occurrenceIdInput.value = selectedOccurrenceId;
 			form.appendChild(occurrenceIdInput);
+			console.log('[CLIENT] Sending occurrenceId in form:', selectedOccurrenceId);
+		} else {
+			console.log('[CLIENT] No occurrenceId to send, selectedOccurrenceId:', selectedOccurrenceId);
 		}
 		
 		document.body.appendChild(form);
@@ -397,53 +442,56 @@
 				<input type="hidden" name="notes" value={notes} />
 				
 				<!-- Basic Information Panel -->
-				<div class="border border-gray-200 rounded-lg p-6 mb-6">
-					<h3 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div class="border border-gray-200 rounded-lg p-4 mb-4">
+					<h3 class="text-base font-semibold text-gray-900 mb-3">Basic Information</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 						<FormField label="Role" name="role" bind:value={formData.role} required />
 						<FormField label="Capacity" name="capacity" type="number" bind:value={formData.capacity} required />
-					</div>
-				</div>
-
-				<!-- Owner Panel -->
-				<div class="border border-gray-200 rounded-lg p-6 mb-6">
-					<h3 class="text-lg font-semibold text-gray-900 mb-4">Owner</h3>
-					<div class="space-y-4">
 						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-1">Search Owner (optional)</label>
-							<input
-								type="text"
-								bind:value={ownerSearchTerm}
-								placeholder="Search by name or email..."
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
-							/>
+							<label for="visibility-select" class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
+							<select id="visibility-select" name="visibility" bind:value={formData.visibility} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 text-sm">
+								<option value="public">Public</option>
+								<option value="internal">Internal</option>
+							</select>
+							<p class="mt-1 text-xs text-gray-500">Public = signup links, Internal = admin only</p>
 						</div>
 						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-1">Select Owner</label>
+							<label for="owner-select" class="block text-sm font-medium text-gray-700 mb-1">Owner</label>
 							<select 
+								id="owner-select"
 								name="ownerId" 
 								value={formData.ownerId || ''}
 								on:change={(e) => {
 									formData.ownerId = e.target.value || '';
 								}}
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 text-sm"
 							>
 								<option value="">No owner</option>
 								{#each filteredOwnerContacts as contact (contact.id)}
 									{@const contactId = String(contact.id || '')}
 									<option value={contactId} selected={formData.ownerId === contactId}>
-										{`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email} {contact.email ? `(${contact.email})` : ''}
+										{`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email}
 									</option>
 								{/each}
 							</select>
-							<p class="mt-1 text-xs text-gray-500">The owner will be notified when this rota is updated</p>
+							<p class="mt-1 text-xs text-gray-500">Owner gets update notifications</p>
 						</div>
+					</div>
+					<div class="mt-3">
+						<label for="owner-search" class="block text-sm font-medium text-gray-700 mb-1">Search Owner (optional)</label>
+						<input
+							id="owner-search"
+							type="text"
+							bind:value={ownerSearchTerm}
+							placeholder="Search by name or email..."
+							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 text-sm"
+						/>
 					</div>
 				</div>
 
 				<!-- Notes Panel -->
-				<div class="border border-gray-200 rounded-lg p-6 mb-6">
-					<h3 class="text-lg font-semibold text-gray-900 mb-4">Notes</h3>
+				<div class="border border-gray-200 rounded-lg p-4 mb-4">
+					<h3 class="text-base font-semibold text-gray-900 mb-3">Notes</h3>
 					<div>
 						<HtmlEditor bind:value={notes} name="notes" />
 					</div>
@@ -531,96 +579,101 @@
 	<div class="bg-white shadow rounded-lg p-6">
 		<div class="flex justify-between items-center mb-4">
 			<h3 class="text-xl font-bold text-gray-900">Assignees by Occurrence</h3>
-			<button
-				on:click={() => showAddAssignees = true}
-				class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-			>
-				+ Add Assignees
-			</button>
 		</div>
 		{#if eventOccurrences.length > 0}
-			<div class="space-y-6">
+			<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
 				{#each eventOccurrences as occ}
 					{@const occAssignees = assigneesByOccurrence[occ.id] || []}
 					{@const isFull = occAssignees.length >= rota.capacity}
-					<div class="border border-gray-200 rounded-lg p-4">
-						<div class="flex justify-between items-center mb-3">
-							<div>
-								<h4 class="font-semibold text-gray-900">{formatDateTimeUK(occ.startsAt)}</h4>
-							</div>
-							<div class="text-right">
-								<span class="text-sm font-medium {isFull ? 'text-red-600' : 'text-gray-700'}">
-									{occAssignees.length} / {rota.capacity}
+					<div class="border border-gray-200 rounded-lg p-3">
+						<div class="flex justify-between items-center mb-2">
+							<h4 class="text-sm font-semibold text-gray-900">{formatDateTimeUK(occ.startsAt)}</h4>
+							<div class="flex items-center gap-2">
+								<span class="text-xs font-medium {isFull ? 'text-red-600' : 'text-gray-700'}">
+									{occAssignees.length}/{rota.capacity}
 								</span>
 								{#if isFull}
-									<span class="ml-2 text-xs text-red-600 font-medium">Full</span>
+									<span class="text-xs text-red-600 font-medium">Full</span>
+								{:else}
+									<button
+										on:click={() => {
+											console.log('[CLIENT] + Add clicked for occurrence:', occ.id, 'Current assignees:', occAssignees.length, 'Assignees:', JSON.stringify(occAssignees));
+											selectedOccurrenceId = occ.id;
+											showAddAssignees = true;
+											searchTerm = '';
+											selectedContactIds = new Set();
+											selectedListId = '';
+										}}
+										class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700"
+										title="Add assignees to this occurrence"
+									>
+										+ Add
+									</button>
 								{/if}
 							</div>
 						</div>
 						{#if occAssignees.length > 0}
-							<div class="space-y-2">
+							<div class="space-y-1.5 max-h-64 overflow-y-auto">
 								{#each occAssignees as assignee}
-									<div class="flex items-center justify-between p-2 bg-gray-50 rounded-md">
-										<div class="flex-1">
+									<div class="flex items-center justify-between p-1.5 bg-gray-50 rounded text-sm">
+										<div class="flex-1 min-w-0">
 											{#if assignee.id}
-												<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium">
+												<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium truncate block">
 													{assignee.name || 'Unknown'}
 												</a>
 											{:else}
-												<span class="font-medium">{assignee.name || 'Unknown'}</span>
-												<span class="text-xs text-gray-400 ml-2">(Public signup)</span>
+												<span class="font-medium truncate block">{assignee.name || 'Unknown'}</span>
 											{/if}
-											<span class="text-sm text-gray-500 ml-2">{assignee.email}</span>
+											<span class="text-xs text-gray-500 truncate block">{assignee.email}</span>
 										</div>
 										<button
 											on:click={() => handleRemoveAssignee(assignee)}
-											class="text-red-600 hover:text-red-800 px-2 py-1 rounded text-sm"
+											class="text-red-600 hover:text-red-800 px-1.5 py-0.5 rounded text-xs ml-2 flex-shrink-0"
 											title="Remove assignee"
 										>
-											Remove
+											×
 										</button>
 									</div>
 								{/each}
 							</div>
 						{:else}
-							<p class="text-sm text-gray-400 italic">No assignees for this occurrence</p>
+							<p class="text-xs text-gray-400 italic py-2">No assignees</p>
 						{/if}
 					</div>
 				{/each}
 				
 				{#if assigneesByOccurrence['unassigned'] && assigneesByOccurrence['unassigned'].length > 0}
-					<div class="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
-						<div class="flex justify-between items-center mb-3">
+					<div class="lg:col-span-2 xl:col-span-3 border border-yellow-200 rounded-lg p-3 bg-yellow-50">
+						<div class="flex justify-between items-center mb-2">
 							<div>
-								<h4 class="font-semibold text-gray-900">Unassigned to Specific Occurrence</h4>
-								<p class="text-sm text-gray-500">These assignees need to be assigned to a specific occurrence</p>
+								<h4 class="text-sm font-semibold text-gray-900">Unassigned to Specific Occurrence</h4>
+								<p class="text-xs text-gray-500">These assignees need to be assigned to a specific occurrence</p>
 							</div>
 							<div class="text-right">
-								<span class="text-sm font-medium text-gray-700">
+								<span class="text-xs font-medium text-gray-700">
 									{assigneesByOccurrence['unassigned'].length}
 								</span>
 							</div>
 						</div>
-						<div class="space-y-2">
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
 							{#each assigneesByOccurrence['unassigned'] as assignee}
-								<div class="flex items-center justify-between p-2 bg-white rounded-md">
-									<div class="flex-1">
+								<div class="flex items-center justify-between p-1.5 bg-white rounded text-sm">
+									<div class="flex-1 min-w-0">
 										{#if assignee.id}
-											<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium">
+											<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium truncate block">
 												{assignee.name || 'Unknown'}
 											</a>
 										{:else}
-											<span class="font-medium">{assignee.name || 'Unknown'}</span>
-											<span class="text-xs text-gray-400 ml-2">(Public signup)</span>
+											<span class="font-medium truncate block">{assignee.name || 'Unknown'}</span>
 										{/if}
-										<span class="text-sm text-gray-500 ml-2">{assignee.email}</span>
+										<span class="text-xs text-gray-500 truncate block">{assignee.email}</span>
 									</div>
 									<button
 										on:click={() => handleRemoveAssignee(assignee)}
-										class="text-red-600 hover:text-red-800 px-2 py-1 rounded text-sm"
+										class="text-red-600 hover:text-red-800 px-1.5 py-0.5 rounded text-xs ml-2 flex-shrink-0"
 										title="Remove assignee"
 									>
-										Remove
+										×
 									</button>
 								</div>
 							{/each}
@@ -629,26 +682,25 @@
 				{/if}
 			</div>
 		{:else if (rota.assignees || []).length > 0}
-			<div class="space-y-2">
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
 				{#each rota.assignees as assignee, index}
-					<div class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-						<div class="flex-1">
+					<div class="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+						<div class="flex-1 min-w-0">
 							{#if assignee.id}
-								<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium">
+								<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium truncate block">
 									{assignee.name || 'Unknown'}
 								</a>
 							{:else}
-								<span class="font-medium">{assignee.name || 'Unknown'}</span>
-								<span class="text-xs text-gray-400 ml-2">(Public signup)</span>
+								<span class="font-medium truncate block">{assignee.name || 'Unknown'}</span>
 							{/if}
-							<span class="text-sm text-gray-500 ml-2">{assignee.email}</span>
+							<span class="text-xs text-gray-500 truncate block">{assignee.email}</span>
 						</div>
 						<button
 							on:click={() => handleRemoveAssignee(assignee, index)}
-							class="text-red-600 hover:text-red-800 px-2 py-1 rounded"
+							class="text-red-600 hover:text-red-800 px-1.5 py-0.5 rounded text-xs ml-2 flex-shrink-0"
 							title="Remove assignee"
 						>
-							Remove
+							×
 						</button>
 					</div>
 				{/each}
@@ -659,16 +711,16 @@
 	</div>
 
 	{#if showAddAssignees}
-		<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" on:click={() => showAddAssignees = false}>
-			<div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] flex flex-col" on:click|stopPropagation>
+		<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" role="button" tabindex="0" on:click={() => showAddAssignees = false} on:keydown={(e) => e.key === 'Escape' && (showAddAssignees = false)} aria-label="Close modal">
+			<div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] flex flex-col" on:click|stopPropagation role="dialog" aria-modal="true">
 				<!-- Header (fixed) -->
 				<div class="p-6 border-b border-gray-200">
 					<h3 class="text-xl font-bold text-gray-900 mb-4">Add Assignees</h3>
 					
-					{#if !rota.occurrenceId && eventOccurrences.length > 0}
+					{#if !rota.occurrenceId && eventOccurrences.length > 0 && !selectedOccurrenceId}
 						<div class="mb-4">
-							<label class="block text-sm font-medium text-gray-700 mb-1">Occurrence</label>
-							<select bind:value={selectedOccurrenceId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4">
+							<label for="occurrence-select" class="block text-sm font-medium text-gray-700 mb-1">Occurrence</label>
+							<select id="occurrence-select" bind:value={selectedOccurrenceId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4">
 								{#each eventOccurrences as occ}
 									{@const occAssignees = assigneesByOccurrence[occ.id] || []}
 									{@const isFull = occAssignees.length >= rota.capacity}
@@ -679,10 +731,29 @@
 							</select>
 							<p class="mt-1 text-xs text-gray-500">Select which occurrence to assign these contacts to</p>
 						</div>
+					{:else if !rota.occurrenceId && eventOccurrences.length > 0 && selectedOccurrenceId}
+						<div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+							<p class="text-sm text-gray-700">
+								<strong>Adding to:</strong> {formatDateTimeUK(eventOccurrences.find(o => o.id === selectedOccurrenceId)?.startsAt || '')}
+							</p>
+						</div>
 					{/if}
 					
+					<div class="mb-4">
+						<label for="list-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by List (optional)</label>
+						<select id="list-filter" bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4">
+							<option value="">All Contacts</option>
+							{#each lists as list}
+								<option value={list.id}>{list.name}</option>
+							{/each}
+						</select>
+						<p class="mt-1 text-xs text-gray-500">Select a list to filter contacts</p>
+					</div>
+					
 					<div>
+						<label for="contact-search" class="block text-sm font-medium text-gray-700 mb-1 sr-only">Search contacts</label>
 						<input
+							id="contact-search"
 							type="text"
 							bind:value={searchTerm}
 							placeholder="Search contacts..."
@@ -694,6 +765,25 @@
 				<!-- Scrollable content area -->
 				<div class="flex-1 overflow-y-auto p-6">
 					{#if filteredAvailableContacts.length > 0}
+						<div class="mb-3 flex justify-between items-center">
+							<span class="text-sm text-gray-600">
+								Showing {filteredAvailableContacts.length} contact{filteredAvailableContacts.length !== 1 ? 's' : ''}
+							</span>
+							<div class="flex gap-2">
+								<button
+									on:click={selectAllContacts}
+									class="text-sm text-green-600 hover:text-green-800 underline"
+								>
+									Select All
+								</button>
+								<button
+									on:click={deselectAllContacts}
+									class="text-sm text-gray-600 hover:text-gray-800 underline"
+								>
+									Deselect All
+								</button>
+							</div>
+						</div>
 						<div class="space-y-2">
 							{#each filteredAvailableContacts as contact}
 								<label class="flex items-center p-3 bg-gray-50 rounded-md hover:bg-gray-100 cursor-pointer">
@@ -720,7 +810,12 @@
 				<!-- Footer with buttons (fixed at bottom) -->
 				<div class="p-6 border-t border-gray-200 flex gap-2 justify-end">
 					<button
-						on:click={() => { showAddAssignees = false; searchTerm = ''; selectedContactIds = new Set(); }}
+						on:click={() => { 
+							showAddAssignees = false; 
+							searchTerm = ''; 
+							selectedContactIds = new Set(); 
+							selectedListId = '';
+						}}
 						class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
 					>
 						Cancel

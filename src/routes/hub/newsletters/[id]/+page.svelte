@@ -14,15 +14,22 @@
 	$: formResult = $page.form;
 	$: urlParams = $page.url.searchParams;
 	
+	// Track last processed form result to avoid duplicate notifications
+	let lastProcessedFormResult = null;
+
 	// Show notifications from form results
-	$: if (formResult?.success && !formResult?.templateId) {
-		notifications.success('Newsletter updated successfully');
-	}
-	$: if (formResult?.success && formResult?.templateId) {
-		notifications.success(`Template saved successfully! View it <a href="/hub/newsletters/templates/${formResult.templateId}" class="underline">here</a>`, 8000);
-	}
-	$: if (formResult?.error) {
-		notifications.error(formResult.error);
+	$: if (formResult && formResult !== lastProcessedFormResult) {
+		lastProcessedFormResult = formResult;
+		
+		if (formResult?.success) {
+			if (formResult?.templateId) {
+				notifications.success(`Template saved successfully! View it <a href="/hub/newsletters/templates/${formResult.templateId}" class="underline">here</a>`, 8000);
+			} else {
+				notifications.success('Newsletter updated successfully');
+			}
+		} else if (formResult?.error) {
+			notifications.error(formResult.error);
+		}
 	}
 	
 	// Show notification when coming from create action (only once)

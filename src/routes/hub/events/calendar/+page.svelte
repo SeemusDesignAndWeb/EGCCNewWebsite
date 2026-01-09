@@ -141,6 +141,31 @@
 
 	const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 	const dayNamesFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+	// Helper function to get event color styles
+	function getEventColorStyles(event) {
+		const color = event?.color || '#9333ea';
+		// Calculate a lighter background color (20% opacity)
+		const rgb = hexToRgb(color);
+		const bgColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`;
+		// Use the original color for text
+		const textColor = color;
+		return {
+			backgroundColor: bgColor,
+			color: textColor,
+			borderColor: color
+		};
+	}
+
+	// Helper to convert hex to RGB
+	function hexToRgb(hex) {
+		const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+		return result ? {
+			r: parseInt(result[1], 16),
+			g: parseInt(result[2], 16),
+			b: parseInt(result[3], 16)
+		} : { r: 147, g: 51, b: 234 }; // Default purple
+	}
 </script>
 
 	<div class="mb-6">
@@ -290,7 +315,12 @@
 					</div>
 					<div class="space-y-1">
 						{#each monthOccurrences.slice(0, 3) as occ}
-							<div class="text-xs px-2 py-1 rounded bg-purple-100 text-purple-800 truncate" title="{occ.event?.title || 'Event'}">
+							{@const colorStyles = getEventColorStyles(occ.event)}
+							<div 
+								class="text-xs px-2 py-1 rounded truncate" 
+								style="background-color: {colorStyles.backgroundColor}; color: {colorStyles.color}; border: 1px solid {colorStyles.borderColor};"
+								title="{occ.event?.title || 'Event'}"
+							>
 								{new Date(occ.startsAt).getDate()} - {occ.event?.title || 'Event'}
 							</div>
 						{/each}
@@ -327,9 +357,11 @@
 						</div>
 						<div class="space-y-1">
 							{#each dayOccurrences.slice(0, 3) as occ}
+								{@const colorStyles = getEventColorStyles(occ.event)}
 								<a
 									href="/hub/events/{occ.eventId}"
-									class="block text-xs px-2 py-1 rounded bg-purple-100 text-purple-800 hover:bg-purple-200 truncate"
+									class="block text-xs px-2 py-1 rounded truncate hover:opacity-80 transition-colors"
+									style="background-color: {colorStyles.backgroundColor}; color: {colorStyles.color}; border: 1px solid {colorStyles.borderColor};"
 									title="{occ.event?.title || 'Event'}"
 								>
 									{new Date(occ.startsAt).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} {occ.event?.title || 'Event'}
@@ -380,10 +412,11 @@
 						{@const endTime = new Date(occ.endsAt)}
 						{@const startHour = startTime.getHours() + startTime.getMinutes() / 60}
 						{@const duration = (endTime - startTime) / (1000 * 60 * 60)}
+						{@const colorStyles = getEventColorStyles(occ.event)}
 						<a
 							href="/hub/events/{occ.eventId}"
-							class="absolute left-1 right-1 rounded px-2 py-1 bg-purple-100 text-purple-800 hover:bg-purple-200 text-xs block"
-							style="top: {startHour * 24}px; height: {Math.max(duration * 24, 20)}px;"
+							class="absolute left-1 right-1 rounded px-2 py-1 text-xs block hover:opacity-80 transition-colors"
+							style="top: {startHour * 24}px; height: {Math.max(duration * 24, 20)}px; background-color: {colorStyles.backgroundColor}; color: {colorStyles.color}; border: 1px solid {colorStyles.borderColor};"
 							title="{occ.event?.title || 'Event'}"
 						>
 							<div class="font-medium truncate">{occ.event?.title || 'Event'}</div>

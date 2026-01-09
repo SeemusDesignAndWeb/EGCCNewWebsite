@@ -111,8 +111,27 @@ export function validateList(data) {
  * @returns {object} Validated event data
  * @throws {Error} If validation fails
  */
+// Predefined event colors
+export const EVENT_COLORS = [
+	{ value: '#9333ea', label: 'Purple' },
+	{ value: '#3b82f6', label: 'Blue' },
+	{ value: '#10b981', label: 'Green' },
+	{ value: '#ef4444', label: 'Red' },
+	{ value: '#f97316', label: 'Orange' },
+	{ value: '#eab308', label: 'Yellow' },
+	{ value: '#ec4899', label: 'Pink' },
+	{ value: '#6366f1', label: 'Indigo' },
+	{ value: '#14b8a6', label: 'Teal' },
+	{ value: '#f59e0b', label: 'Amber' }
+];
+
 export function validateEvent(data) {
 	requireField(data.title, 'Title');
+	
+	// Validate color - must be one of the predefined colors
+	const allowedColors = EVENT_COLORS.map(c => c.value);
+	const color = allowedColors.includes(data.color) ? data.color : '#9333ea';
+	
 	return {
 		title: validateString(data.title, 'Title', 200),
 		description: validateString(data.description || '', 'Description', 10000),
@@ -120,6 +139,7 @@ export function validateEvent(data) {
 		visibility: ['public', 'private', 'internal'].includes(data.visibility) ? data.visibility : 'private',
 		enableSignup: data.enableSignup === true || data.enableSignup === 'true' || data.enableSignup === 'on',
 		maxSpaces: typeof data.maxSpaces === 'number' && data.maxSpaces > 0 ? data.maxSpaces : (data.maxSpaces ? parseInt(data.maxSpaces) || null : null),
+		color: color, // Default to purple if not provided or invalid
 		// Recurrence fields
 		repeatType: ['none', 'daily', 'weekly', 'monthly', 'yearly'].includes(data.repeatType) ? data.repeatType : 'none',
 		repeatInterval: typeof data.repeatInterval === 'number' && data.repeatInterval > 0 ? data.repeatInterval : (data.repeatInterval ? parseInt(data.repeatInterval) || 1 : 1),
@@ -199,6 +219,9 @@ export function validateRota(data) {
 		return null;
 	}).filter(a => a !== null);
 
+	// Validate visibility - must be 'public' or 'internal', default to 'public' for backward compatibility
+	const visibility = data.visibility === 'internal' ? 'internal' : 'public';
+
 	return {
 		eventId: validateString(data.eventId, 'Event ID', 50),
 		occurrenceId: data.occurrenceId ? validateString(data.occurrenceId, 'Occurrence ID', 50) : null,
@@ -206,7 +229,8 @@ export function validateRota(data) {
 		capacity: typeof data.capacity === 'number' && data.capacity > 0 ? data.capacity : 1,
 		assignees: validatedAssignees,
 		notes: validateString(data.notes || '', 'Notes', 10000),
-		ownerId: data.ownerId ? validateString(data.ownerId, 'Owner ID', 50) : null
+		ownerId: data.ownerId ? validateString(data.ownerId, 'Owner ID', 50) : null,
+		visibility: visibility
 	};
 }
 
@@ -275,5 +299,28 @@ export function validateNewsletterTemplate(data) {
 		htmlContent: validateString(data.htmlContent || '', 'HTML Content', 50000),
 		textContent: validateString(data.textContent || '', 'Text Content', 50000),
 		description: validateString(data.description || '', 'Description', 1000)
+	};
+}
+
+/**
+ * Validate meeting planner data
+ * @param {object} data - Meeting planner data
+ * @returns {object} Validated meeting planner data
+ * @throws {Error} If validation fails
+ */
+export function validateMeetingPlanner(data) {
+	requireField(data.eventId, 'Event ID');
+	
+	return {
+		eventId: validateString(data.eventId, 'Event ID', 50),
+		occurrenceId: data.occurrenceId ? validateString(data.occurrenceId, 'Occurrence ID', 50) : null,
+		communionHappening: data.communionHappening === true || data.communionHappening === 'true' || data.communionHappening === 'on',
+		notes: validateString(data.notes || '', 'Notes', 10000),
+		speakerTopic: validateString(data.speakerTopic || '', 'Speaker Topic', 200),
+		speakerSeries: validateString(data.speakerSeries || '', 'Speaker Series', 200),
+		meetingLeaderRotaId: data.meetingLeaderRotaId ? validateString(data.meetingLeaderRotaId, 'Meeting Leader Rota ID', 50) : null,
+		worshipLeaderRotaId: data.worshipLeaderRotaId ? validateString(data.worshipLeaderRotaId, 'Worship Leader Rota ID', 50) : null,
+		speakerRotaId: data.speakerRotaId ? validateString(data.speakerRotaId, 'Speaker Rota ID', 50) : null,
+		callToWorshipRotaId: data.callToWorshipRotaId ? validateString(data.callToWorshipRotaId, 'Call to Worship Rota ID', 50) : null
 	};
 }

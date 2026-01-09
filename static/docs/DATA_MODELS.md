@@ -103,6 +103,26 @@ This document describes the data structures used in the CRM module.
 }
 ```
 
+## Meeting Planner
+
+```javascript
+{
+  id: string,                    // ULID
+  eventId: string,              // Required: linked event ID
+  occurrenceId: string,         // Optional: specific occurrence ID (null for all)
+  communionHappening: boolean,  // Whether communion is happening
+  notes: string,                // HTML notes
+  speakerTopic: string,         // Speaker topic
+  speakerSeries: string,        // Speaker series name
+  meetingLeaderRotaId: string,  // Reference to Meeting Leader rota
+  worshipLeaderRotaId: string,  // Reference to Worship Leader rota
+  speakerRotaId: string,        // Reference to Speaker rota
+  callToWorshipRotaId: string,  // Reference to Call to Worship rota
+  createdAt: string,           // ISO 8601 timestamp
+  updatedAt: string             // ISO 8601 timestamp
+}
+```
+
 ## Newsletter
 
 ```javascript
@@ -207,6 +227,9 @@ All data is stored in NDJSON (Newline Delimited JSON) format:
 - **Form → Register**: One-to-many (via `formId`)
 - **Event → Token**: One-to-many (via `eventId`)
 - **Rota → Token**: One-to-many (via `rotaId`)
+- **Event → Meeting Planner**: One-to-many (via `eventId`)
+- **Occurrence → Meeting Planner**: Optional one-to-many (via `occurrenceId`, null for all occurrences)
+- **Meeting Planner → Rota**: One-to-four (via `meetingLeaderRotaId`, `worshipLeaderRotaId`, `speakerRotaId`, `callToWorshipRotaId`)
 
 ## Validation
 

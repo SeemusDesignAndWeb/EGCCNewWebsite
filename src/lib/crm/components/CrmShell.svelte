@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 	import NotificationPopup from '$lib/crm/components/NotificationPopup.svelte';
 	import ConfirmDialog from '$lib/crm/components/ConfirmDialog.svelte';
 	
@@ -9,6 +10,23 @@
 	$: isAuthPage = $page.url.pathname.startsWith('/hub/auth/');
 	
 	let mobileMenuOpen = false;
+	let settingsDropdownOpen = false;
+	let settingsDropdownElement;
+	
+	$: isSettingsActive = $page.url.pathname.startsWith('/hub/users') || $page.url.pathname.startsWith('/hub/help') || $page.url.pathname.startsWith('/hub/profile');
+	
+	function handleClickOutside(event) {
+		if (settingsDropdownElement && !settingsDropdownElement.contains(event.target)) {
+			settingsDropdownOpen = false;
+		}
+	}
+	
+	onMount(() => {
+		document.addEventListener('click', handleClickOutside);
+		return () => {
+			document.removeEventListener('click', handleClickOutside);
+		};
+	});
 </script>
 
 <div class="min-h-screen bg-gray-50 flex flex-col">
@@ -34,15 +52,35 @@
 							<a href="/hub/newsletters" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/newsletters') ? 'bg-blue-600' : ''}">Newsletters</a>
 							<a href="/hub/events/calendar" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/events') ? 'bg-blue-600' : ''}">Events</a>
 							<a href="/hub/rotas" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/rotas') ? 'bg-blue-600' : ''}">Rotas</a>
+							<a href="/hub/meeting-planners" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/meeting-planners') ? 'bg-blue-600' : ''}">Meeting Planners</a>
 							<a href="/hub/forms" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/forms') ? 'bg-blue-600' : ''}">Forms</a>
-							<a href="/hub/users" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/users') ? 'bg-blue-600' : ''}">Users</a>
-							<a href="/hub/help" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/help') ? 'bg-blue-600' : ''}">Help</a>
+							<!-- Settings Dropdown -->
+							<div class="relative" bind:this={settingsDropdownElement}>
+								<button
+									on:click|stopPropagation={() => settingsDropdownOpen = !settingsDropdownOpen}
+									class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {isSettingsActive ? 'bg-blue-600' : ''} flex items-center"
+									aria-label="Settings"
+									aria-expanded={settingsDropdownOpen}
+									aria-haspopup="true"
+								>
+									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+									</svg>
+								</button>
+								{#if settingsDropdownOpen}
+									<div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200" role="menu" tabindex="-1">
+										{#if admin}
+											<a href="/hub/profile" on:click={() => settingsDropdownOpen = false} class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {$page.url.pathname.startsWith('/hub/profile') ? 'bg-blue-50 text-blue-600' : ''}" role="menuitem">Profile</a>
+										{/if}
+										<a href="/hub/users" on:click={() => settingsDropdownOpen = false} class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {$page.url.pathname.startsWith('/hub/users') ? 'bg-blue-50 text-blue-600' : ''}" role="menuitem">Users</a>
+										<a href="/hub/help" on:click={() => settingsDropdownOpen = false} class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {$page.url.pathname.startsWith('/hub/help') ? 'bg-blue-50 text-blue-600' : ''}" role="menuitem">Help</a>
+									</div>
+								{/if}
+							</div>
 						</nav>
 					</div>
 					<div class="flex items-center space-x-4">
-						{#if admin}
-							<a href="/hub/profile" class="text-sm text-white hidden sm:block hover:underline">{admin.name || admin.email}</a>
-						{/if}
 						<a href="/hub/auth/logout" class="hidden md:block px-4 py-2 bg-white text-blue-500 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium">
 							Logout
 						</a>
@@ -74,12 +112,29 @@
 							<a href="/hub/newsletters" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/newsletters') ? 'bg-blue-600' : ''}">Newsletters</a>
 							<a href="/hub/events/calendar" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/events') ? 'bg-blue-600' : ''}">Events</a>
 							<a href="/hub/rotas" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/rotas') ? 'bg-blue-600' : ''}">Rotas</a>
+							<a href="/hub/meeting-planners" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/meeting-planners') ? 'bg-blue-600' : ''}">Meeting Planners</a>
 							<a href="/hub/forms" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/forms') ? 'bg-blue-600' : ''}">Forms</a>
-							<a href="/hub/users" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/users') ? 'bg-blue-600' : ''}">Users</a>
-							<a href="/hub/help" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/help') ? 'bg-blue-600' : ''}">Help</a>
-							{#if admin}
-								<a href="/hub/profile" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600">Profile</a>
-							{/if}
+							<div class="px-4 py-2">
+								<button
+									on:click={() => settingsDropdownOpen = !settingsDropdownOpen}
+									class="flex items-center gap-2 text-sm font-medium text-white hover:bg-blue-600 px-2 py-1 rounded-lg transition-colors w-full"
+								>
+									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+									</svg>
+									<span>Settings</span>
+								</button>
+								{#if settingsDropdownOpen}
+									<div class="ml-6 mt-2 space-y-1">
+										{#if admin}
+											<a href="/hub/profile" on:click={() => { mobileMenuOpen = false; settingsDropdownOpen = false; }} class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/profile') ? 'bg-blue-600' : ''}">Profile</a>
+										{/if}
+										<a href="/hub/users" on:click={() => { mobileMenuOpen = false; settingsDropdownOpen = false; }} class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/users') ? 'bg-blue-600' : ''}">Users</a>
+										<a href="/hub/help" on:click={() => { mobileMenuOpen = false; settingsDropdownOpen = false; }} class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/help') ? 'bg-blue-600' : ''}">Help</a>
+									</div>
+								{/if}
+							</div>
 							<a href="/hub/auth/logout" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 border-t border-blue-400 pt-2 mt-2">
 								Logout
 							</a>

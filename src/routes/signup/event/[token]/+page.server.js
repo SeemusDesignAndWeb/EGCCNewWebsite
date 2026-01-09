@@ -18,8 +18,9 @@ export async function load({ params, cookies }) {
 	// Get all occurrences for this event
 	const occurrences = await findMany('occurrences', o => o.eventId === event.id);
 	
-	// Get all rotas for this event
-	const rotas = await findMany('rotas', r => r.eventId === event.id);
+	// Get all rotas for this event - only show public rotas on public signup pages
+	const allRotas = await findMany('rotas', r => r.eventId === event.id);
+	const rotas = allRotas.filter(r => (r.visibility || 'public') === 'public');
 	
 	// Load contacts to enrich assignees
 	const contacts = await readCollection('contacts');

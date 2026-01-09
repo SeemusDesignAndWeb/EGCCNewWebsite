@@ -27,22 +27,28 @@
 		}
 	}
 	
+	// Track last processed form result to avoid duplicate notifications
+	let lastProcessedFormResult = null;
+
 	// Show notifications from form results
-	$: if (formResult?.success && browser) {
-		if (formResult?.type === 'addContacts' || formResult?.type === 'removeContact') {
-			notifications.success(formResult.type === 'addContacts' ? 'Contacts added successfully' : 'Contact removed successfully');
-			// Reload to refresh the contact list - only on client
-			if (browser) {
-				setTimeout(() => {
-					invalidateAll();
-				}, 500);
+	$: if (formResult && browser && formResult !== lastProcessedFormResult) {
+		lastProcessedFormResult = formResult;
+		
+		if (formResult?.success) {
+			if (formResult?.type === 'addContacts' || formResult?.type === 'removeContact') {
+				notifications.success(formResult.type === 'addContacts' ? 'Contacts added successfully' : 'Contact removed successfully');
+				// Reload to refresh the contact list - only on client
+				if (browser) {
+					setTimeout(() => {
+						invalidateAll();
+					}, 500);
+				}
+			} else {
+				notifications.success('List updated successfully');
 			}
-		} else {
-			notifications.success('List updated successfully');
+		} else if (formResult?.error) {
+			notifications.error(formResult.error);
 		}
-	}
-	$: if (formResult?.error && browser) {
-		notifications.error(formResult.error);
 	}
 
 	let editing = false;
