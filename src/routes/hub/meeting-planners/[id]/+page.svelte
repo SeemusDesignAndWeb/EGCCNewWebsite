@@ -47,17 +47,58 @@
 
 	// Initialize form data when meeting planner loads (only once per meeting planner)
 	$: if (meetingPlanner && meetingPlanner.id !== initializedMeetingPlannerId) {
-		notes = meetingPlanner.notes || '';
-		formData = {
-			communionHappening: meetingPlanner.communionHappening || false,
-			speakerTopic: meetingPlanner.speakerTopic || '',
-			speakerSeries: meetingPlanner.speakerSeries || ''
-		};
+		let restoredFromStorage = false;
+		
+		// Check if there's unsaved form data in sessionStorage
+		if (browser && typeof sessionStorage !== 'undefined') {
+			const unsavedFormDataKey = `unsavedMeetingPlanner_${meetingPlanner.id}`;
+			const unsavedData = sessionStorage.getItem(unsavedFormDataKey);
+			if (unsavedData) {
+				try {
+					const parsed = JSON.parse(unsavedData);
+					notes = parsed.notes || meetingPlanner.notes || '';
+					formData = {
+						communionHappening: parsed.communionHappening ?? meetingPlanner.communionHappening ?? false,
+						speakerTopic: parsed.speakerTopic || meetingPlanner.speakerTopic || '',
+						speakerSeries: parsed.speakerSeries || meetingPlanner.speakerSeries || ''
+					};
+					restoredFromStorage = true;
+				} catch (error) {
+					console.error('[CLIENT] Error parsing unsaved form data:', error);
+					// Fall through to use database values
+				}
+			}
+		}
+		
+		// Use database values if no unsaved data found or if restoration failed
+		if (!restoredFromStorage) {
+			notes = meetingPlanner.notes || '';
+			formData = {
+				communionHappening: meetingPlanner.communionHappening || false,
+				speakerTopic: meetingPlanner.speakerTopic || '',
+				speakerSeries: meetingPlanner.speakerSeries || ''
+			};
+		}
+		
 		initializedMeetingPlannerId = meetingPlanner.id;
 	}
 
 	// Track last processed form result to avoid duplicate notifications
 	let lastProcessedFormResult = null;
+
+	// Preserve form data before page unload (for cases like form.submit() in removeAssignee)
+	function preserveFormData() {
+		if (browser && meetingPlanner?.id && typeof sessionStorage !== 'undefined') {
+			const unsavedFormDataKey = `unsavedMeetingPlanner_${meetingPlanner.id}`;
+			const unsavedData = {
+				notes: notes,
+				communionHappening: formData.communionHappening,
+				speakerTopic: formData.speakerTopic,
+				speakerSeries: formData.speakerSeries
+			};
+			sessionStorage.setItem(unsavedFormDataKey, JSON.stringify(unsavedData));
+		}
+	}
 
 	// Check for notification stored in sessionStorage (from page reload after adding assignees)
 	onMount(() => {
@@ -73,7 +114,16 @@
 				sessionStorage.removeItem('assigneeNotification');
 				notifications.success(storedNotification);
 			}
+			
+			// Add beforeunload listener to preserve form data
+			window.addEventListener('beforeunload', preserveFormData);
 		}
+		
+		return () => {
+			if (browser) {
+				window.removeEventListener('beforeunload', preserveFormData);
+			}
+		};
 	});
 
 	// Show notifications from form results
@@ -85,12 +135,28 @@
 				const message = formResult.message || (formResult.type === 'addAssignee' ? 'Assignee added successfully' : 'Assignee removed successfully');
 				notifications.success(message);
 				if (browser) {
+					// Preserve unsaved form data before refresh
+					if (meetingPlanner?.id && typeof sessionStorage !== 'undefined') {
+						const unsavedFormDataKey = `unsavedMeetingPlanner_${meetingPlanner.id}`;
+						const unsavedData = {
+							notes: notes,
+							communionHappening: formData.communionHappening,
+							speakerTopic: formData.speakerTopic,
+							speakerSeries: formData.speakerSeries
+						};
+						sessionStorage.setItem(unsavedFormDataKey, JSON.stringify(unsavedData));
+					}
 					// Force immediate refresh to show updated assignees
 					// Use invalidateAll to ensure fresh data from server
 					invalidateAll();
 				}
 			} else if (formResult?.type !== 'addAssignee' && formResult?.type !== 'removeAssignee') {
 				notifications.success('Meeting planner updated successfully');
+				// Clear unsaved form data after successful save
+				if (browser && meetingPlanner?.id && typeof sessionStorage !== 'undefined') {
+					const unsavedFormDataKey = `unsavedMeetingPlanner_${meetingPlanner.id}`;
+					sessionStorage.removeItem(unsavedFormDataKey);
+				}
 				if (browser) {
 					setTimeout(() => {
 						invalidateAll();
@@ -282,6 +348,18 @@
 				// Store message in sessionStorage to show after reload
 				if (browser && typeof sessionStorage !== 'undefined') {
 					sessionStorage.setItem('assigneeNotification', message);
+					
+					// Preserve unsaved form data before reload
+					if (meetingPlanner?.id) {
+						const unsavedFormDataKey = `unsavedMeetingPlanner_${meetingPlanner.id}`;
+						const unsavedData = {
+							notes: notes,
+							communionHappening: formData.communionHappening,
+							speakerTopic: formData.speakerTopic,
+							speakerSeries: formData.speakerSeries
+						};
+						sessionStorage.setItem(unsavedFormDataKey, JSON.stringify(unsavedData));
+					}
 				}
 
 				console.log('[CLIENT] Reloading page...');
@@ -398,6 +476,18 @@
 			indexInput.value = originalIndex;
 			form.appendChild(indexInput);
 			
+			// Preserve unsaved form data before submitting
+			if (browser && meetingPlanner?.id && typeof sessionStorage !== 'undefined') {
+				const unsavedFormDataKey = `unsavedMeetingPlanner_${meetingPlanner.id}`;
+				const unsavedData = {
+					notes: notes,
+					communionHappening: formData.communionHappening,
+					speakerTopic: formData.speakerTopic,
+					speakerSeries: formData.speakerSeries
+				};
+				sessionStorage.setItem(unsavedFormDataKey, JSON.stringify(unsavedData));
+			}
+			
 			document.body.appendChild(form);
 			form.submit();
 		}
@@ -485,7 +575,16 @@
 	<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
 		<!-- Left Column: Meeting Details (1/4 width) -->
 		<div class="lg:col-span-1">
-			<form id="meeting-planner-edit-form" method="POST" action="?/update" use:enhance>
+			<form id="meeting-planner-edit-form" method="POST" action="?/update" use:enhance={({ formData: fd, cancel }) => {
+				return async ({ result, update }) => {
+					// Clear unsaved form data after successful save
+					if (result.type === 'success' && browser && meetingPlanner?.id && typeof sessionStorage !== 'undefined') {
+						const unsavedFormDataKey = `unsavedMeetingPlanner_${meetingPlanner.id}`;
+						sessionStorage.removeItem(unsavedFormDataKey);
+					}
+					await update({ reset: false });
+				};
+			}}>
 				<input type="hidden" name="_csrf" value={csrfToken} />
 				<input type="hidden" name="notes" value={notes} />
 				
