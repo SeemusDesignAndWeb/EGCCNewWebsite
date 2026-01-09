@@ -30,8 +30,22 @@
 	let email = '';
 	let selectedRotas = new Set(); // Store as "rotaId:occurrenceId" or "rotaId" if no occurrence
 
-	// Reactive value for the hidden input
-	$: selectedRotasJson = JSON.stringify(getSelectedRotasArray());
+	// Reactive value for the hidden input - explicitly depend on selectedRotas
+	// Convert Set to array and stringify whenever selectedRotas changes
+	$: selectedRotasJson = (() => {
+		// Force reactivity by accessing selectedRotas
+		const size = selectedRotas.size;
+		const keys = Array.from(selectedRotas);
+		return JSON.stringify(
+			keys.map(key => {
+				const parts = key.split(':');
+				return {
+					rotaId: parts[0],
+					occurrenceId: parts.length > 1 ? parts[1] : null
+				};
+			})
+		);
+	})();
 
 	function toggleRotaSelection(rotaId, occurrenceId) {
 		const key = occurrenceId ? `${rotaId}:${occurrenceId}` : rotaId;
@@ -39,10 +53,13 @@
 		const newSet = new Set(selectedRotas);
 		if (newSet.has(key)) {
 			newSet.delete(key);
+			console.log('[Rota Signup] Removed selection:', key, 'New size:', newSet.size);
 		} else {
 			newSet.add(key);
+			console.log('[Rota Signup] Added selection:', key, 'New size:', newSet.size);
 		}
 		selectedRotas = newSet; // Assign new Set to trigger reactivity
+		console.log('[Rota Signup] Current selectedRotas:', Array.from(selectedRotas));
 	}
 
 	function isRotaSelected(rotaId, occurrenceId) {
@@ -78,11 +95,27 @@
 	}
 
 	// Action to ensure hidden input is updated on form submit
+	let hiddenInputNode = null;
+	
 	function syncHiddenInput(node) {
+		hiddenInputNode = node;
+		
 		function update() {
-			// Always get the latest value from the reactive statement
-			node.value = selectedRotasJson;
+			// Always get the latest value directly from selectedRotas to ensure it's current
+			const selectedArray = Array.from(selectedRotas).map(key => {
+				const parts = key.split(':');
+				return {
+					rotaId: parts[0],
+					occurrenceId: parts.length > 1 ? parts[1] : null
+				};
+			});
+			const jsonStr = JSON.stringify(selectedArray);
+			console.log('[Rota Signup] Updating hidden input. selectedRotas.size:', selectedRotas.size, 'selectedArray:', selectedArray, 'jsonStr:', jsonStr);
+			node.value = jsonStr;
 		}
+		
+		// Update immediately
+		update();
 		
 		// Update on form submit with capture:true to run BEFORE enhance processes the form
 		// This ensures we have the latest value even if there's a timing issue
@@ -97,8 +130,26 @@
 				if (form) {
 					form.removeEventListener('submit', update, { capture: true });
 				}
+				hiddenInputNode = null;
 			}
 		};
+	}
+	
+	// Reactive statement to update hidden input whenever selectedRotas changes
+	$: if (hiddenInputNode) {
+		// Force reactivity by accessing selectedRotas
+		const _ = selectedRotas.size;
+		// Update the input value directly from selectedRotas to ensure it's current
+		const selectedArray = Array.from(selectedRotas).map(key => {
+			const parts = key.split(':');
+			return {
+				rotaId: parts[0],
+				occurrenceId: parts.length > 1 ? parts[1] : null
+			};
+		});
+		const jsonStr = JSON.stringify(selectedArray);
+		console.log('[Rota Signup] Reactive update. selectedRotas.size:', selectedRotas.size, 'selectedArray:', selectedArray, 'jsonStr:', jsonStr);
+		hiddenInputNode.value = jsonStr;
 	}
 </script>
 

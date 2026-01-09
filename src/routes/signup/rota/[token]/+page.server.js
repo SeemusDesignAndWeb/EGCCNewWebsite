@@ -120,9 +120,25 @@ export const actions = {
 
 				// Get selected rotas and occurrences
 				const selectedRotasStr = data.get('selectedRotas') || '[]';
-				const selectedRotas = JSON.parse(selectedRotasStr);
+				console.log('[Rota Signup] Received selectedRotas string:', selectedRotasStr);
+				
+				let selectedRotas;
+				try {
+					selectedRotas = JSON.parse(selectedRotasStr);
+					console.log('[Rota Signup] Parsed selectedRotas:', JSON.stringify(selectedRotas, null, 2));
+				} catch (parseError) {
+					console.error('[Rota Signup] JSON parse error:', parseError);
+					console.error('[Rota Signup] Failed to parse:', selectedRotasStr);
+					return fail(400, { error: 'Invalid selection data format' });
+				}
+				
+				if (!Array.isArray(selectedRotas)) {
+					console.error('[Rota Signup] selectedRotas is not an array:', typeof selectedRotas, selectedRotas);
+					return fail(400, { error: 'Invalid selection data format' });
+				}
 				
 				if (selectedRotas.length === 0) {
+					console.warn('[Rota Signup] No rotas selected. selectedRotasStr was:', selectedRotasStr);
 					return fail(400, { error: 'Please select at least one rota and occurrence to sign up for' });
 				}
 
@@ -202,7 +218,10 @@ export const actions = {
 
 				// Process each selected rota/occurrence
 				for (const { rotaId, occurrenceId } of selectedRotas) {
-					const rota = rotas.find(r => r.id === rotaId);
+					console.log(`[Rota Signup] Processing rotaId: ${rotaId}, occurrenceId: ${occurrenceId}`);
+					
+					// Reload rota from database to get latest data (in case it was updated in previous iteration)
+					const rota = await findById('rotas', rotaId);
 					if (!rota) {
 						errors.push(`Rota not found: ${rotaId}`);
 						continue;
@@ -210,6 +229,7 @@ export const actions = {
 
 					// Determine the actual occurrenceId to use
 					const targetOccurrenceId = occurrenceId || rota.occurrenceId || null;
+					console.log(`[Rota Signup] Target occurrenceId: ${targetOccurrenceId}, Current assignees count: ${rota.assignees?.length || 0}`);
 
 					// Check capacity per occurrence
 					const existingAssignees = Array.isArray(rota.assignees) ? [...rota.assignees] : [];
@@ -231,6 +251,7 @@ export const actions = {
 
 					// Add assignee as object (name, email, occurrenceId) for public signups
 					existingAssignees.push({ name, email, occurrenceId: targetOccurrenceId });
+					console.log(`[Rota Signup] Adding assignee. Total assignees after add: ${existingAssignees.length}`);
 
 					// Update rota
 					const updatedRota = {
@@ -240,6 +261,7 @@ export const actions = {
 					const { validateRota } = await import('$lib/crm/server/validators.js');
 					const validated = validateRota(updatedRota);
 					await update('rotas', rota.id, validated);
+					console.log(`[Rota Signup] Updated rota ${rotaId} with ${validated.assignees.length} assignees`);
 				}
 
 				if (errors.length > 0) {
