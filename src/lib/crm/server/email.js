@@ -15,6 +15,24 @@ function getBaseUrl(event) {
 }
 
 /**
+ * Generate email branding HTML with logo and site link
+ * @param {object} event - SvelteKit event object (for base URL)
+ * @returns {string} Branding HTML
+ */
+function getEmailBranding(event) {
+	const baseUrl = getBaseUrl(event);
+	const logoUrl = `${baseUrl}/images/egcc-color.png`;
+	
+	return `
+		<div style="text-align: center; padding: 20px 0; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px;">
+			<a href="${baseUrl}" style="display: inline-block; text-decoration: none;">
+				<img src="${logoUrl}" alt="Eltham Green Community Church" style="max-width: 200px; height: auto; display: block; margin: 0 auto;" />
+			</a>
+		</div>
+	`;
+}
+
+/**
  * Clean up empty paragraphs and other Quill artifacts from HTML
  * @param {string} html - HTML content
  * @returns {string} Cleaned HTML
@@ -405,7 +423,28 @@ export async function sendNewsletterEmail({ newsletterId, to, name, contact }, e
 	`;
 	const unsubscribeText = `\n\n---\nYou are receiving this email because you are subscribed to our newsletter.\nUnsubscribe: ${unsubscribeLink}`;
 
-	personalizedHtml += unsubscribeHtml;
+	// Wrap content in proper email template with branding
+	const branding = getEmailBranding(event);
+	const fullHtml = `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta charset="utf-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>${personalizedSubject}</title>
+		</head>
+		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+				${branding}
+				<div style="color: #333;">
+					${personalizedHtml}
+				</div>
+				${unsubscribeHtml}
+			</div>
+		</body>
+		</html>
+	`;
+
 	personalizedText += unsubscribeText;
 
 	try {
@@ -413,7 +452,7 @@ export async function sendNewsletterEmail({ newsletterId, to, name, contact }, e
 			from: fromEmail,
 			to: [to],
 			subject: personalizedSubject,
-			html: personalizedHtml,
+			html: fullHtml,
 			text: personalizedText
 		});
 
@@ -510,6 +549,7 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 		upcomingRotasHtml += '</div>';
 	}
 
+	const branding = getEmailBranding(event);
 	const html = `
 		<!DOCTYPE html>
 		<html>
@@ -519,11 +559,13 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 			<title>Volunteer Rota Invitation</title>
 		</head>
 		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
-			<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 20px 15px; border-radius: 8px 8px 0 0; text-align: center;">
-				<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Volunteer Rota Invitation</h1>
-			</div>
-			
-			<div style="background: #ffffff; padding: 20px 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+				${branding}
+				<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 20px 15px; border-radius: 6px; text-align: center; margin-bottom: 20px;">
+					<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Volunteer Rota Invitation</h1>
+				</div>
+				
+				<div style="padding: 0;">
 				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Hello ${name},</p>
 				
 				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">
@@ -551,6 +593,7 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 				</p>
 
 				${upcomingRotasHtml}
+				</div>
 			</div>
 		</body>
 		</html>
@@ -610,7 +653,228 @@ ${upcomingRotasText}
 }
 
 /**
- * Send bulk rota invitations
+ * Send bulk rota invitations (one email per contact with all rotas)
+ * @param {Array} contactInvites - Array of {contact, invites: [{token, rotaData}]}
+ * @param {object} eventData - Event data
+ * @param {string} eventPageUrl - URL to the public event page
+ * @param {object} event - SvelteKit event object
+ * @returns {Promise<Array>} Results array
+ */
+export async function sendCombinedRotaInvites(contactInvites, eventData, eventPageUrl, event) {
+	const results = [];
+	const baseUrl = getBaseUrl(event);
+	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	
+	for (const contactInvite of contactInvites) {
+		const { contact, invites } = contactInvite;
+		const name = `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email;
+		const to = contact.email;
+		
+		if (!to) {
+			results.push({ email: to || 'unknown', status: 'error', error: 'No email address' });
+			continue;
+		}
+
+		try {
+			// Group invites by rota (one section per rota, not per occurrence)
+			const rotasMap = new Map();
+			
+			for (const invite of invites) {
+				const { rota } = invite.rotaData;
+				const rotaId = rota?.id;
+				if (!rotaId) continue;
+				
+				if (!rotasMap.has(rotaId)) {
+					// Use the first token for this rota (all tokens for same rota go to same page)
+					rotasMap.set(rotaId, {
+						rota,
+						token: invite.token,
+						signupUrl: `${baseUrl}/signup/rota/${invite.token}#rota-${rotaId}`
+					});
+				}
+			}
+
+			// Build rota sections for HTML (one per rota)
+			let rotasHtml = '';
+			let rotasText = '';
+			const eventTitle = eventData?.title || 'Event';
+			
+			for (const [rotaId, rotaInfo] of rotasMap) {
+				const { rota, signupUrl } = rotaInfo;
+				const role = rota?.role || 'Volunteer';
+				const capacity = rota?.capacity || 1;
+
+				rotasHtml += `
+					<div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #2d7a32;">
+						<p style="margin: 0 0 8px 0; color: #333; font-size: 16px; font-weight: 600;">${role}</p>
+						<p style="margin: 0 0 10px 0; color: #666; font-size: 13px;">Capacity: ${capacity} ${capacity === 1 ? 'person' : 'people'} per occurrence</p>
+						<div style="text-align: center; margin-top: 10px;">
+							<a href="${signupUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 8px 16px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 13px;">Select Date for ${role}</a>
+						</div>
+					</div>
+				`;
+
+				rotasText += `\n${role} (Capacity: ${capacity} ${capacity === 1 ? 'person' : 'people'} per occurrence)`;
+				rotasText += `\nSelect date: ${signupUrl}\n`;
+			}
+
+			// Get upcoming rotas for this contact (excluding the ones in this invitation)
+			const upcomingRotas = await getUpcomingRotas(contact.id, event);
+			const invitedRotaIds = new Set(invites.map(i => i.rotaData.rota.id));
+			const otherUpcomingRotas = upcomingRotas.filter(item => 
+				!invitedRotaIds.has(item.rota.id)
+			);
+
+			// Build upcoming rotas section
+			let upcomingRotasHtml = '';
+			if (otherUpcomingRotas.length > 0) {
+				upcomingRotasHtml = `
+					<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #2d7a32;">
+						<h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; font-weight: 600;">Your Other Upcoming Rotas (Next 7 Days)</h3>
+				`;
+				for (const item of otherUpcomingRotas) {
+					const dateStr = new Date(item.occurrence.startsAt).toLocaleDateString('en-GB', {
+						weekday: 'long',
+						year: 'numeric',
+						month: 'long',
+						day: 'numeric',
+						hour: '2-digit',
+						minute: '2-digit'
+					});
+					upcomingRotasHtml += `
+						<div style="border-bottom: 1px solid #e5e7eb; padding: 8px 0; margin-bottom: 8px;">
+							<p style="margin: 0 0 4px 0; color: #333; font-size: 14px; font-weight: 600;">${item.event.title} - ${item.rota.role}</p>
+							<p style="margin: 0 0 4px 0; color: #666; font-size: 13px;">${dateStr}</p>
+							${item.occurrence.location ? `<p style="margin: 0 0 8px 0; color: #666; font-size: 13px;">📍 ${item.occurrence.location}</p>` : ''}
+							${item.signupUrl ? `<a href="${item.signupUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;">View Rota</a>` : ''}
+						</div>
+					`;
+				}
+				upcomingRotasHtml += '</div>';
+			}
+
+			const branding = getEmailBranding(event);
+			const html = `
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<meta charset="utf-8">
+					<meta name="viewport" content="width=device-width, initial-scale=1.0">
+					<title>Volunteer Rota Invitations</title>
+				</head>
+				<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
+					<div style="background: #ffffff; padding: 20px 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+						${branding}
+						<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 20px 15px; border-radius: 6px; text-align: center; margin-bottom: 20px;">
+							<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Volunteer Rota Invitations</h1>
+						</div>
+						
+						<div style="padding: 0;">
+						<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Hello ${name},</p>
+						
+						<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">
+							Thank you for considering volunteering for <strong>${eventTitle}</strong>. We cannot run these events without your support, and we truly appreciate your willingness to help.
+						</p>
+						
+						<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">
+							You've been invited to volunteer in the following role${rotasMap.size > 1 ? 's' : ''}:
+						</p>
+
+						${rotasHtml}
+
+						${eventPageUrl ? `
+						<div style="text-align: center; margin: 20px 0;">
+							<a href="${eventPageUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px;">View Event Page</a>
+						</div>
+						` : ''}
+
+						${upcomingRotasHtml}
+						
+						<!-- Footer -->
+						<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+							<div style="text-align: center; margin-bottom: 15px;">
+								<p style="margin: 0 0 8px 0; color: #333; font-size: 14px; font-weight: 600;">Eltham Green Community Church</p>
+								<p style="margin: 0 0 4px 0; color: #666; font-size: 12px;">542 Westhorne Avenue, Eltham, London, SE9 6RR</p>
+								<p style="margin: 0 0 4px 0; color: #666; font-size: 12px;">
+									<a href="tel:02088501331" style="color: #2d7a32; text-decoration: none;">020 8850 1331</a> | 
+									<a href="mailto:enquiries@egcc.co.uk" style="color: #2d7a32; text-decoration: none;">enquiries@egcc.co.uk</a>
+								</p>
+								<p style="margin: 10px 0 0 0;">
+									<a href="${baseUrl}" style="color: #2d7a32; text-decoration: none; font-size: 12px; font-weight: 500;">Visit our website</a>
+								</p>
+							</div>
+						</div>
+						</div>
+					</div>
+				</body>
+				</html>
+			`;
+
+			let upcomingRotasText = '';
+			if (otherUpcomingRotas.length > 0) {
+				upcomingRotasText = '\n\nYour Other Upcoming Rotas (Next 7 Days):\n';
+				for (const item of otherUpcomingRotas) {
+					const dateStr = new Date(item.occurrence.startsAt).toLocaleDateString('en-GB', {
+						weekday: 'long',
+						year: 'numeric',
+						month: 'long',
+						day: 'numeric',
+						hour: '2-digit',
+						minute: '2-digit'
+					});
+					upcomingRotasText += `- ${item.event.title} - ${item.rota.role}\n  ${dateStr}`;
+					if (item.occurrence.location) {
+						upcomingRotasText += `\n  Location: ${item.occurrence.location}`;
+					}
+					if (item.signupUrl) {
+						upcomingRotasText += `\n  View: ${item.signupUrl}`;
+					}
+					upcomingRotasText += '\n';
+				}
+			}
+
+			const text = `
+Volunteer Rota Invitations
+
+Hello ${name},
+
+Thank you for considering volunteering for ${eventTitle}. We cannot run these events without your support, and we truly appreciate your willingness to help.
+
+You've been invited to volunteer in the following role${rotasMap.size > 1 ? 's' : ''}:
+${rotasText}
+${eventPageUrl ? `\nView Event Page: ${eventPageUrl}` : ''}
+${upcomingRotasText}
+
+---
+Eltham Green Community Church
+542 Westhorne Avenue, Eltham, London, SE9 6RR
+Phone: 020 8850 1331
+Email: enquiries@egcc.co.uk
+Website: ${baseUrl}
+			`.trim();
+
+			const subject = `Volunteer for ${eventTitle}`;
+
+			const result = await resend.emails.send({
+				from: fromEmail,
+				to: [to],
+				subject,
+				html,
+				text
+			});
+
+			results.push({ email: to, status: 'sent', result });
+		} catch (error) {
+			console.error(`Error sending combined rota invite to ${to}:`, error);
+			results.push({ email: to, status: 'error', error: error.message });
+		}
+	}
+
+	return results;
+}
+
+/**
+ * Send bulk rota invitations (legacy - sends one email per rota)
  * @param {Array} invites - Array of {to, name, token, rotaData, contact}
  * @param {object} event - SvelteKit event object
  * @returns {Promise<Array>} Results array
@@ -654,6 +918,7 @@ export async function sendAdminWelcomeEmail({ to, name, email, verificationToken
 	const verificationLink = `${baseUrl}/hub/auth/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`;
 	const hubLoginLink = `${baseUrl}/hub/auth/login`;
 
+	const branding = getEmailBranding(event);
 	const html = `
 		<!DOCTYPE html>
 		<html>
@@ -663,12 +928,14 @@ export async function sendAdminWelcomeEmail({ to, name, email, verificationToken
 			<title>Welcome to TheHUB - Eltham Green Community Church</title>
 		</head>
 		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
-			<div style="background: linear-gradient(135deg, #4A97D2 0%, #3a7ab8 100%); padding: 20px 15px; border-radius: 8px 8px 0 0; text-align: center;">
-				<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Welcome to TheHUB</h1>
-				<p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">Eltham Green Community Church</p>
-			</div>
-			
-			<div style="background: #ffffff; padding: 20px 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+				${branding}
+				<div style="background: linear-gradient(135deg, #4A97D2 0%, #3a7ab8 100%); padding: 20px 15px; border-radius: 6px; text-align: center; margin-bottom: 20px;">
+					<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Welcome to TheHUB</h1>
+					<p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">Eltham Green Community Church</p>
+				</div>
+				
+				<div style="padding: 0;">
 				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Hello ${name},</p>
 				
 				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Your admin account has been created for TheHUB, the church management system for Eltham Green Community Church.</p>
@@ -722,6 +989,7 @@ export async function sendAdminWelcomeEmail({ to, name, email, verificationToken
 					<p style="margin: 8px 0 0 0;">
 						<a href="${baseUrl}" style="color: #4A97D2; text-decoration: none;">Visit Eltham Green Community Church Website</a>
 					</p>
+				</div>
 				</div>
 			</div>
 		</body>
@@ -805,6 +1073,7 @@ export async function sendPasswordResetEmail({ to, name, resetToken }, event) {
 		fullLink: resetLink
 	});
 
+	const branding = getEmailBranding(event);
 	const html = `
 		<!DOCTYPE html>
 		<html>
@@ -814,12 +1083,14 @@ export async function sendPasswordResetEmail({ to, name, resetToken }, event) {
 			<title>Reset Your Password - TheHUB</title>
 		</head>
 		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
-			<div style="background: linear-gradient(135deg, #4A97D2 0%, #3a7ab8 100%); padding: 20px 15px; border-radius: 8px 8px 0 0; text-align: center;">
-				<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Reset Your Password</h1>
-				<p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">TheHUB - Eltham Green Community Church</p>
-			</div>
-			
-			<div style="background: #ffffff; padding: 20px 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+				${branding}
+				<div style="background: linear-gradient(135deg, #4A97D2 0%, #3a7ab8 100%); padding: 20px 15px; border-radius: 6px; text-align: center; margin-bottom: 20px;">
+					<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Reset Your Password</h1>
+					<p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">TheHUB - Eltham Green Community Church</p>
+				</div>
+				
+				<div style="padding: 0;">
 				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Hello ${name},</p>
 				
 				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">We received a request to reset your password for your TheHUB admin account.</p>
@@ -846,6 +1117,7 @@ export async function sendPasswordResetEmail({ to, name, resetToken }, event) {
 					<p style="margin: 8px 0 0 0;">
 						<a href="${baseUrl}" style="color: #4A97D2; text-decoration: none;">Visit Eltham Green Community Church Website</a>
 					</p>
+				</div>
 				</div>
 			</div>
 		</body>
@@ -929,6 +1201,7 @@ export async function sendEventSignupConfirmation({ to, name, event, occurrence,
 	const eventTime = `${formatTime(occurrence.startsAt)} - ${formatTime(occurrence.endsAt)}`;
 	const totalAttendees = guestCount + 1; // +1 for the signer-upper
 
+	const branding = getEmailBranding(svelteEvent);
 	const html = `
 		<!DOCTYPE html>
 		<html>
@@ -938,11 +1211,13 @@ export async function sendEventSignupConfirmation({ to, name, event, occurrence,
 			<title>Event Signup Confirmation</title>
 		</head>
 		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
-			<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 20px 15px; border-radius: 8px 8px 0 0; text-align: center;">
-				<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Event Signup Confirmed!</h1>
-			</div>
-			
-			<div style="background: #ffffff; padding: 20px 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+				${branding}
+				<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 20px 15px; border-radius: 6px; text-align: center; margin-bottom: 20px;">
+					<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Event Signup Confirmed!</h1>
+				</div>
+				
+				<div style="padding: 0;">
 				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">
 					Hi ${name},
 				</p>
@@ -985,6 +1260,7 @@ export async function sendEventSignupConfirmation({ to, name, event, occurrence,
 				<div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; text-align: center; color: #666; font-size: 12px;">
 					<p style="margin: 0;">Eltham Green Community Church</p>
 					<p style="margin: 4px 0 0 0;">542 Westhorne Avenue, Eltham, London, SE9 6RR</p>
+				</div>
 				</div>
 			</div>
 		</body>
@@ -1202,6 +1478,7 @@ export async function sendRotaUpdateNotification({ to, name }, rotaData, event) 
 		assigneesText = '\n\nNo assignees yet.';
 	}
 
+	const branding = getEmailBranding(event);
 	const html = `
 		<!DOCTYPE html>
 		<html>
@@ -1211,11 +1488,13 @@ export async function sendRotaUpdateNotification({ to, name }, rotaData, event) 
 			<title>Rota Updated</title>
 		</head>
 		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
-			<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 20px 15px; border-radius: 8px 8px 0 0; text-align: center;">
-				<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Rota Updated</h1>
-			</div>
-			
-			<div style="background: #ffffff; padding: 20px 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+				${branding}
+				<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 20px 15px; border-radius: 6px; text-align: center; margin-bottom: 20px;">
+					<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Rota Updated</h1>
+				</div>
+				
+				<div style="padding: 0;">
 				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Hello ${name},</p>
 				
 				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">
@@ -1233,6 +1512,7 @@ export async function sendRotaUpdateNotification({ to, name }, rotaData, event) 
 
 				<div style="text-align: center; margin: 20px 0;">
 					<a href="${hubUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px;">View Rota</a>
+				</div>
 				</div>
 			</div>
 		</body>
@@ -1267,6 +1547,156 @@ View the rota: ${hubUrl}
 		return result;
 	} catch (error) {
 		console.error('Failed to send rota update notification:', error);
+		throw error;
+	}
+}
+
+/**
+ * Send upcoming rota reminder email to a contact
+ * @param {object} options - Email options
+ * @param {string} options.to - Contact email address
+ * @param {string} options.name - Contact name
+ * @param {object} rotaData - Rota data { rota, event, occurrence }
+ * @param {object} event - SvelteKit event object (for base URL)
+ * @returns {Promise<object>} Resend API response
+ */
+export async function sendUpcomingRotaReminder({ to, name }, rotaData, event) {
+	const { rota, event: eventData, occurrence } = rotaData;
+	const baseUrl = getBaseUrl(event);
+	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	
+	// Get signup link if token exists
+	let signupLink = '';
+	try {
+		const { ensureRotaToken } = await import('./tokens.js');
+		const token = await ensureRotaToken(rota.eventId, rota.id, occurrence?.id || rota.occurrenceId);
+		signupLink = `${baseUrl}/signup/rota/${token.token}`;
+	} catch (error) {
+		console.error('Error generating rota token for reminder:', error);
+		// Continue without signup link if token generation fails
+	}
+
+	const eventTitle = eventData?.title || 'Event';
+	const role = rota?.role || 'Volunteer';
+
+	// Format occurrence date
+	let occurrenceDateDisplay = '';
+	let occurrenceTimeDisplay = '';
+	let occurrenceLocation = '';
+	if (occurrence) {
+		const startDate = new Date(occurrence.startsAt);
+		occurrenceDateDisplay = startDate.toLocaleDateString('en-GB', {
+			weekday: 'long',
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric'
+		});
+		occurrenceTimeDisplay = startDate.toLocaleTimeString('en-GB', {
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+		occurrenceLocation = occurrence.location || eventData?.location || '';
+	} else if (rota.occurrenceId) {
+		const { readCollection } = await import('./fileStore.js');
+		const occurrences = await readCollection('occurrences');
+		const rotaOccurrence = occurrences.find(o => o.id === rota.occurrenceId);
+		if (rotaOccurrence) {
+			const startDate = new Date(rotaOccurrence.startsAt);
+			occurrenceDateDisplay = startDate.toLocaleDateString('en-GB', {
+				weekday: 'long',
+				year: 'numeric',
+				month: 'long',
+				day: 'numeric'
+			});
+			occurrenceTimeDisplay = startDate.toLocaleTimeString('en-GB', {
+				hour: '2-digit',
+				minute: '2-digit'
+			});
+			occurrenceLocation = rotaOccurrence.location || eventData?.location || '';
+		}
+	}
+
+	const branding = getEmailBranding(event);
+	const html = `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta charset="utf-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>Upcoming Rota Reminder</title>
+		</head>
+		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f9fafb;">
+			<div style="background: #ffffff; padding: 20px 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+				${branding}
+				<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 20px 15px; border-radius: 6px; text-align: center; margin-bottom: 20px;">
+					<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 600;">Upcoming Rota Reminder</h1>
+					<p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">You have a rota assignment coming up in 3 days</p>
+				</div>
+				
+				<div style="padding: 0;">
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">Hello ${name},</p>
+				
+				<p style="color: #333; font-size: 15px; margin: 0 0 15px 0;">
+					This is a friendly reminder that you are assigned to the rota <strong>${role}</strong> for <strong>${eventTitle}</strong>.
+				</p>
+
+				<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #2d7a32;">
+					<h2 style="color: #2d7a32; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Rota Details</h2>
+					<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Role:</strong> ${role}</p>
+					<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Event:</strong> ${eventTitle}</p>
+					${occurrenceDateDisplay ? `<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Date:</strong> ${occurrenceDateDisplay}</p>` : ''}
+					${occurrenceTimeDisplay ? `<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Time:</strong> ${occurrenceTimeDisplay}</p>` : ''}
+					${occurrenceLocation ? `<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Location:</strong> ${occurrenceLocation}</p>` : ''}
+				</div>
+
+				${signupLink ? `
+				<div style="text-align: center; margin: 20px 0;">
+					<a href="${signupLink}" style="display: inline-block; background: #2d7a32; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 14px;">View Rota Details</a>
+				</div>
+				` : ''}
+
+				<div style="background: #fffbf0; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #E6A324;">
+					<p style="color: #333; font-size: 13px; margin: 0;">
+						<strong>Note:</strong> If you are unable to fulfill this assignment, please contact the rota coordinator as soon as possible.
+					</p>
+				</div>
+				</div>
+			</div>
+		</body>
+		</html>
+	`;
+
+	const text = `
+Upcoming Rota Reminder
+
+Hello ${name},
+
+This is a friendly reminder that you are assigned to the rota ${role} for ${eventTitle}.
+
+Rota Details:
+Role: ${role}
+Event: ${eventTitle}
+${occurrenceDateDisplay ? `Date: ${occurrenceDateDisplay}` : ''}
+${occurrenceTimeDisplay ? `Time: ${occurrenceTimeDisplay}` : ''}
+${occurrenceLocation ? `Location: ${occurrenceLocation}` : ''}
+
+${signupLink ? `View rota details: ${signupLink}` : ''}
+
+Note: If you are unable to fulfill this assignment, please contact the rota coordinator as soon as possible.
+	`.trim();
+
+	try {
+		const result = await resend.emails.send({
+			from: fromEmail,
+			to: [to],
+			subject: `Reminder: ${role} - ${eventTitle} in 3 days`,
+			html,
+			text
+		});
+
+		return result;
+	} catch (error) {
+		console.error('Failed to send upcoming rota reminder:', error);
 		throw error;
 	}
 }

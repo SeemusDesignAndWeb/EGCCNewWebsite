@@ -5,6 +5,31 @@ import { env } from '$env/dynamic/private';
 const resend = new Resend(env.RESEND_API_KEY || 're_C88Tpi9d_5uF8M4U2R8r4NbyTwjHBVZ6A');
 
 /**
+ * Get base URL for absolute links in emails
+ * @returns {string} Base URL
+ */
+function getBaseUrl() {
+	return env.APP_BASE_URL || 'http://localhost:5173';
+}
+
+/**
+ * Generate email branding HTML with logo and site link
+ * @returns {string} Branding HTML
+ */
+function getEmailBranding() {
+	const baseUrl = getBaseUrl();
+	const logoUrl = `${baseUrl}/images/egcc-color.png`;
+	
+	return `
+		<div style="text-align: center; padding: 20px 0; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px;">
+			<a href="${baseUrl}" style="display: inline-block; text-decoration: none;">
+				<img src="${logoUrl}" alt="Eltham Green Community Church" style="max-width: 200px; height: auto; display: block; margin: 0 auto;" />
+			</a>
+		</div>
+	`;
+}
+
+/**
  * Send a contact form email via Resend
  * @param {object} options - Email options
  * @param {string} options.to - Recipient email address
@@ -27,6 +52,7 @@ export async function sendContactEmail({
 }) {
 	try {
 		console.log('Sending contact email:', { to, from, replyTo: replyTo || email, name });
+		const branding = getEmailBranding();
 		const result = await resend.emails.send({
 			from: from,
 			to: [to],
@@ -41,11 +67,13 @@ export async function sendContactEmail({
 					<title>New Contact Form Submission</title>
 				</head>
 				<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-					<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-						<h1 style="color: white; margin: 0; font-size: 24px;">New Contact Form Submission</h1>
-					</div>
-					
-					<div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e5e7eb; border-top: none;">
+					<div style="background: #ffffff; padding: 30px; border-radius: 10px; border: 1px solid #e5e7eb;">
+						${branding}
+						<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 30px; border-radius: 6px; text-align: center; margin-bottom: 20px;">
+							<h1 style="color: white; margin: 0; font-size: 24px;">New Contact Form Submission</h1>
+						</div>
+						
+						<div style="background: #f9fafb; padding: 30px; border-radius: 6px; border: 1px solid #e5e7eb;">
 						<div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 							<h2 style="color: #2d7a32; margin-top: 0; font-size: 18px; border-bottom: 2px solid #2d7a32; padding-bottom: 10px;">Contact Information</h2>
 							<table style="width: 100%; border-collapse: collapse;">
@@ -132,6 +160,7 @@ Reply to: ${email}
  */
 export async function sendConfirmationEmail({ to, from = 'onboarding@resend.dev', name }) {
 	try {
+		const branding = getEmailBranding();
 		const result = await resend.emails.send({
 			from: from,
 			to: [to],
@@ -145,11 +174,13 @@ export async function sendConfirmationEmail({ to, from = 'onboarding@resend.dev'
 					<title>Thank You</title>
 				</head>
 				<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-					<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-						<h1 style="color: white; margin: 0; font-size: 24px;">Thank You, ${name}!</h1>
-					</div>
-					
-					<div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e5e7eb; border-top: none;">
+					<div style="background: #ffffff; padding: 30px; border-radius: 10px; border: 1px solid #e5e7eb;">
+						${branding}
+						<div style="background: linear-gradient(135deg, #2d7a32 0%, #1e5a22 100%); padding: 30px; border-radius: 6px; text-align: center; margin-bottom: 20px;">
+							<h1 style="color: white; margin: 0; font-size: 24px;">Thank You, ${name}!</h1>
+						</div>
+						
+						<div style="background: #f9fafb; padding: 30px; border-radius: 6px; border: 1px solid #e5e7eb;">
 						<div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center;">
 							<p style="color: #333; font-size: 16px; margin: 0 0 20px 0;">
 								We've received your message and will get back to you as soon as possible.
