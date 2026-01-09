@@ -143,16 +143,16 @@
 					accept=".csv,.xlsx,.xls"
 					required
 					on:change={handleFileSelect}
-					class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-green file:text-white hover:file:bg-primary-dark"
+					class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-hub-green-600 file:text-white hover:file:bg-hub-green-700"
 				/>
 				<p class="mt-2 text-xs text-gray-500">
 					Upload a CSV or Excel (.xlsx, .xls) file with contact information. The first row should contain column headers.
 				</p>
 			</div>
 
-			<div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
-				<p class="text-sm font-medium text-blue-800 mb-2">Expected File Format:</p>
-				<p class="text-xs text-blue-700">
+			<div class="bg-hub-blue-50 border border-hub-blue-200 rounded-md p-4 mb-4">
+				<p class="text-sm font-medium text-hub-blue-800 mb-2">Expected File Format:</p>
+				<p class="text-xs text-hub-blue-700">
 					The file should include columns like: Email, First Name, Last Name, Phone, Address, City, etc.
 					Column names will be automatically detected and mapped to contact fields.
 					Supports CSV and Excel (.xlsx, .xls) formats.
@@ -204,7 +204,7 @@
 				</p>
 			</div>
 
-			<button type="submit" class="bg-brand-green text-white px-4 py-2 rounded-md hover:bg-primary-dark">
+			<button type="submit" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 				Upload and Map Fields
 			</button>
 			<a href="/hub/contacts" class="ml-2 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 inline-block">
@@ -281,7 +281,7 @@
 							<td class="px-4 py-3">
 								<select
 									bind:value={fieldMapping[header]}
-									class="block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 text-sm"
+									class="block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
 								>
 									{#each contactFields as field}
 										<option value={field.value}>{field.label}</option>
@@ -297,8 +297,8 @@
 			</table>
 		</div>
 
-		<div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
-			<p class="text-sm text-yellow-800">
+		<div class="bg-hub-yellow-50 border border-hub-yellow-200 rounded-md p-4 mb-6">
+			<p class="text-sm text-hub-yellow-800">
 				<strong>Preview:</strong> Showing first {csvRows.length} of {totalRows} rows. 
 				All {totalRows} rows will be imported when you proceed.
 			</p>
@@ -308,7 +308,7 @@
 			<button
 				type="button"
 				on:click={proceedToPreview}
-				class="bg-brand-green text-white px-4 py-2 rounded-md hover:bg-primary-dark"
+				class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 			>
 				Preview Import
 			</button>
@@ -366,7 +366,7 @@
 			<button
 				type="button"
 				on:click={handleImport}
-				class="bg-brand-green text-white px-4 py-2 rounded-md hover:bg-primary-dark"
+				class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 			>
 				Import {totalRows} Contacts
 			</button>
@@ -387,23 +387,23 @@
 		</div>
 
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-			<div class="bg-green-50 border border-green-200 rounded-lg p-4">
-				<div class="text-2xl font-bold text-green-800">{importResults.success.length}</div>
-				<div class="text-sm text-green-700">Successfully Imported</div>
+			<div class="bg-hub-green-50 border border-hub-green-200 rounded-lg p-4">
+				<div class="text-2xl font-bold text-hub-green-800">{importResults.success.length}</div>
+				<div class="text-sm text-hub-green-700">Successfully Imported</div>
 			</div>
-			<div class="bg-red-50 border border-red-200 rounded-lg p-4">
-				<div class="text-2xl font-bold text-red-800">{importResults.errors.length}</div>
-				<div class="text-sm text-red-700">Errors</div>
+			<div class="bg-hub-red-50 border border-hub-red-200 rounded-lg p-4">
+				<div class="text-2xl font-bold text-hub-red-800">{importResults.errors.length}</div>
+				<div class="text-sm text-hub-red-700">Errors</div>
 			</div>
 		</div>
 
 		{#if importResults.errors.length > 0}
 			<div class="mb-6">
 				<h4 class="text-md font-semibold text-gray-900 mb-2">Errors</h4>
-				<div class="bg-red-50 border border-red-200 rounded-md p-4 max-h-60 overflow-y-auto">
+				<div class="bg-hub-red-50 border border-hub-red-200 rounded-md p-4 max-h-60 overflow-y-auto">
 					<ul class="space-y-1">
 						{#each importResults.errors as error}
-							<li class="text-sm text-red-800">Row {error.row}: {error.error}</li>
+							<li class="text-sm text-hub-red-800">Row {error.row}: {error.error}</li>
 						{/each}
 					</ul>
 				</div>
@@ -412,7 +412,7 @@
 
 
 		<div class="flex gap-2">
-			<a href="/hub/contacts" class="bg-brand-green text-white px-4 py-2 rounded-md hover:bg-primary-dark">
+			<a href="/hub/contacts" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 				View Contacts
 			</a>
 			<button

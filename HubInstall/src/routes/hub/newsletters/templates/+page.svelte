@@ -24,7 +24,7 @@
 
 	<div class="mb-4 flex justify-between items-center">
 		<h2 class="text-2xl font-bold text-gray-900">Newsletter Templates</h2>
-		<a href="/hub/newsletters/templates/new" class="bg-brand-green text-white px-4 py-2 rounded-md hover:bg-primary-dark">
+		<a href="/hub/newsletters/templates/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 			New Template
 		</a>
 	</div>

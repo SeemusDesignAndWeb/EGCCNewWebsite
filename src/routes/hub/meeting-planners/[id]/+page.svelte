@@ -531,7 +531,7 @@
 				<h2 class="text-xl font-bold text-gray-900 mb-2">Meeting Planner</h2>
 				<div class="flex flex-wrap items-center gap-3 text-xl text-gray-600">
 					<div>
-						<a href="/hub/events/{event.id}" class="text-brand-green hover:text-primary-dark underline font-bold">
+						<a href="/hub/events/{event.id}" class="text-hub-green-600 hover:text-hub-green-700 underline font-bold">
 							{event?.title || 'Unknown'}
 						</a>
 					</div>
@@ -557,13 +557,13 @@
 				<button
 					type="submit"
 					form="meeting-planner-edit-form"
-					class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm"
+					class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 text-sm"
 				>
 					Save Changes
 				</button>
 				<button
 					on:click={handleDelete}
-					class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm"
+					class="bg-hub-red-600 text-white px-4 py-2 rounded-md hover:bg-hub-red-700 text-sm"
 				>
 					Delete
 				</button>
@@ -599,7 +599,7 @@
 								name="communionHappening"
 								value="on"
 								bind:checked={formData.communionHappening}
-								class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+								class="h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded"
 							/>
 							<label for="communionHappening" class="ml-2 block text-xs text-gray-700">
 								Communion happening
@@ -612,7 +612,7 @@
 								id="speakerTopic"
 								name="speakerTopic"
 								bind:value={formData.speakerTopic}
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 text-sm"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
 								placeholder="Enter speaker topic"
 							/>
 						</div>
@@ -624,7 +624,7 @@
 								name="speakerSeries"
 								bind:value={formData.speakerSeries}
 								list="speakerSeriesList"
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 text-sm"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
 								placeholder="Enter or select a series"
 							/>
 							<datalist id="speakerSeriesList">
@@ -665,7 +665,7 @@
 											<h4 class="text-sm font-semibold text-gray-900 truncate">{getRotaDisplayName(rotaKey)}</h4>
 											<a 
 												href="/hub/rotas/{rota.id}" 
-												class="text-blue-600 hover:text-blue-800 flex-shrink-0"
+												class="text-hub-blue-600 hover:text-hub-blue-800 flex-shrink-0"
 												target="_blank"
 												title="View full details"
 											>
@@ -675,11 +675,11 @@
 											</a>
 										</div>
 										<div class="text-xs text-gray-500">
-											<span class="font-medium {rota.assignees?.length >= rota.capacity ? 'text-red-600' : 'text-gray-700'}">
+											<span class="font-medium {rota.assignees?.length >= rota.capacity ? 'text-hub-red-600' : 'text-gray-700'}">
 												{rota.assignees?.length || 0} / {rota.capacity}
 											</span>
 											{#if rota.assignees?.length >= rota.capacity}
-												<span class="ml-1 text-red-600">(Full)</span>
+												<span class="ml-1 text-hub-red-600">(Full)</span>
 											{/if}
 										</div>
 									</div>
@@ -692,7 +692,7 @@
 												<div class="flex items-center justify-between p-1.5 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
 													<div class="flex-1 min-w-0">
 														{#if assignee.id}
-															<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium text-xs block truncate">
+															<a href="/hub/contacts/{assignee.id}" class="text-hub-green-600 hover:text-hub-green-700 underline font-medium text-xs block truncate">
 																{assignee.name || 'Unknown'}
 															</a>
 														{:else}
@@ -703,7 +703,7 @@
 													</div>
 													<button
 														on:click={() => handleRemoveAssignee(rotaKey, assignee, index)}
-														class="text-red-600 hover:text-red-800 p-1 rounded text-xs ml-1.5 flex-shrink-0"
+														class="text-hub-red-600 hover:text-hub-red-800 p-1 rounded text-xs ml-1.5 flex-shrink-0"
 														title="Remove assignee"
 													>
 														<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -725,7 +725,7 @@
 										selectedContactIds[rotaKey] = new Set();
 										selectedListId[rotaKey] = '';
 									}}
-									class="w-full bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 text-xs transition-colors"
+									class="w-full bg-hub-green-600 text-white px-3 py-1.5 rounded-md hover:bg-hub-green-700 text-xs transition-colors"
 								>
 									+ Add Assignees
 								</button>
@@ -740,8 +740,8 @@
 											
 											{#if eventOccurrences.length > 0}
 												<div class="mb-3">
-													<label class="block text-xs font-medium text-gray-700 mb-1">Occurrence <span class="text-red-500">*</span></label>
-													<select bind:value={selectedOccurrenceId[rotaKey]} required class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-1.5 px-3 text-sm">
+													<label class="block text-xs font-medium text-gray-700 mb-1">Occurrence <span class="text-hub-red-500">*</span></label>
+													<select bind:value={selectedOccurrenceId[rotaKey]} required class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-3 text-sm">
 														<option value="">Select an occurrence</option>
 														{#each eventOccurrences as occ}
 															<option value={occ.id}>
@@ -755,7 +755,7 @@
 											
 											<div class="mb-3">
 												<label class="block text-xs font-medium text-gray-700 mb-1">Filter by List (optional)</label>
-												<select bind:value={selectedListId[rotaKey]} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-1.5 px-3 text-sm">
+												<select bind:value={selectedListId[rotaKey]} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-3 text-sm">
 													<option value="">All Contacts</option>
 													{#each lists as list}
 														<option value={list.id}>{list.name}</option>
@@ -769,7 +769,7 @@
 													type="text"
 													bind:value={searchTerm[rotaKey]}
 													placeholder="Search contacts..."
-													class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-1.5 px-3 text-sm"
+													class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-3 text-sm"
 												/>
 											</div>
 										</div>
@@ -783,7 +783,7 @@
 													<div class="flex gap-2">
 														<button
 															on:click={() => selectAllContacts(rotaKey)}
-															class="text-xs text-green-600 hover:text-green-800 underline"
+															class="text-xs text-hub-green-600 hover:text-hub-green-800 underline"
 														>
 															Select All
 														</button>
@@ -833,7 +833,7 @@
 											<button
 												on:click={() => handleAddAssignees(rotaKey)}
 												disabled={!selectedContactIds[rotaKey] || selectedContactIds[rotaKey].size === 0 || (eventOccurrences.length > 0 && !selectedOccurrenceId[rotaKey])}
-												class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 text-sm"
+												class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 disabled:opacity-50 text-sm"
 											>
 												Add Selected ({selectedContactIds[rotaKey]?.size || 0})
 											</button>

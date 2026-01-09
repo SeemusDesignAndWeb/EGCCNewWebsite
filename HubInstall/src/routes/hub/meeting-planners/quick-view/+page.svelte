@@ -129,7 +129,7 @@
 	<div class="flex gap-2">
 		<button 
 			on:click={toggleFullscreen}
-			class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
+			class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700 flex items-center gap-2"
 			title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
 		>
 			{#if isFullscreen}
@@ -147,7 +147,7 @@
 		<a href="/hub/meeting-planners" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
 			Back to List
 		</a>
-		<a href="/hub/meeting-planners/new" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+		<a href="/hub/meeting-planners/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 			New Meeting Planner
 		</a>
 	</div>

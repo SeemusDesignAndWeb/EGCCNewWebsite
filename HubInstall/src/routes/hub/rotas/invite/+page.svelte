@@ -76,7 +76,7 @@
 				<button
 					on:click={sendInvites}
 					disabled={sending || !selectedEventId || selectedRotaIds.length === 0 || !selectedListId}
-					class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+					class="bg-hub-green-600 text-white px-6 py-2 rounded-md hover:bg-hub-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
 				>
 					{#if sending}
 						<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -100,8 +100,8 @@
 		<h3 class="text-lg font-semibold text-gray-900 mb-4">Selection</h3>
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 			<div>
-				<label class="block text-sm font-medium text-gray-700 mb-1">Event <span class="text-red-500">*</span></label>
-				<select bind:value={selectedEventId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3">
+				<label class="block text-sm font-medium text-gray-700 mb-1">Event <span class="text-hub-red-500">*</span></label>
+				<select bind:value={selectedEventId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3">
 					<option value="">Select an event</option>
 					{#each events as event}
 						<option value={event.id}>{event.title}</option>
@@ -109,8 +109,8 @@
 				</select>
 			</div>
 			<div>
-				<label class="block text-sm font-medium text-gray-700 mb-1">Contact List <span class="text-red-500">*</span></label>
-				<select bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3">
+				<label class="block text-sm font-medium text-gray-700 mb-1">Contact List <span class="text-hub-red-500">*</span></label>
+				<select bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3">
 					<option value="">Select a list</option>
 					{#each lists as list}
 						<option value={list.id}>{list.name}</option>
@@ -123,12 +123,12 @@
 	<!-- Rotas Panel -->
 	<div class="bg-white shadow rounded-lg p-6">
 		<div class="flex justify-between items-center mb-4">
-			<h3 class="text-lg font-semibold text-gray-900">Rotas <span class="text-red-500">*</span></h3>
+			<h3 class="text-lg font-semibold text-gray-900">Rotas <span class="text-hub-red-500">*</span></h3>
 			{#if filteredRotas.length > 0}
 				<div class="flex gap-2">
 					<button
 						on:click={selectAllRotas}
-						class="text-xs text-green-600 hover:text-green-800 underline"
+						class="text-xs text-hub-green-600 hover:text-hub-green-800 underline"
 					>
 						Select All
 					</button>
@@ -153,7 +153,7 @@
 							type="checkbox" 
 							bind:group={selectedRotaIds} 
 							value={rota.id} 
-							class="mr-3 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded" 
+							class="mr-3 h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded" 
 						/>
 						<div class="flex-1">
 							<div class="font-medium text-sm text-gray-900">{rota.role}</div>
@@ -170,22 +170,22 @@
 		<div class="bg-white shadow rounded-lg p-6">
 			<h3 class="text-lg font-semibold text-gray-900 mb-4">Results</h3>
 			{#if results.error}
-				<div class="p-4 bg-red-50 border border-red-200 rounded-md">
-					<p class="text-red-800 font-medium">{results.error}</p>
+				<div class="p-4 bg-hub-red-50 border border-hub-red-200 rounded-md">
+					<p class="text-hub-red-800 font-medium">{results.error}</p>
 				</div>
 			{:else if results.results}
 				<div class="space-y-3">
-					<div class="p-4 bg-green-50 border border-green-200 rounded-md">
-						<p class="text-green-800 font-medium">
+					<div class="p-4 bg-hub-green-50 border border-hub-green-200 rounded-md">
+						<p class="text-hub-green-800 font-medium">
 							✓ Sent {results.results.filter(r => r.status === 'sent').length} invitation{results.results.filter(r => r.status === 'sent').length !== 1 ? 's' : ''} successfully
 						</p>
 					</div>
 					{#if results.results.some(r => r.status === 'error')}
-						<div class="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-							<p class="text-yellow-800 font-medium">
+						<div class="p-4 bg-hub-yellow-50 border border-hub-yellow-200 rounded-md">
+							<p class="text-hub-yellow-800 font-medium">
 								⚠ {results.results.filter(r => r.status === 'error').length} invitation{results.results.filter(r => r.status === 'error').length !== 1 ? 's' : ''} failed
 							</p>
-							<ul class="mt-2 space-y-1 text-sm text-yellow-700">
+							<ul class="mt-2 space-y-1 text-sm text-hub-yellow-700">
 								{#each results.results.filter(r => r.status === 'error') as result}
 									<li>• {result.contact?.email || 'Unknown'}: {result.error || 'Unknown error'}</li>
 								{/each}

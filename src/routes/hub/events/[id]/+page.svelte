@@ -177,9 +177,9 @@
 				}
 				
 				if (isFull) {
-					return `<span class="text-red-600 font-medium">${signupCount} / ${effectiveMaxSpaces} Full</span>`;
+					return `<span class="text-hub-red-600 font-medium">${signupCount} / ${effectiveMaxSpaces} Full</span>`;
 				}
-				return `${signupCount} / ${effectiveMaxSpaces}<br><span class="text-green-600 text-xs">${availableSpots} left</span>`;
+				return `${signupCount} / ${effectiveMaxSpaces}<br><span class="text-hub-green-600 text-xs">${availableSpots} left</span>`;
 			}
 		},
 		{ 
@@ -204,7 +204,7 @@
 					<div class="flex items-center gap-1" data-occurrence-id="${escapedId}" data-occurrence-link="${escapedLink}">
 						<button 
 							type="button"
-							class="copy-occurrence-link p-1.5 rounded hover:bg-purple-100 text-purple-600"
+							class="copy-occurrence-link p-1.5 rounded hover:bg-hub-blue-100 text-hub-blue-600"
 							title="Copy link"
 						>
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,7 +215,7 @@
 							href="${escapedLink}" 
 							target="_blank" 
 							rel="noopener noreferrer"
-							class="p-1.5 rounded hover:bg-purple-100 text-purple-600"
+							class="p-1.5 rounded hover:bg-hub-blue-100 text-hub-blue-600"
 							title="Open link"
 						>
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,7 +299,7 @@
 					<button
 						type="submit"
 						form="event-edit-form"
-						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 					>
 						Save Changes
 					</button>
@@ -313,13 +313,13 @@
 				{:else}
 					<button
 						on:click={() => editing = true}
-						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 					>
 						Edit
 					</button>
 					<button
 						on:click={handleDelete}
-						class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+						class="bg-hub-red-600 text-white px-4 py-2 rounded-md hover:bg-hub-red-700"
 					>
 						Delete
 					</button>
@@ -347,7 +347,7 @@
 							/>
 							<div>
 								<label class="block text-xs font-medium text-gray-700 mb-1">Visibility</label>
-								<select name="visibility" bind:value={formData.visibility} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-1.5 px-2 text-sm">
+								<select name="visibility" bind:value={formData.visibility} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm">
 									<option value="private">Private</option>
 									<option value="internal">Internal</option>
 									<option value="public">Public</option>
@@ -357,7 +357,7 @@
 								<label class="block text-xs font-medium text-gray-700 mb-1">Color</label>
 								<div class="flex items-center gap-1.5">
 									<div class="w-5 h-5 rounded border border-gray-300 flex-shrink-0" style="background-color: {formData.color};"></div>
-									<select name="color" bind:value={formData.color} class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-1.5 px-1.5 text-xs">
+									<select name="color" bind:value={formData.color} class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-1.5 text-xs">
 										{#each EVENT_COLORS as colorOption}
 											<option value={colorOption.value}>{colorOption.label}</option>
 										{/each}
@@ -370,7 +370,7 @@
 									id="enableSignup"
 									name="enableSignup"
 									bind:checked={formData.enableSignup}
-									class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+									class="h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded"
 								/>
 								<label for="enableSignup" class="ml-2 block text-xs text-gray-700">
 									Enable Signup
@@ -445,7 +445,7 @@
 					{#if publicEventLink}
 						<button
 							on:click={copyPublicEventLink}
-							class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2"
+							class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 flex items-center gap-2"
 						>
 							{#if publicLinkCopied}
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -463,7 +463,7 @@
 							href={publicEventLink}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2"
+							class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 flex items-center gap-2"
 						>
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -474,7 +474,7 @@
 					{#if rotaSignupLink}
 						<button
 							on:click={copyRotaSignupLink}
-							class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
+							class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700 flex items-center gap-2"
 						>
 							{#if rotaLinkCopied}
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -492,7 +492,7 @@
 							href={rotaSignupLink}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
+							class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700 flex items-center gap-2"
 						>
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -509,7 +509,7 @@
 	<div class="bg-white shadow rounded-lg p-4 mb-4">
 		<div class="flex justify-between items-center mb-3">
 			<h3 class="text-lg font-bold text-gray-900">Occurrences</h3>
-			<a href="/hub/events/{event.id}/occurrences/new" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+			<a href="/hub/events/{event.id}/occurrences/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 				Add Occurrence
 			</a>
 		</div>
@@ -536,9 +536,9 @@
 											<p class="text-sm text-gray-600 mt-1">
 												Spots: {occ.signupStats.totalAttendees} / {occ.maxSpaces}
 												{#if occ.signupStats.isFull}
-													<span class="text-red-600 font-medium ml-2">(Full)</span>
+													<span class="text-hub-red-600 font-medium ml-2">(Full)</span>
 												{:else}
-													<span class="text-green-600 ml-2">({occ.signupStats.availableSpots} available)</span>
+													<span class="text-hub-green-600 ml-2">({occ.signupStats.availableSpots} available)</span>
 												{/if}
 											</p>
 										{/if}
@@ -550,7 +550,7 @@
 										{#each occ.signupStats.signups as signup}
 											<li class="text-sm text-gray-600 flex items-start justify-between gap-2">
 												<div class="flex items-start gap-2 flex-1">
-													<span class="w-2 h-2 bg-green-500 rounded-full mt-2"></span>
+													<span class="w-2 h-2 bg-hub-green-500 rounded-full mt-2"></span>
 													<div>
 														<span class="font-medium">{signup.name}</span>
 														<span class="text-gray-400"> ({signup.email})</span>
@@ -561,7 +561,7 @@
 												</div>
 												<button
 													on:click={() => handleDeleteSignup(signup.id)}
-													class="text-red-600 hover:text-red-800 font-medium text-xs ml-2"
+													class="text-hub-red-600 hover:text-hub-red-800 font-medium text-xs ml-2"
 													title="Remove signup"
 												>
 													Remove
@@ -582,7 +582,7 @@
 		<div class="bg-white shadow rounded-lg p-4 mb-4">
 			<div class="flex justify-between items-center mb-3">
 				<h3 class="text-lg font-bold text-gray-900">Meeting Planners</h3>
-				<a href="/hub/meeting-planners/new?eventId={event.id}" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+				<a href="/hub/meeting-planners/new?eventId={event.id}" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 					New Meeting Planner
 				</a>
 			</div>
@@ -616,7 +616,7 @@
 	<div class="bg-white shadow rounded-lg p-4">
 		<div class="flex justify-between items-center mb-3">
 			<h3 class="text-lg font-bold text-gray-900">Rotas</h3>
-			<a href="/hub/rotas/new?eventId={event.id}" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+			<a href="/hub/rotas/new?eventId={event.id}" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 				Add Rota
 			</a>
 		</div>

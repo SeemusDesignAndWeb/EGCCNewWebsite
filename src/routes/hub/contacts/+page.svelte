@@ -57,10 +57,10 @@
 <div class="mb-4 flex justify-between items-center">
 	<h2 class="text-2xl font-bold text-gray-900">Contacts</h2>
 	<div class="flex gap-2">
-		<a href="/hub/contacts/import" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+		<a href="/hub/contacts/import" class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700">
 			Import Contacts
 		</a>
-		<a href="/hub/contacts/new" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+		<a href="/hub/contacts/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 			Add Contact
 		</a>
 	</div>
@@ -72,7 +72,7 @@
 			type="text"
 			bind:value={searchInput}
 			placeholder="Search contacts..."
-			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 px-4 py-2"
+			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-4 py-2"
 		/>
 		<button type="submit" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
 			Search

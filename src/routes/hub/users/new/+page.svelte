@@ -59,7 +59,7 @@
 							bind:value={formData.password}
 							required
 							placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-							class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4 pr-10"
+							class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
 						/>
 					{:else}
 						<input
@@ -69,7 +69,7 @@
 							bind:value={formData.password}
 							required
 							placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-							class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4 pr-10"
+							class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
 						/>
 					{/if}
 					<button
@@ -96,7 +96,7 @@
 		</div>
 
 		<div class="flex gap-2 mt-6">
-			<button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+			<button type="submit" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 				Create Admin User
 			</button>
 			<a href="/hub/users" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">

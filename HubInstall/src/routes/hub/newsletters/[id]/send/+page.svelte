@@ -73,11 +73,11 @@
 {#if newsletter}
 	<div class="space-y-6">
 		<!-- Header Card -->
-		<div class="bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg rounded-lg p-6 text-white">
+		<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 shadow-lg rounded-lg p-6 text-white">
 			<div class="flex items-center justify-between">
 				<div>
 					<h1 class="text-3xl font-bold mb-2 text-white">Send Newsletter</h1>
-					<p class="text-blue-100">Send "{newsletter.subject || 'Untitled Newsletter'}" to a contact list</p>
+					<p class="text-hub-blue-100">Send "{newsletter.subject || 'Untitled Newsletter'}" to a contact list</p>
 				</div>
 				<a 
 					href="/hub/newsletters/{newsletter.id}" 
@@ -106,18 +106,18 @@
 				<!-- List Selection -->
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-2">
-						Select Contact List <span class="text-red-500">*</span>
+						Select Contact List <span class="text-hub-red-500">*</span>
 					</label>
 					{#if lists.length === 0}
-						<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-							<p class="text-yellow-800 text-sm">
+						<div class="bg-hub-yellow-50 border border-hub-yellow-200 rounded-lg p-4">
+							<p class="text-hub-yellow-800 text-sm">
 								No contact lists available. <a href="/hub/lists/new" class="underline font-medium">Create a list</a> first.
 							</p>
 						</div>
 					{:else}
 						<select 
 							bind:value={selectedListId} 
-							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
+							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
 							disabled={sending}
 						>
 							<option value="">-- Select a contact list --</option>
@@ -138,7 +138,7 @@
 					<button
 						on:click={sendNewsletter}
 						disabled={sending || !selectedListId || lists.length === 0}
-						class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center gap-2 transition-colors"
+						class="bg-hub-green-600 text-white px-6 py-3 rounded-md hover:bg-hub-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center gap-2 transition-colors"
 					>
 						{#if sending}
 							<svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -166,19 +166,19 @@
 					<div class="mt-6 p-4 bg-gray-50 rounded-md border border-gray-200">
 						<h3 class="font-bold text-gray-900 mb-3">Send Results</h3>
 						{#if results.error}
-							<p class="text-red-600">{results.error}</p>
+							<p class="text-hub-red-600">{results.error}</p>
 						{:else if results.results}
 							<div class="space-y-2">
-								<p class="text-green-600 font-medium">
+								<p class="text-hub-green-600 font-medium">
 									✓ Sent to {results.results.filter(r => r.status === 'sent').length} {results.results.filter(r => r.status === 'sent').length === 1 ? 'recipient' : 'recipients'}
 								</p>
 								{#if results.results.some(r => r.status === 'error')}
-									<p class="text-red-600 font-medium">
+									<p class="text-hub-red-600 font-medium">
 										✕ {results.results.filter(r => r.status === 'error').length} {results.results.filter(r => r.status === 'error').length === 1 ? 'error' : 'errors'} occurred
 									</p>
 									<div class="mt-3 max-h-40 overflow-y-auto">
 										{#each results.results.filter(r => r.status === 'error') as result}
-											<div class="text-sm text-red-700 py-1">
+											<div class="text-sm text-hub-red-700 py-1">
 												{result.email}: {result.error || 'Unknown error'}
 											</div>
 										{/each}

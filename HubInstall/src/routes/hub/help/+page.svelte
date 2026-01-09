@@ -222,7 +222,7 @@ ${scriptContent}
 			<a href="/docs/ADMIN_GUIDE.md" on:click|preventDefault={() => loadDoc('ADMIN_GUIDE.md')} class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Admin Guide</a>
 			<a href="/docs/TECHNICAL.md" on:click|preventDefault={() => loadDoc('TECHNICAL.md')} class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Technical</a>
 			<a href="/docs/SECURITY.md" on:click|preventDefault={() => loadDoc('SECURITY.md')} class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors">Security Guide</a>
-			<a href="/docs/SECURITY_AUDIT.md" on:click|preventDefault={() => loadDoc('SECURITY_AUDIT.md')} class="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors font-semibold">Security Audit</a>
+			<a href="/docs/SECURITY_AUDIT.md" on:click|preventDefault={() => loadDoc('SECURITY_AUDIT.md')} class="px-3 py-2 text-sm font-medium text-hub-red-600 hover:text-hub-red-900 hover:bg-hub-red-50 rounded-md transition-colors font-semibold">Security Audit</a>
 		</div>
 	</nav>
 	<div class="flex-1 bg-white shadow rounded-lg overflow-hidden">

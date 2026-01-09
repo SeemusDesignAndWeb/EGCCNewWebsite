@@ -175,7 +175,7 @@
 				<a href="/hub/events?view=list" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
 					List View
 				</a>
-				<a href="/hub/events/new" class="bg-brand-green text-white px-4 py-2 rounded-md hover:bg-primary-dark">
+				<a href="/hub/events/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 					New Event
 				</a>
 			</div>
@@ -185,25 +185,25 @@
 	<div class="flex gap-2 mb-4 border-b border-gray-200">
 		<button
 			on:click={() => setView('year')}
-			class="px-4 py-2 font-medium transition-colors {viewMode === 'year' ? 'text-brand-green border-b-2 border-brand-green' : 'text-gray-600 hover:text-gray-900'}"
+			class="px-4 py-2 font-medium transition-colors {viewMode === 'year' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
 		>
 			Year
 		</button>
 		<button
 			on:click={() => setView('month')}
-			class="px-4 py-2 font-medium transition-colors {viewMode === 'month' ? 'text-brand-green border-b-2 border-brand-green' : 'text-gray-600 hover:text-gray-900'}"
+			class="px-4 py-2 font-medium transition-colors {viewMode === 'month' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
 		>
 			Month
 		</button>
 		<button
 			on:click={() => setView('week')}
-			class="px-4 py-2 font-medium transition-colors {viewMode === 'week' ? 'text-brand-green border-b-2 border-brand-green' : 'text-gray-600 hover:text-gray-900'}"
+			class="px-4 py-2 font-medium transition-colors {viewMode === 'week' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
 		>
 			Week
 		</button>
 		<button
 			on:click={() => setView('agenda')}
-			class="px-4 py-2 font-medium transition-colors {viewMode === 'agenda' ? 'text-brand-green border-b-2 border-brand-green' : 'text-gray-600 hover:text-gray-900'}"
+			class="px-4 py-2 font-medium transition-colors {viewMode === 'agenda' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
 		>
 			Agenda
 		</button>
@@ -304,7 +304,7 @@
 			{#each yearMonths as monthDate}
 				{@const monthOccurrences = getOccurrencesForMonth(monthDate.getFullYear(), monthDate.getMonth())}
 				{@const isCurrentMonth = monthDate.getMonth() === new Date().getMonth() && monthDate.getFullYear() === new Date().getFullYear()}
-				<div class="border border-gray-200 rounded-lg p-3 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer {isCurrentMonth ? 'bg-blue-50 border-blue-300' : ''}"
+				<div class="border border-gray-200 rounded-lg p-3 hover:border-hub-blue-300 hover:shadow-md transition-all cursor-pointer {isCurrentMonth ? 'bg-hub-blue-50 border-hub-blue-300' : ''}"
 					on:click={() => goto(`/hub/events/calendar?year=${monthDate.getFullYear()}&month=${monthDate.getMonth()}&view=month`)}
 				>
 					<div class="text-sm font-semibold text-gray-900 mb-2">
@@ -351,8 +351,8 @@
 				{#if day}
 					{@const dayOccurrences = getOccurrencesForDate(day)}
 					{@const isToday = day.toDateString() === new Date().toDateString()}
-					<div class="min-h-[120px] border-r border-b border-gray-200 p-2 {isToday ? 'bg-blue-50' : ''}">
-						<div class="text-sm font-medium mb-1 {isToday ? 'text-blue-600' : 'text-gray-900'}">
+					<div class="min-h-[120px] border-r border-b border-gray-200 p-2 {isToday ? 'bg-hub-blue-50' : ''}">
+						<div class="text-sm font-medium mb-1 {isToday ? 'text-hub-blue-600' : 'text-gray-900'}">
 							{day.getDate()}
 						</div>
 						<div class="space-y-1">
@@ -389,7 +389,7 @@
 			<div class="px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-50"></div>
 			{#each weekDays as day}
 				{@const isToday = day.toDateString() === new Date().toDateString()}
-				<div class="px-4 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-50 {isToday ? 'bg-blue-50' : ''}">
+				<div class="px-4 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-50 {isToday ? 'bg-hub-blue-50' : ''}">
 					<div>{dayNames[day.getDay()]}</div>
 					<div class="text-xs font-normal mt-1">{day.getDate()}</div>
 				</div>
@@ -406,7 +406,7 @@
 			{#each weekDays as day}
 				{@const dayOccurrences = getOccurrencesForDate(day)}
 				{@const isToday = day.toDateString() === new Date().toDateString()}
-				<div class="min-h-[576px] border-r border-gray-200 p-1 {isToday ? 'bg-blue-50' : ''} relative">
+				<div class="min-h-[576px] border-r border-gray-200 p-1 {isToday ? 'bg-hub-blue-50' : ''} relative">
 					{#each dayOccurrences as occ}
 						{@const startTime = new Date(occ.startsAt)}
 						{@const endTime = new Date(occ.endsAt)}

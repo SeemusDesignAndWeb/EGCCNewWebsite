@@ -12,7 +12,7 @@
 	<div class="bg-white shadow rounded-lg p-6">
 		<div class="flex justify-between items-center mb-6">
 			<h2 class="text-2xl font-bold text-gray-900">Form Submission</h2>
-			<a href="/hub/forms/{form.id}" class="text-green-600 hover:text-green-800">
+			<a href="/hub/forms/{form.id}" class="text-hub-green-600 hover:text-hub-green-800">
 				← Back to Form
 			</a>
 		</div>
@@ -31,8 +31,8 @@
 				</div>
 				{#if form.isSafeguarding}
 					<div class="sm:col-span-2">
-						<div class="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-							<p class="text-sm text-yellow-800">
+						<div class="bg-hub-yellow-50 border border-hub-yellow-200 rounded-md p-3">
+							<p class="text-sm text-hub-yellow-800">
 								<strong>⚠️ Safeguarding Form:</strong> This submission is encrypted for security.
 							</p>
 						</div>

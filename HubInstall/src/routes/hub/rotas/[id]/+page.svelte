@@ -157,7 +157,7 @@
 			label: 'Name',
 			render: (val, row) => {
 				if (row.id) {
-					return `<a href="/hub/contacts/${row.id}" class="text-brand-green hover:text-primary-dark underline">${val || 'Unknown'}</a>`;
+					return `<a href="/hub/contacts/${row.id}" class="text-hub-green-600 hover:text-hub-green-700 underline">${val || 'Unknown'}</a>`;
 				}
 				return val || 'Unknown';
 			}
@@ -408,7 +408,7 @@
 					<button
 						type="submit"
 						form="rota-edit-form"
-						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 					>
 						Save Changes
 					</button>
@@ -422,13 +422,13 @@
 				{:else}
 					<button
 						on:click={() => editing = true}
-						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 					>
 						Edit
 					</button>
 					<button
 						on:click={handleDelete}
-						class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+						class="bg-hub-red-600 text-white px-4 py-2 rounded-md hover:bg-hub-red-700"
 					>
 						Delete
 					</button>
@@ -449,7 +449,7 @@
 						<FormField label="Capacity" name="capacity" type="number" bind:value={formData.capacity} required />
 						<div>
 							<label for="visibility-select" class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
-							<select id="visibility-select" name="visibility" bind:value={formData.visibility} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 text-sm">
+							<select id="visibility-select" name="visibility" bind:value={formData.visibility} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm">
 								<option value="public">Public</option>
 								<option value="internal">Internal</option>
 							</select>
@@ -464,7 +464,7 @@
 								on:change={(e) => {
 									formData.ownerId = e.target.value || '';
 								}}
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 text-sm"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
 							>
 								<option value="">No owner</option>
 								{#each filteredOwnerContacts as contact (contact.id)}
@@ -484,7 +484,7 @@
 							type="text"
 							bind:value={ownerSearchTerm}
 							placeholder="Search by name or email..."
-							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 text-sm"
+							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
 						/>
 					</div>
 				</div>
@@ -519,7 +519,7 @@
 					<div>
 						<dt class="text-sm font-medium text-gray-500">Owner</dt>
 						<dd class="mt-1 text-sm text-gray-900">
-							<a href="/hub/contacts/{owner.id}" class="text-brand-green hover:text-primary-dark underline">
+							<a href="/hub/contacts/{owner.id}" class="text-hub-green-600 hover:text-hub-green-700 underline">
 								{`${owner.firstName || ''} ${owner.lastName || ''}`.trim() || owner.email}
 							</a>
 						</dd>
@@ -546,11 +546,11 @@
 					type="text"
 					readonly
 					value={signupLink}
-					class="flex-1 rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4 bg-gray-50 text-sm"
+					class="flex-1 rounded-md border border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 bg-gray-50 text-sm"
 				/>
 				<button
 					on:click={copySignupLink}
-					class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
+					class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700 flex items-center gap-2"
 				>
 					{#if linkCopied}
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -569,7 +569,7 @@
 				href={signupLink}
 				target="_blank"
 				rel="noopener noreferrer"
-				class="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800 underline"
+				class="mt-2 inline-block text-sm text-hub-blue-600 hover:text-hub-blue-800 underline"
 			>
 				Open signup page in new tab
 			</a>
@@ -589,11 +589,11 @@
 						<div class="flex justify-between items-center mb-2">
 							<h4 class="text-sm font-semibold text-gray-900">{formatDateTimeUK(occ.startsAt)}</h4>
 							<div class="flex items-center gap-2">
-								<span class="text-xs font-medium {isFull ? 'text-red-600' : 'text-gray-700'}">
+								<span class="text-xs font-medium {isFull ? 'text-hub-red-600' : 'text-gray-700'}">
 									{occAssignees.length}/{rota.capacity}
 								</span>
 								{#if isFull}
-									<span class="text-xs text-red-600 font-medium">Full</span>
+									<span class="text-xs text-hub-red-600 font-medium">Full</span>
 								{:else}
 									<button
 										on:click={() => {
@@ -604,7 +604,7 @@
 											selectedContactIds = new Set();
 											selectedListId = '';
 										}}
-										class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700"
+										class="bg-hub-green-600 text-white px-2 py-1 rounded text-xs hover:bg-hub-green-700"
 										title="Add assignees to this occurrence"
 									>
 										+ Add
@@ -618,7 +618,7 @@
 									<div class="flex items-center justify-between p-1.5 bg-gray-50 rounded text-sm">
 										<div class="flex-1 min-w-0">
 											{#if assignee.id}
-												<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium truncate block">
+												<a href="/hub/contacts/{assignee.id}" class="text-hub-green-600 hover:text-hub-green-700 underline font-medium truncate block">
 													{assignee.name || 'Unknown'}
 												</a>
 											{:else}
@@ -628,7 +628,7 @@
 										</div>
 										<button
 											on:click={() => handleRemoveAssignee(assignee)}
-											class="text-red-600 hover:text-red-800 px-1.5 py-0.5 rounded text-xs ml-2 flex-shrink-0"
+											class="text-hub-red-600 hover:text-hub-red-800 px-1.5 py-0.5 rounded text-xs ml-2 flex-shrink-0"
 											title="Remove assignee"
 										>
 											×
@@ -643,7 +643,7 @@
 				{/each}
 				
 				{#if assigneesByOccurrence['unassigned'] && assigneesByOccurrence['unassigned'].length > 0}
-					<div class="lg:col-span-2 xl:col-span-3 border border-yellow-200 rounded-lg p-3 bg-yellow-50">
+					<div class="lg:col-span-2 xl:col-span-3 border border-hub-yellow-200 rounded-lg p-3 bg-hub-yellow-50">
 						<div class="flex justify-between items-center mb-2">
 							<div>
 								<h4 class="text-sm font-semibold text-gray-900">Unassigned to Specific Occurrence</h4>
@@ -660,7 +660,7 @@
 								<div class="flex items-center justify-between p-1.5 bg-white rounded text-sm">
 									<div class="flex-1 min-w-0">
 										{#if assignee.id}
-											<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium truncate block">
+											<a href="/hub/contacts/{assignee.id}" class="text-hub-green-600 hover:text-hub-green-700 underline font-medium truncate block">
 												{assignee.name || 'Unknown'}
 											</a>
 										{:else}
@@ -670,7 +670,7 @@
 									</div>
 									<button
 										on:click={() => handleRemoveAssignee(assignee)}
-										class="text-red-600 hover:text-red-800 px-1.5 py-0.5 rounded text-xs ml-2 flex-shrink-0"
+										class="text-hub-red-600 hover:text-hub-red-800 px-1.5 py-0.5 rounded text-xs ml-2 flex-shrink-0"
 										title="Remove assignee"
 									>
 										×
@@ -687,7 +687,7 @@
 					<div class="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
 						<div class="flex-1 min-w-0">
 							{#if assignee.id}
-								<a href="/hub/contacts/{assignee.id}" class="text-brand-green hover:text-primary-dark underline font-medium truncate block">
+								<a href="/hub/contacts/{assignee.id}" class="text-hub-green-600 hover:text-hub-green-700 underline font-medium truncate block">
 									{assignee.name || 'Unknown'}
 								</a>
 							{:else}
@@ -697,7 +697,7 @@
 						</div>
 						<button
 							on:click={() => handleRemoveAssignee(assignee, index)}
-							class="text-red-600 hover:text-red-800 px-1.5 py-0.5 rounded text-xs ml-2 flex-shrink-0"
+							class="text-hub-red-600 hover:text-hub-red-800 px-1.5 py-0.5 rounded text-xs ml-2 flex-shrink-0"
 							title="Remove assignee"
 						>
 							×
@@ -720,7 +720,7 @@
 					{#if !rota.occurrenceId && eventOccurrences.length > 0 && !selectedOccurrenceId}
 						<div class="mb-4">
 							<label for="occurrence-select" class="block text-sm font-medium text-gray-700 mb-1">Occurrence</label>
-							<select id="occurrence-select" bind:value={selectedOccurrenceId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4">
+							<select id="occurrence-select" bind:value={selectedOccurrenceId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4">
 								{#each eventOccurrences as occ}
 									{@const occAssignees = assigneesByOccurrence[occ.id] || []}
 									{@const isFull = occAssignees.length >= rota.capacity}
@@ -732,7 +732,7 @@
 							<p class="mt-1 text-xs text-gray-500">Select which occurrence to assign these contacts to</p>
 						</div>
 					{:else if !rota.occurrenceId && eventOccurrences.length > 0 && selectedOccurrenceId}
-						<div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+						<div class="mb-4 p-3 bg-hub-blue-50 border border-hub-blue-200 rounded-md">
 							<p class="text-sm text-gray-700">
 								<strong>Adding to:</strong> {formatDateTimeUK(eventOccurrences.find(o => o.id === selectedOccurrenceId)?.startsAt || '')}
 							</p>
@@ -741,7 +741,7 @@
 					
 					<div class="mb-4">
 						<label for="list-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by List (optional)</label>
-						<select id="list-filter" bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4">
+						<select id="list-filter" bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4">
 							<option value="">All Contacts</option>
 							{#each lists as list}
 								<option value={list.id}>{list.name}</option>
@@ -757,7 +757,7 @@
 							type="text"
 							bind:value={searchTerm}
 							placeholder="Search contacts..."
-							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4"
+							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4"
 						/>
 					</div>
 				</div>
@@ -772,7 +772,7 @@
 							<div class="flex gap-2">
 								<button
 									on:click={selectAllContacts}
-									class="text-sm text-green-600 hover:text-green-800 underline"
+									class="text-sm text-hub-green-600 hover:text-hub-green-800 underline"
 								>
 									Select All
 								</button>
@@ -823,7 +823,7 @@
 					<button
 						on:click={handleAddAssignees}
 						disabled={selectedContactIds.size === 0}
-						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
+						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 disabled:opacity-50"
 					>
 						Add Selected ({selectedContactIds.size})
 					</button>

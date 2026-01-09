@@ -101,7 +101,7 @@
 			render: (val, row) => {
 				const visibility = row.visibility || 'public';
 				const badgeClass = visibility === 'public' 
-					? 'bg-green-100 text-green-800' 
+					? 'bg-hub-green-100 text-hub-green-800' 
 					: 'bg-gray-100 text-gray-800';
 				return `<span class="px-2 py-1 text-xs rounded ${badgeClass}">${visibility === 'public' ? 'Public' : 'Internal'}</span>`;
 			}
@@ -111,7 +111,7 @@
 			label: '',
 			render: (val, row) => {
 				return `<button 
-					class="text-red-600 hover:text-red-800 font-bold text-lg delete-rota-btn w-6 h-6 flex items-center justify-center"
+					class="text-hub-red-600 hover:text-hub-red-800 font-bold text-lg delete-rota-btn w-6 h-6 flex items-center justify-center"
 					data-delete-rota="${row.id}"
 					type="button"
 					title="Delete rota"
@@ -124,10 +124,10 @@
 <div class="mb-4 flex justify-between items-center">
 	<h2 class="text-2xl font-bold text-gray-900">Rotas</h2>
 	<div class="flex gap-2">
-		<a href="/hub/rotas/invite" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700">
+		<a href="/hub/rotas/invite" class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700">
 			Bulk Invite
 		</a>
-		<a href="/hub/rotas/new" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+		<a href="/hub/rotas/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 			New Rota
 		</a>
 	</div>
@@ -139,7 +139,7 @@
 			type="text"
 			bind:value={searchInput}
 			placeholder="Search rotas..."
-			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 px-4 py-2"
+			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-4 py-2"
 		/>
 		<button type="submit" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
 			Search

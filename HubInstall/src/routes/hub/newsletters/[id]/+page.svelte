@@ -182,7 +182,7 @@
 {#if newsletter}
 	<div class="space-y-6">
 		<!-- Header Card -->
-		<div class="bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg rounded-lg p-6 text-white">
+		<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 shadow-lg rounded-lg p-6 text-white">
 			<div class="flex justify-between items-start mb-4">
 				<div class="flex-1">
 					<h1 class="text-3xl font-bold mb-2 text-white">{newsletter.subject || 'Untitled Newsletter'}</h1>
@@ -222,7 +222,7 @@
 						<button
 							type="submit"
 							form="newsletter-form"
-							class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors font-medium border border-green-500/50 flex items-center gap-2"
+							class="bg-hub-green-600 hover:bg-hub-green-700 text-white px-4 py-2 rounded-md transition-colors font-medium border border-hub-green-500/50 flex items-center gap-2"
 						>
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -232,7 +232,7 @@
 						<button
 							type="button"
 							on:click={() => showSaveTemplateModal = true}
-							class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors font-medium border border-purple-500/50 flex items-center gap-2"
+							class="bg-hub-blue-600 hover:bg-hub-blue-700 text-white px-4 py-2 rounded-md transition-colors font-medium border border-hub-blue-500/50 flex items-center gap-2"
 						>
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
@@ -243,21 +243,21 @@
 						<button
 							type="button"
 							on:click|preventDefault={() => editing = true}
-							class="bg-yellow-500/80 hover:bg-yellow-600/90 text-white px-4 py-2 rounded-md transition-colors font-medium border border-yellow-400/50 flex items-center gap-2"
+							class="bg-hub-yellow-500/80 hover:bg-hub-yellow-600/90 text-white px-4 py-2 rounded-md transition-colors font-medium border border-hub-yellow-400/50 flex items-center gap-2"
 						>
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
 							</svg>
 							Edit
 						</button>
-						<a href="/hub/newsletters/{newsletter.id}/preview" class="bg-indigo-500/80 hover:bg-indigo-600/90 text-white px-4 py-2 rounded-md transition-colors font-medium border border-indigo-400/50 flex items-center gap-2">
+						<a href="/hub/newsletters/{newsletter.id}/preview" class="bg-hub-red-500/80 hover:bg-hub-red-600/90 text-white px-4 py-2 rounded-md transition-colors font-medium border border-hub-red-400/50 flex items-center gap-2">
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 							</svg>
 							Preview
 						</a>
-						<a href="/hub/newsletters/{newsletter.id}/export-pdf" target="_blank" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors font-medium border border-red-500/50 flex items-center gap-2">
+						<a href="/hub/newsletters/{newsletter.id}/export-pdf" target="_blank" class="bg-hub-red-600 hover:bg-hub-red-700 text-white px-4 py-2 rounded-md transition-colors font-medium border border-hub-red-500/50 flex items-center gap-2">
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 							</svg>
@@ -287,7 +287,7 @@
 					<button
 						type="button"
 						on:click={handleDelete}
-						class="bg-red-500/80 hover:bg-red-600/90 text-white px-4 py-2 rounded-md transition-colors font-medium border border-red-400/50 flex items-center gap-2"
+						class="bg-hub-red-500/80 hover:bg-hub-red-600/90 text-white px-4 py-2 rounded-md transition-colors font-medium border border-hub-red-400/50 flex items-center gap-2"
 					>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -308,7 +308,7 @@
 					<select
 						bind:value={selectedTemplateId}
 						on:change={handleTemplateChange}
-						class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
+						class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
 					>
 						<option value="">-- Select a template --</option>
 						{#each templates as template}
@@ -327,11 +327,11 @@
 			<!-- Info Cards Grid -->
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 				<!-- Status Card -->
-				<div class="bg-gradient-to-br from-blue-500 to-blue-600 border-2 border-blue-400 rounded-lg p-4">
+				<div class="bg-gradient-to-br from-hub-blue-500 to-hub-blue-600 border-2 border-hub-blue-400 rounded-lg p-4">
 					<div class="flex items-center justify-between">
 						<div>
 							<p class="text-xs font-medium text-white uppercase tracking-wide mb-1">Status</p>
-							<span class="px-3 py-1 rounded-full text-sm font-semibold border-2 {newsletter.status === 'sent' ? 'bg-green-100 text-green-800 border-green-300' : newsletter.status === 'scheduled' ? 'bg-white/20 text-white border-white/30' : 'bg-gray-100 text-gray-800 border-gray-300'}">
+							<span class="px-3 py-1 rounded-full text-sm font-semibold border-2 {newsletter.status === 'sent' ? 'bg-hub-green-100 text-hub-green-800 border-hub-green-300' : newsletter.status === 'scheduled' ? 'bg-white/20 text-white border-white/30' : 'bg-gray-100 text-gray-800 border-gray-300'}">
 								{newsletter.status ? newsletter.status.charAt(0).toUpperCase() + newsletter.status.slice(1) : 'Draft'}
 							</span>
 						</div>
@@ -342,7 +342,7 @@
 				</div>
 
 				<!-- Stats Card -->
-				<div class="bg-gradient-to-br from-green-500 to-green-600 border-2 border-green-400 rounded-lg p-4">
+				<div class="bg-gradient-to-br from-hub-green-500 to-hub-green-600 border-2 border-hub-green-400 rounded-lg p-4">
 					<div class="flex items-center justify-between">
 						<div>
 							<p class="text-xs font-medium text-white uppercase tracking-wide mb-1">Sends</p>
@@ -357,7 +357,7 @@
 				</div>
 
 				<!-- Date Card -->
-				<div class="bg-gradient-to-br from-purple-500 to-purple-600 border-2 border-purple-400 rounded-lg p-4">
+				<div class="bg-gradient-to-br from-hub-blue-500 to-hub-blue-600 border-2 border-hub-blue-400 rounded-lg p-4">
 					<div class="flex items-center justify-between">
 						<div>
 							<p class="text-xs font-medium text-white uppercase tracking-wide mb-1">Created</p>
@@ -379,8 +379,8 @@
 			<!-- Subject Card -->
 			<div class="bg-white border-2 border-gray-200 rounded-lg p-5 mb-6">
 				<div class="flex items-start gap-3">
-					<div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-						<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<div class="flex-shrink-0 w-10 h-10 bg-hub-blue-100 rounded-lg flex items-center justify-center">
+						<svg class="w-6 h-6 text-hub-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
 						</svg>
 					</div>
@@ -402,7 +402,7 @@
 								</svg>
 								Content Preview
 							</h3>
-							<a href="/hub/newsletters/{newsletter.id}/preview" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+							<a href="/hub/newsletters/{newsletter.id}/preview" class="text-sm text-hub-blue-600 hover:text-hub-blue-800 font-medium flex items-center gap-1">
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -440,7 +440,7 @@
 				<input
 					type="text"
 					bind:value={templateName}
-					class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
+					class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
 					placeholder="Enter template name"
 				/>
 			</div>
@@ -449,7 +449,7 @@
 				<textarea
 					bind:value={templateDescription}
 					rows="3"
-					class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
+					class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
 					placeholder="Optional description"
 				></textarea>
 			</div>
@@ -464,7 +464,7 @@
 				<button
 					type="button"
 					on:click={handleSaveAsTemplate}
-					class="bg-brand-green text-white px-4 py-2 rounded-md hover:bg-primary-dark"
+					class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 				>
 					Save Template
 				</button>

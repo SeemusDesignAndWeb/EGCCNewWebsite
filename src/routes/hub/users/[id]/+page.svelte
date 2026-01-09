@@ -125,14 +125,14 @@
 				{:else}
 					<button
 						on:click={() => editing = true}
-						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 					>
 						Edit
 					</button>
 					{#if !admin.emailVerified}
 						<button
 							on:click={handleVerify}
-							class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+							class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700"
 						>
 							Verify Email
 						</button>
@@ -140,14 +140,14 @@
 					{#if isAccountLocked()}
 						<button
 							on:click={handleUnlock}
-							class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700"
+							class="bg-hub-yellow-600 text-white px-4 py-2 rounded-md hover:bg-hub-yellow-700"
 						>
 							Unlock Account
 						</button>
 					{/if}
 					<button
 						on:click={handleDelete}
-						class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+						class="bg-hub-red-600 text-white px-4 py-2 rounded-md hover:bg-hub-red-700"
 					>
 						Delete
 					</button>
@@ -194,7 +194,7 @@
 				</div>
 
 				<div class="flex gap-2 mt-6">
-					<button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+					<button type="submit" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 						Save Changes
 					</button>
 					<button
@@ -236,15 +236,15 @@
 							<dt class="text-sm font-medium text-gray-500">Status</dt>
 							<dd class="mt-1">
 								{#if isAccountLocked()}
-									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-hub-red-100 text-hub-red-800">
 										Locked
 									</span>
 								{:else if !admin.emailVerified}
-									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-hub-yellow-100 text-hub-yellow-800">
 										Unverified
 									</span>
 								{:else}
-									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-hub-green-100 text-hub-green-800">
 										Active
 									</span>
 								{/if}
@@ -285,7 +285,7 @@
 				<h3 class="text-lg font-semibold text-gray-900">Reset Password</h3>
 				<button
 					on:click={() => resettingPassword = !resettingPassword}
-					class="text-sm text-blue-600 hover:text-blue-800"
+					class="text-sm text-hub-blue-600 hover:text-hub-blue-800"
 				>
 					{resettingPassword ? 'Cancel' : 'Reset Password'}
 				</button>
@@ -309,7 +309,7 @@
 										bind:value={passwordData.newPassword}
 										required
 										placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-										class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4 pr-10"
+										class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
 									/>
 								{:else}
 									<input
@@ -319,7 +319,7 @@
 										bind:value={passwordData.newPassword}
 										required
 										placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-										class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4 pr-10"
+										class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
 									/>
 								{/if}
 								<button
@@ -356,7 +356,7 @@
 									bind:value={passwordData.confirmPassword}
 									required
 									placeholder="Confirm new password"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4"
 								/>
 							{:else}
 								<input
@@ -366,14 +366,14 @@
 									bind:value={passwordData.confirmPassword}
 									required
 									placeholder="Confirm new password"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4"
 								/>
 							{/if}
 						</div>
 					</div>
 
 					<div class="flex gap-2 mt-6">
-						<button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+						<button type="submit" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 							Reset Password
 						</button>
 						<button

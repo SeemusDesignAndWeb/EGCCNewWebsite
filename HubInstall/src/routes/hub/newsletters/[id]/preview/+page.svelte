@@ -7,11 +7,11 @@
 	function getStatusBadgeClass(status) {
 		switch (status) {
 			case 'sent':
-				return 'bg-green-100 text-green-800 border-green-300';
+				return 'bg-hub-green-100 text-hub-green-800 border-hub-green-300';
 			case 'draft':
 				return 'bg-gray-100 text-gray-800 border-gray-300';
 			case 'scheduled':
-				return 'bg-blue-100 text-blue-800 border-blue-300';
+				return 'bg-hub-blue-100 text-hub-blue-800 border-hub-blue-300';
 			default:
 				return 'bg-gray-100 text-gray-800 border-gray-300';
 		}
@@ -25,7 +25,7 @@
 {#if newsletter}
 	<div class="space-y-6">
 		<!-- Header Card -->
-		<div class="bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg rounded-lg p-6 text-white">
+		<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 shadow-lg rounded-lg p-6 text-white">
 			<div class="flex justify-between items-start mb-4">
 				<div class="flex-1">
 					<h1 class="text-3xl font-bold mb-2 text-white">{newsletter.subject || 'Untitled Newsletter'}</h1>
@@ -66,7 +66,7 @@
 			<div class="bg-gray-50 border-b border-gray-200 px-6 py-3">
 				<div class="flex justify-between items-center">
 					<h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-						<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-5 h-5 text-hub-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 						</svg>
@@ -87,7 +87,7 @@
 		<!-- Action Bar -->
 		<div class="bg-white shadow rounded-lg p-4">
 			<div class="flex justify-between items-center">
-				<a href="/hub/newsletters/{newsletter.id}" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition-colors">
+				<a href="/hub/newsletters/{newsletter.id}" class="inline-flex items-center gap-2 text-hub-blue-600 hover:text-hub-blue-800 font-medium transition-colors">
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
 					</svg>
@@ -97,18 +97,18 @@
 					<a 
 						href="/hub/newsletters/{newsletter.id}/export-pdf" 
 						target="_blank"
-						class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors font-medium inline-flex items-center gap-2"
+						class="bg-hub-red-600 text-white px-4 py-2 rounded-md hover:bg-hub-red-700 transition-colors font-medium inline-flex items-center gap-2"
 					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 						</svg>
 						Export PDF
 					</a>
-					<a href="/hub/newsletters/{newsletter.id}" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors font-medium">
+					<a href="/hub/newsletters/{newsletter.id}" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 transition-colors font-medium">
 						Edit Newsletter
 					</a>
 					{#if newsletter.status === 'draft' || !newsletter.status}
-						<a href="/hub/newsletters/{newsletter.id}/send" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors font-medium">
+						<a href="/hub/newsletters/{newsletter.id}/send" class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700 transition-colors font-medium">
 							Send Newsletter
 						</a>
 					{/if}

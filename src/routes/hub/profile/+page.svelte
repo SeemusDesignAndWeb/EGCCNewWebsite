@@ -71,11 +71,11 @@
 						<dt class="text-sm font-medium text-gray-500">Email Verified</dt>
 						<dd class="mt-1">
 							{#if admin.emailVerified}
-								<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+								<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-hub-green-100 text-hub-green-800">
 									Verified
 								</span>
 							{:else}
-								<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+								<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-hub-yellow-100 text-hub-yellow-800">
 									Unverified
 								</span>
 							{/if}
@@ -109,7 +109,7 @@
 								emailData = { email: admin.email || '' };
 							}
 						}}
-						class="text-sm text-blue-600 hover:text-blue-800"
+						class="text-sm text-hub-blue-600 hover:text-hub-blue-800"
 					>
 						{editingEmail ? 'Cancel' : 'Change Email'}
 					</button>
@@ -138,7 +138,7 @@
 						/>
 
 						<div class="flex gap-2 mt-4">
-							<button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+							<button type="submit" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 								Update Email
 							</button>
 							<button
@@ -171,7 +171,7 @@
 								passwordData = { currentPassword: '', newPassword: '', confirmPassword: '' };
 							}
 						}}
-						class="text-sm text-blue-600 hover:text-blue-800"
+						class="text-sm text-hub-blue-600 hover:text-hub-blue-800"
 					>
 						{changingPassword ? 'Cancel' : 'Change Password'}
 					</button>
@@ -205,7 +205,7 @@
 											name="currentPassword"
 											bind:value={passwordData.currentPassword}
 											required
-											class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4 pr-10"
+											class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
 										/>
 									{:else}
 										<input
@@ -214,7 +214,7 @@
 											name="currentPassword"
 											bind:value={passwordData.currentPassword}
 											required
-											class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4 pr-10"
+											class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
 										/>
 									{/if}
 									<button
@@ -249,7 +249,7 @@
 											bind:value={passwordData.newPassword}
 											required
 											placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-											class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4 pr-10"
+											class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
 										/>
 									{:else}
 										<input
@@ -259,7 +259,7 @@
 											bind:value={passwordData.newPassword}
 											required
 											placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-											class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4 pr-10"
+											class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
 										/>
 									{/if}
 									<button
@@ -296,7 +296,7 @@
 										bind:value={passwordData.confirmPassword}
 										required
 										placeholder="Confirm new password"
-										class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4"
+										class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4"
 									/>
 								{:else}
 									<input
@@ -306,14 +306,14 @@
 										bind:value={passwordData.confirmPassword}
 										required
 										placeholder="Confirm new password"
-										class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-4"
+										class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4"
 									/>
 								{/if}
 							</div>
 						</div>
 
 						<div class="flex gap-2 mt-6">
-							<button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+							<button type="submit" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 								Update Password
 							</button>
 							<button

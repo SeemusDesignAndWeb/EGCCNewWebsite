@@ -139,14 +139,14 @@
 							<span class="font-medium">{field.label}</span>
 							<span class="text-sm text-gray-500 ml-2">({field.type})</span>
 							{#if field.required}
-								<span class="text-red-500 ml-2">*</span>
+								<span class="text-hub-red-500 ml-2">*</span>
 							{/if}
 						</div>
 						<div class="flex gap-2">
 							<button type="button" on:click={() => moveField(i, 'up')} disabled={i === 0} class="text-gray-600 hover:text-gray-900 disabled:opacity-50">↑</button>
 							<button type="button" on:click={() => moveField(i, 'down')} disabled={i === fields.length - 1} class="text-gray-600 hover:text-gray-900 disabled:opacity-50">↓</button>
-							<button type="button" on:click={() => editField(i)} class="text-blue-600 hover:text-blue-900">Edit</button>
-							<button type="button" on:click={() => removeField(i)} class="text-red-600 hover:text-red-900">Remove</button>
+							<button type="button" on:click={() => editField(i)} class="text-hub-blue-600 hover:text-hub-blue-900">Edit</button>
+							<button type="button" on:click={() => removeField(i)} class="text-hub-red-600 hover:text-hub-red-900">Remove</button>
 						</div>
 					</div>
 				{/each}
@@ -158,7 +158,7 @@
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Field Type</label>
-					<select bind:value={fieldForm.type} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+					<select bind:value={fieldForm.type} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
 						{#each fieldTypes as type}
 							<option value={type.value}>{type.label}</option>
 						{/each}
@@ -166,15 +166,15 @@
 				</div>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Field Label</label>
-					<input type="text" bind:value={fieldForm.label} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4" />
+					<input type="text" bind:value={fieldForm.label} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4" />
 				</div>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Field Name (ID)</label>
-					<input type="text" bind:value={fieldForm.name} placeholder="e.g. child_name" class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4" />
+					<input type="text" bind:value={fieldForm.name} placeholder="e.g. child_name" class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4" />
 				</div>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Placeholder</label>
-					<input type="text" bind:value={fieldForm.placeholder} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4" />
+					<input type="text" bind:value={fieldForm.placeholder} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4" />
 				</div>
 			</div>
 			<div class="mt-4">
@@ -192,7 +192,7 @@
 							type="text"
 							bind:value={optionInput}
 							placeholder="Add option"
-							class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
+							class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
 							on:keydown={(e) => e.key === 'Enter' && (e.preventDefault(), addOption())}
 						/>
 						<button type="button" on:click={addOption} class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
@@ -210,7 +210,7 @@
 				</div>
 			{/if}
 			
-			<button type="button" on:click={addField} class="mt-4 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+			<button type="button" on:click={addField} class="mt-4 bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 				{editingField !== null ? 'Update Field' : 'Add Field'}
 			</button>
 			{#if editingField !== null}
@@ -221,7 +221,7 @@
 		</div>
 
 		<div class="flex gap-2">
-			<button type="submit" disabled={fields.length === 0} class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50">
+			<button type="submit" disabled={fields.length === 0} class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 disabled:opacity-50">
 				Create Form
 			</button>
 			<a href="/hub/forms" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">

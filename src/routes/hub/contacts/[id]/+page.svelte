@@ -129,7 +129,7 @@
 					<button
 						type="submit"
 						form="contact-edit-form"
-						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 					>
 						Save Changes
 					</button>
@@ -143,13 +143,13 @@
 				{:else}
 					<button
 						on:click={() => editing = true}
-						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 					>
 						Edit
 					</button>
 					<button
 						on:click={handleDelete}
-						class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+						class="bg-hub-red-600 text-white px-4 py-2 rounded-md hover:bg-hub-red-700"
 					>
 						Delete
 					</button>
@@ -165,8 +165,8 @@
 				
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 					<!-- Personal Information Panel -->
-					<div class="bg-white border-2 border-blue-200 rounded-lg shadow-md overflow-hidden">
-						<div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+					<div class="bg-white border-2 border-hub-blue-200 rounded-lg shadow-md overflow-hidden">
+						<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 px-6 py-4">
 							<div class="flex items-center gap-2">
 								<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -185,7 +185,7 @@
 										type="checkbox"
 										name="subscribed"
 										bind:checked={formData.subscribed}
-										class="w-4 h-4 rounded border-gray-300 text-green-600 shadow-sm focus:border-green-500 focus:ring-green-500 cursor-pointer"
+										class="w-4 h-4 rounded border-gray-300 text-hub-green-600 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 cursor-pointer"
 									/>
 									<span class="ml-2 text-sm text-gray-700">Subscribed to newsletters</span>
 								</label>
@@ -194,8 +194,8 @@
 					</div>
 
 					<!-- Address Panel -->
-					<div class="bg-white border-2 border-purple-200 rounded-lg shadow-md overflow-hidden">
-						<div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+					<div class="bg-white border-2 border-hub-blue-200 rounded-lg shadow-md overflow-hidden">
+						<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 px-6 py-4">
 							<div class="flex items-center gap-2">
 								<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -215,8 +215,8 @@
 					</div>
 
 					<!-- Church Membership Panel -->
-					<div class="bg-white border-2 border-green-200 rounded-lg shadow-md overflow-hidden">
-						<div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
+					<div class="bg-white border-2 border-hub-green-200 rounded-lg shadow-md overflow-hidden">
+						<div class="bg-gradient-to-r from-hub-green-500 to-hub-green-600 px-6 py-4">
 							<div class="flex items-center gap-2">
 								<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -227,7 +227,7 @@
 						<div class="p-6 space-y-4">
 							<div>
 								<label class="block text-sm font-medium text-gray-700 mb-1">Membership Status</label>
-								<select name="membershipStatus" bind:value={formData.membershipStatus} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+								<select name="membershipStatus" bind:value={formData.membershipStatus} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
 									<option value="">Select status</option>
 									<option value="member">Member</option>
 									<option value="regular-attender">Regular Attender</option>
@@ -241,8 +241,8 @@
 					</div>
 
 					<!-- Additional Information Panel -->
-					<div class="bg-white border-2 border-orange-200 rounded-lg shadow-md overflow-hidden">
-						<div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
+					<div class="bg-white border-2 border-hub-yellow-200 rounded-lg shadow-md overflow-hidden">
+						<div class="bg-gradient-to-r from-hub-yellow-500 to-hub-yellow-600 px-6 py-4">
 							<div class="flex items-center gap-2">
 								<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -258,18 +258,18 @@
 										type="text"
 										bind:value={servingAreaInput}
 										placeholder="Add serving area"
-										class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 px-4 py-2"
+										class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-4 py-2"
 										on:keydown={(e) => e.key === 'Enter' && (e.preventDefault(), addServingArea())}
 									/>
-									<button type="button" on:click={addServingArea} class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+									<button type="button" on:click={addServingArea} class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 										Add
 									</button>
 								</div>
 								<div class="flex flex-wrap gap-2">
 									{#each formData.servingAreas as area, i}
-										<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 border border-green-300">
+										<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-hub-green-100 text-hub-green-800 border border-hub-green-300">
 											{area}
-											<button type="button" on:click={() => removeServingArea(i)} class="ml-2 text-green-600 hover:text-green-800 font-bold">×</button>
+											<button type="button" on:click={() => removeServingArea(i)} class="ml-2 text-hub-green-600 hover:text-hub-green-800 font-bold">×</button>
 										</span>
 									{/each}
 								</div>
@@ -282,18 +282,18 @@
 										type="text"
 										bind:value={giftingInput}
 										placeholder="Add gifting"
-										class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 px-4 py-2"
+										class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-4 py-2"
 										on:keydown={(e) => e.key === 'Enter' && (e.preventDefault(), addGifting())}
 									/>
-									<button type="button" on:click={addGifting} class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+									<button type="button" on:click={addGifting} class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700">
 										Add
 									</button>
 								</div>
 								<div class="flex flex-wrap gap-2">
 									{#each formData.giftings as gifting, i}
-										<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-300">
+										<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-hub-blue-100 text-hub-blue-800 border border-hub-blue-300">
 											{gifting}
-											<button type="button" on:click={() => removeGifting(i)} class="ml-2 text-blue-600 hover:text-blue-800 font-bold">×</button>
+											<button type="button" on:click={() => removeGifting(i)} class="ml-2 text-hub-blue-600 hover:text-hub-blue-800 font-bold">×</button>
 										</span>
 									{/each}
 								</div>
@@ -395,7 +395,7 @@
 								<dt class="text-sm font-medium text-gray-500">Serving Areas</dt>
 								<dd class="mt-1 flex flex-wrap gap-2">
 									{#each contact.servingAreas as area}
-										<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">{area}</span>
+										<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-hub-green-100 text-hub-green-800">{area}</span>
 									{/each}
 								</dd>
 							</div>
@@ -405,7 +405,7 @@
 								<dt class="text-sm font-medium text-gray-500">Giftings</dt>
 								<dd class="mt-1 flex flex-wrap gap-2">
 									{#each contact.giftings as gifting}
-										<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">{gifting}</span>
+										<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-hub-blue-100 text-hub-blue-800">{gifting}</span>
 									{/each}
 								</dd>
 							</div>
@@ -414,9 +414,9 @@
 							<dt class="text-sm font-medium text-gray-500">Newsletter Subscription</dt>
 							<dd class="mt-1 text-sm text-gray-900">
 								{#if contact.subscribed !== false}
-									<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">Subscribed</span>
+									<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-hub-green-100 text-hub-green-800">Subscribed</span>
 								{:else}
-									<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 text-red-800">Unsubscribed</span>
+									<span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-hub-red-100 text-hub-red-800">Unsubscribed</span>
 								{/if}
 							</dd>
 						</div>

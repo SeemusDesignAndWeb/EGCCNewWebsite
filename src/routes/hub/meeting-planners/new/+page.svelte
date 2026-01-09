@@ -53,7 +53,7 @@
 				<a href="/hub/meeting-planners" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 text-sm">
 					Cancel
 				</a>
-				<button type="submit" form="meeting-planner-form" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm">
+				<button type="submit" form="meeting-planner-form" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 text-sm">
 					Create Meeting Planner
 				</button>
 			</div>
@@ -69,12 +69,12 @@
 			<h3 class="text-base font-semibold text-gray-900 mb-3">Event Selection</h3>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
 				<div>
-					<label class="block text-xs font-medium text-gray-700 mb-1">Event <span class="text-red-500">*</span></label>
+					<label class="block text-xs font-medium text-gray-700 mb-1">Event <span class="text-hub-red-500">*</span></label>
 					<select 
 						name="eventId" 
 						bind:value={formData.eventId} 
 						required 
-						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 text-sm"
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
 					>
 						<option value="">Select an event</option>
 						{#each events as event}
@@ -88,7 +88,7 @@
 						<select 
 							name="occurrenceId" 
 							bind:value={formData.occurrenceId} 
-							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3 text-sm"
+							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
 						>
 							<option value="">All occurrences (recurring)</option>
 							{#each filteredOccurrences as occurrence}

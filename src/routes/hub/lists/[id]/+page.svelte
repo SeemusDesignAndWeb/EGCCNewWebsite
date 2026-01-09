@@ -173,13 +173,13 @@
 				{:else}
 					<button
 						on:click={() => editing = true}
-						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 					>
 						Edit
 					</button>
 					<button
 						on:click={handleDelete}
-						class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+						class="bg-hub-red-600 text-white px-4 py-2 rounded-md hover:bg-hub-red-700"
 					>
 						Delete
 					</button>
@@ -192,7 +192,7 @@
 				<input type="hidden" name="_csrf" value={csrfToken} />
 				<FormField label="Name" name="name" bind:value={formData.name} required />
 				<FormField label="Description" name="description" type="textarea" rows="3" bind:value={formData.description} />
-				<button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+				<button type="submit" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 					Save Changes
 				</button>
 			</form>
@@ -226,7 +226,7 @@
 					selectedContactIds = new Set();
 					searchTerm = '';
 				}}
-				class="bg-brand-green text-white px-4 py-2 rounded-md hover:bg-primary-dark"
+				class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 			>
 				{showAddContacts ? 'Cancel' : '+ Add Contacts'}
 			</button>
@@ -241,7 +241,7 @@
 						type="text"
 						bind:value={searchTerm}
 						placeholder="Search contacts by name or email..."
-						class="w-full px-4 py-2 border border-gray-500 rounded-md focus:border-green-500 focus:ring-green-500"
+						class="w-full px-4 py-2 border border-gray-500 rounded-md focus:border-hub-green-500 focus:ring-hub-green-500"
 					/>
 				</div>
 				
@@ -265,7 +265,7 @@
 													selectedContactIds = new Set();
 												}
 											}}
-											class="rounded border-gray-300 text-brand-green focus:ring-brand-green"
+											class="rounded border-gray-300 text-hub-green-600 focus:ring-hub-green-500"
 										/>
 									</th>
 									<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
@@ -280,7 +280,7 @@
 												type="checkbox"
 												checked={selectedContactIds.has(contact.id)}
 												on:change={() => toggleContactSelection(contact.id)}
-												class="rounded border-gray-300 text-brand-green focus:ring-brand-green"
+												class="rounded border-gray-300 text-hub-green-600 focus:ring-hub-green-500"
 											/>
 										</td>
 										<td class="px-4 py-2 text-sm text-gray-900">{contact.email}</td>
@@ -300,7 +300,7 @@
 						<button
 							on:click={handleAddContacts}
 							disabled={selectedContactIds.size === 0}
-							class="bg-brand-green text-white px-4 py-2 rounded-md hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed"
+							class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
 						>
 							Add Selected Contacts
 						</button>
@@ -325,19 +325,19 @@
 						{#each contacts as contact}
 							<tr class="hover:bg-gray-50">
 								<td class="px-4 py-3 text-sm">
-									<a href="/hub/contacts/{contact.id}" class="text-blue-600 hover:text-blue-800 font-medium">
+									<a href="/hub/contacts/{contact.id}" class="text-hub-blue-600 hover:text-hub-blue-800 font-medium">
 										{`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email || '-'}
 									</a>
 								</td>
 								<td class="px-4 py-3 text-sm text-gray-900">
-									<a href="/hub/contacts/{contact.id}" class="text-blue-600 hover:text-blue-800">
+									<a href="/hub/contacts/{contact.id}" class="text-hub-blue-600 hover:text-hub-blue-800">
 										{contact.email}
 									</a>
 								</td>
 								<td class="px-4 py-3 text-sm">
 									<button
 										on:click|stopPropagation={() => handleRemoveContact(contact.id, `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email)}
-										class="text-red-600 hover:text-red-800 font-medium"
+										class="text-hub-red-600 hover:text-hub-red-800 font-medium"
 									>
 										Remove
 									</button>

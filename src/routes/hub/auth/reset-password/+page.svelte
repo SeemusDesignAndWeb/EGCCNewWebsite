@@ -58,7 +58,7 @@
 									bind:value={passwordData.newPassword}
 									required
 									placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-green focus:ring-brand-green py-2 px-4 pr-10"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-hub-green-500 py-2 px-4 pr-10"
 								/>
 							{:else}
 								<input
@@ -68,7 +68,7 @@
 									bind:value={passwordData.newPassword}
 									required
 									placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-green focus:ring-brand-green py-2 px-4 pr-10"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-hub-green-500 py-2 px-4 pr-10"
 								/>
 							{/if}
 							<button
@@ -106,7 +106,7 @@
 									bind:value={passwordData.confirmPassword}
 									required
 									placeholder="Confirm new password"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-green focus:ring-brand-green py-2 px-4 pr-10"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-hub-green-500 py-2 px-4 pr-10"
 								/>
 							{:else}
 								<input
@@ -116,7 +116,7 @@
 									bind:value={passwordData.confirmPassword}
 									required
 									placeholder="Confirm new password"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-green focus:ring-brand-green py-2 px-4 pr-10"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-hub-green-500 py-2 px-4 pr-10"
 								/>
 							{/if}
 							<button
@@ -142,22 +142,22 @@
 				<div class="mt-6">
 					<button
 						type="submit"
-						class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-brand-green hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green"
+						class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-hub-green-600 hover:bg-hub-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-hub-green-500"
 					>
 						Reset Password
 					</button>
 				</div>
 			</form>
 		{:else}
-			<div class="bg-red-50 border border-red-200 rounded-md p-4">
-				<p class="text-sm text-red-800 font-medium mb-2">
+			<div class="bg-hub-red-50 border border-hub-red-200 rounded-md p-4">
+				<p class="text-sm text-hub-red-800 font-medium mb-2">
 					Invalid or expired reset link
 				</p>
-				<p class="text-sm text-red-700 mb-3">
+				<p class="text-sm text-hub-red-700 mb-3">
 					This password reset link may have expired (links are valid for 24 hours) or has already been used. Please request a new password reset link.
 				</p>
 				<div class="text-center">
-					<a href="/hub/auth/forgot-password" class="inline-block text-sm text-brand-blue hover:text-brand-blue/80 font-medium">
+					<a href="/hub/auth/forgot-password" class="inline-block text-sm text-hub-blue-600 hover:text-hub-blue-600/80 font-medium">
 						Request New Reset Link →
 					</a>
 				</div>
@@ -165,7 +165,7 @@
 		{/if}
 
 		<div class="text-center">
-			<a href="/hub/auth/login" class="text-sm text-brand-blue hover:text-brand-blue/80">
+			<a href="/hub/auth/login" class="text-sm text-hub-blue-600 hover:text-hub-blue-600/80">
 				← Back to Login
 			</a>
 		</div>

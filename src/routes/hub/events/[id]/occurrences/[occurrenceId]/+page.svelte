@@ -122,7 +122,7 @@
 					<button
 						type="submit"
 						form="occurrence-edit-form"
-						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 					>
 						Save Changes
 					</button>
@@ -142,13 +142,13 @@
 					</a>
 					<button
 						on:click={() => editing = true}
-						class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
 					>
 						Edit
 					</button>
 					<button
 						on:click={handleDelete}
-						class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+						class="bg-hub-red-600 text-white px-4 py-2 rounded-md hover:bg-hub-red-700"
 					>
 						Delete
 					</button>
@@ -298,7 +298,7 @@
 									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
 										{signup.contactName || signup.name || 'Unknown'}
 										{#if signup.contactId}
-											<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+											<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-hub-blue-100 text-hub-blue-800">
 												Contact
 											</span>
 										{/if}
@@ -318,7 +318,7 @@
 									<td class="px-6 py-4 whitespace-nowrap text-sm">
 										<button
 											on:click={() => handleDeleteSignup(signup.id)}
-											class="text-red-600 hover:text-red-800 font-medium"
+											class="text-hub-red-600 hover:text-hub-red-800 font-medium"
 											title="Remove signup"
 										>
 											Remove
@@ -365,13 +365,13 @@
 							</div>
 							<div class="text-right">
 								<div class="text-sm text-gray-600">
-									<span class="font-medium text-brand-blue">{rota.assignedCount}</span> / <span class="text-gray-500">{rota.capacity || '∞'}</span>
+									<span class="font-medium text-hub-blue-600">{rota.assignedCount}</span> / <span class="text-gray-500">{rota.capacity || '∞'}</span>
 								</div>
 								<div class="text-xs text-gray-500 mt-1">
 									{#if rota.spotsRemaining > 0}
-										<span class="text-green-600">{rota.spotsRemaining} spots remaining</span>
+										<span class="text-hub-green-600">{rota.spotsRemaining} spots remaining</span>
 									{:else if rota.spotsRemaining === 0}
-										<span class="text-red-600">Full</span>
+										<span class="text-hub-red-600">Full</span>
 									{/if}
 								</div>
 							</div>
@@ -383,7 +383,7 @@
 								<ul class="space-y-1">
 									{#each rota.assigneesForOcc as assignee}
 										<li class="text-sm text-gray-600 flex items-center gap-2">
-											<span class="w-2 h-2 bg-brand-green rounded-full"></span>
+											<span class="w-2 h-2 bg-hub-green-600 rounded-full"></span>
 											<span>{assignee.name}</span>
 											{#if assignee.email}
 												<span class="text-gray-400">({assignee.email})</span>
@@ -399,7 +399,7 @@
 						<div class="mt-3">
 							<a 
 								href="/hub/rotas/{rota.id}" 
-								class="text-sm text-brand-blue hover:text-brand-blue/80 underline"
+								class="text-sm text-hub-blue-600 hover:text-hub-blue-600/80 underline"
 							>
 								View rota details →
 							</a>

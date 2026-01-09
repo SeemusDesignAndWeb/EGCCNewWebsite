@@ -56,7 +56,7 @@
 						autocomplete="email"
 						required
 						bind:value={email}
-						class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-brand-green focus:border-brand-green focus:z-10 sm:text-sm"
+						class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-hub-green-500 focus:border-hub-green-600 focus:z-10 sm:text-sm"
 						placeholder="Email address"
 					/>
 				</div>
@@ -64,22 +64,22 @@
 				<div class="mt-6">
 					<button
 						type="submit"
-						class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-brand-green hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green"
+						class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-hub-green-600 hover:bg-hub-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-hub-green-500"
 					>
 						Send Reset Link
 					</button>
 				</div>
 			</form>
 		{:else}
-			<div class="bg-green-50 border border-green-200 rounded-md p-4">
-				<p class="text-sm text-green-800">
+			<div class="bg-hub-green-50 border border-hub-green-200 rounded-md p-4">
+				<p class="text-sm text-hub-green-800">
 					If an account with that email exists, a password reset link has been sent. Please check your email and follow the instructions.
 				</p>
 			</div>
 		{/if}
 
 		<div class="text-center">
-			<a href="/hub/auth/login" class="text-sm text-brand-blue hover:text-brand-blue/80">
+			<a href="/hub/auth/login" class="text-sm text-hub-blue-600 hover:text-hub-blue-600/80">
 				← Back to Login
 			</a>
 		</div>

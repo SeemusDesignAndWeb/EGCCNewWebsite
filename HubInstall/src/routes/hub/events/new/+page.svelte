@@ -69,7 +69,7 @@
 					<FormField label="Location" name="location" bind:value={formData.location} />
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
-						<select name="visibility" bind:value={formData.visibility} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+						<select name="visibility" bind:value={formData.visibility} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
 							<option value="private">Private</option>
 							<option value="internal">Internal</option>
 							<option value="public">Public</option>
@@ -82,7 +82,7 @@
 						id="enableSignup"
 						name="enableSignup"
 						bind:checked={formData.enableSignup}
-						class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+						class="h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded"
 					/>
 					<label for="enableSignup" class="ml-2 block text-sm text-gray-700">
 						Add Signup to this event
@@ -92,7 +92,7 @@
 					<label class="block text-sm font-medium text-gray-700 mb-1">Event Color</label>
 					<div class="flex items-center gap-3">
 						<div class="w-10 h-10 rounded border border-gray-300" style="background-color: {formData.color};"></div>
-						<select name="color" bind:value={formData.color} class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+						<select name="color" bind:value={formData.color} class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
 							{#each EVENT_COLORS as colorOption}
 								<option value={colorOption.value}>{colorOption.label}</option>
 							{/each}
@@ -123,7 +123,7 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Repeat</label>
-						<select name="repeatType" bind:value={formData.repeatType} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+						<select name="repeatType" bind:value={formData.repeatType} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
 							<option value="none">Does not repeat</option>
 							<option value="daily">Daily</option>
 							<option value="weekly">Weekly</option>
@@ -140,7 +140,7 @@
 					{#if showWeeklyOptions}
 						<div>
 							<label class="block text-sm font-medium text-gray-700 mb-1">Repeat on day of week</label>
-							<select name="repeatDayOfWeek" bind:value={formData.repeatDayOfWeek} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+							<select name="repeatDayOfWeek" bind:value={formData.repeatDayOfWeek} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
 								<option value="">Same day as first occurrence</option>
 								<option value="monday">Monday</option>
 								<option value="tuesday">Tuesday</option>
@@ -157,7 +157,7 @@
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 							<div>
 								<label class="block text-sm font-medium text-gray-700 mb-1">Repeat on</label>
-								<select name="repeatWeekOfMonth" bind:value={formData.repeatWeekOfMonth} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+								<select name="repeatWeekOfMonth" bind:value={formData.repeatWeekOfMonth} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
 									<option value="">Same day of month</option>
 									<option value="first">First</option>
 									<option value="second">Second</option>
@@ -169,7 +169,7 @@
 							{#if formData.repeatWeekOfMonth}
 								<div>
 									<label class="block text-sm font-medium text-gray-700 mb-1">Day of week</label>
-									<select name="repeatDayOfWeek" bind:value={formData.repeatDayOfWeek} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+									<select name="repeatDayOfWeek" bind:value={formData.repeatDayOfWeek} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
 										<option value="">Select day</option>
 										<option value="monday">Monday</option>
 										<option value="tuesday">Tuesday</option>
@@ -189,7 +189,7 @@
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<div>
 							<label class="block text-sm font-medium text-gray-700 mb-1">Ends</label>
-							<select name="repeatEndType" bind:value={formData.repeatEndType} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+							<select name="repeatEndType" bind:value={formData.repeatEndType} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
 								<option value="never">Never</option>
 								<option value="date">On date</option>
 								<option value="count">After number of occurrences</option>
@@ -206,7 +206,7 @@
 		</div>
 
 		<div class="flex gap-2">
-			<button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+			<button type="submit" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 				Create Event
 			</button>
 			<a href="/hub/events" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">

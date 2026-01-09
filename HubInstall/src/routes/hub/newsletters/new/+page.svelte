@@ -66,7 +66,7 @@
 			<select
 				bind:value={selectedTemplateId}
 				on:change={handleTemplateChange}
-				class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4"
+				class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
 			>
 				<option value="">-- Select a template --</option>
 				{#each templates as template}
@@ -81,7 +81,7 @@
 			<HtmlEditor bind:value={htmlContent} name="htmlContent" showPlaceholders={true} showImagePicker={true} />
 		</div>
 		<div class="flex gap-2">
-			<button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+			<button type="submit" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 				Create Newsletter
 			</button>
 			<a href="/hub/newsletters" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">

@@ -33,12 +33,12 @@
 
 	function getStatusBadge(admin) {
 		if (admin.accountLockedUntil && new Date(admin.accountLockedUntil) > new Date()) {
-			return { text: 'Locked', class: 'bg-red-100 text-red-800' };
+			return { text: 'Locked', class: 'bg-hub-red-100 text-hub-red-800' };
 		}
 		if (!admin.emailVerified) {
-			return { text: 'Unverified', class: 'bg-yellow-100 text-yellow-800' };
+			return { text: 'Unverified', class: 'bg-hub-yellow-100 text-hub-yellow-800' };
 		}
-		return { text: 'Active', class: 'bg-green-100 text-green-800' };
+		return { text: 'Active', class: 'bg-hub-green-100 text-hub-green-800' };
 	}
 
 	const columns = [
@@ -68,7 +68,7 @@
 <div class="mb-4 flex justify-between items-center">
 	<h2 class="text-2xl font-bold text-gray-900">Admin Users</h2>
 	<div class="flex gap-2">
-		<a href="/hub/users/new" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+		<a href="/hub/users/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
 			Add Admin User
 		</a>
 	</div>
@@ -80,7 +80,7 @@
 			type="text"
 			bind:value={searchInput}
 			placeholder="Search by email or name..."
-			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 px-4 py-2"
+			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-4 py-2"
 		/>
 		<button type="submit" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
 			Search
