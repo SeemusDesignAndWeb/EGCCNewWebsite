@@ -52,6 +52,7 @@
 							<a href="/hub/newsletters" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/newsletters') ? 'bg-blue-600' : ''}">Newsletters</a>
 							<a href="/hub/events/calendar" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/events') ? 'bg-blue-600' : ''}">Events</a>
 							<a href="/hub/rotas" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/rotas') ? 'bg-blue-600' : ''}">Rotas</a>
+							<a href="/hub/meeting-planners" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/meeting-planners') ? 'bg-blue-600' : ''}">Meeting Planners</a>
 							<a href="/hub/forms" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/forms') ? 'bg-blue-600' : ''}">Forms</a>
 							<!-- Settings Dropdown -->
 							<div class="relative" bind:this={settingsDropdownElement}>
@@ -111,6 +112,7 @@
 							<a href="/hub/newsletters" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/newsletters') ? 'bg-blue-600' : ''}">Newsletters</a>
 							<a href="/hub/events/calendar" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/events') ? 'bg-blue-600' : ''}">Events</a>
 							<a href="/hub/rotas" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/rotas') ? 'bg-blue-600' : ''}">Rotas</a>
+							<a href="/hub/meeting-planners" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/meeting-planners') ? 'bg-blue-600' : ''}">Meeting Planners</a>
 							<a href="/hub/forms" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-blue-600 {$page.url.pathname.startsWith('/hub/forms') ? 'bg-blue-600' : ''}">Forms</a>
 							<div class="px-4 py-2">
 								<button

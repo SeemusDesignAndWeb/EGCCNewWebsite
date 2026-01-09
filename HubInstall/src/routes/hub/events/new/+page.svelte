@@ -4,6 +4,7 @@
 	import FormField from '$lib/crm/components/FormField.svelte';
 	import HtmlEditor from '$lib/crm/components/HtmlEditor.svelte';
 	import { notifications } from '$lib/crm/stores/notifications.js';
+	import { EVENT_COLORS } from '$lib/crm/server/validators.js';
 
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
@@ -30,6 +31,7 @@
 		location: '',
 		visibility: 'private',
 		enableSignup: false,
+		color: '#9333ea',
 		repeatType: 'none',
 		repeatInterval: 1,
 		repeatEndType: 'never',
@@ -85,6 +87,18 @@
 					<label for="enableSignup" class="ml-2 block text-sm text-gray-700">
 						Add Signup to this event
 					</label>
+				</div>
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">Event Color</label>
+					<div class="flex items-center gap-3">
+						<div class="w-10 h-10 rounded border border-gray-300" style="background-color: {formData.color};"></div>
+						<select name="color" bind:value={formData.color} class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
+							{#each EVENT_COLORS as colorOption}
+								<option value={colorOption.value}>{colorOption.label}</option>
+							{/each}
+						</select>
+					</div>
+					<p class="text-xs text-gray-500 mt-1">This color will be used to display the event on the calendar</p>
 				</div>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Description</label>

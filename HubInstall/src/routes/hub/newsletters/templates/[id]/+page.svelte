@@ -10,15 +10,21 @@
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
 	
+	// Track last processed form result to avoid duplicate notifications
+	let lastProcessedFormResult = null;
+
 	// Show notifications from form results
-	$: if (formResult?.success) {
-		notifications.success('Template updated successfully');
-		// Exit edit mode after successful save
-		// The page will automatically reload with updated data via use:enhance
-		editing = false;
-	}
-	$: if (formResult?.error) {
-		notifications.error(formResult.error);
+	$: if (formResult && formResult !== lastProcessedFormResult) {
+		lastProcessedFormResult = formResult;
+		
+		if (formResult?.success) {
+			notifications.success('Template updated successfully');
+			// Exit edit mode after successful save
+			// The page will automatically reload with updated data via use:enhance
+			editing = false;
+		} else if (formResult?.error) {
+			notifications.error(formResult.error);
+		}
 	}
 
 	let editing = false;

@@ -34,7 +34,8 @@ export const actions = {
 				capacity: parseInt(data.get('capacity') || '1', 10),
 				assignees: [],
 				notes: sanitized,
-				ownerId: data.get('ownerId') || null
+				ownerId: data.get('ownerId') || null,
+				visibility: data.get('visibility') || 'public' // Default to public for rotas created via events
 			};
 
 			const validated = validateRota(rotaData);

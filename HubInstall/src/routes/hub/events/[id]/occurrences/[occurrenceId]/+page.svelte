@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
 	import FormField from '$lib/crm/components/FormField.svelte';
 	import HtmlEditor from '$lib/crm/components/HtmlEditor.svelte';
 	import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
@@ -15,18 +16,54 @@
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
 	
+	// Track last processed form result to avoid duplicate notifications
+	let lastProcessedFormResult = null;
+
 	// Show notifications from form results
-	$: if (formResult?.success) {
-		notifications.success('Occurrence updated successfully');
-		// Reset editing mode after successful save
-		setTimeout(() => {
-			editing = false;
-			// Reload page data to get updated occurrence
-			goto($page.url, { invalidateAll: true });
-		}, 100);
+	$: if (formResult && browser && formResult !== lastProcessedFormResult) {
+		lastProcessedFormResult = formResult;
+		
+		if (formResult?.success) {
+			if (formResult?.type === 'deleteSignup') {
+				notifications.success('Signup removed successfully');
+			} else {
+				notifications.success('Occurrence updated successfully');
+			}
+			// Reset editing mode after successful save
+			setTimeout(() => {
+				editing = false;
+				// Reload page data to get updated occurrence
+				if (browser) {
+					goto($page.url, { invalidateAll: true });
+				}
+			}, 100);
+		} else if (formResult?.error) {
+			notifications.error(formResult.error);
+		}
 	}
-	$: if (formResult?.error) {
-		notifications.error(formResult.error);
+
+	async function handleDeleteSignup(signupId) {
+		const confirmed = await dialog.confirm('Are you sure you want to remove this signup?', 'Remove Signup');
+		if (confirmed) {
+			const form = document.createElement('form');
+			form.method = 'POST';
+			form.action = '?/deleteSignup';
+			
+			const csrfInput = document.createElement('input');
+			csrfInput.type = 'hidden';
+			csrfInput.name = '_csrf';
+			csrfInput.value = csrfToken;
+			form.appendChild(csrfInput);
+			
+			const signupIdInput = document.createElement('input');
+			signupIdInput.type = 'hidden';
+			signupIdInput.name = 'signupId';
+			signupIdInput.value = signupId;
+			form.appendChild(signupIdInput);
+			
+			document.body.appendChild(form);
+			form.submit();
+		}
 	}
 
 	let editing = false;
@@ -252,6 +289,7 @@
 								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guests</th>
 								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Attendees</th>
 								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Signed Up</th>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
 							</tr>
 						</thead>
 						<tbody class="bg-white divide-y divide-gray-200">
@@ -277,6 +315,15 @@
 									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 										{signup.createdAt ? formatDateTimeUK(signup.createdAt) : '-'}
 									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-sm">
+										<button
+											on:click={() => handleDeleteSignup(signup.id)}
+											class="text-red-600 hover:text-red-800 font-medium"
+											title="Remove signup"
+										>
+											Remove
+										</button>
+									</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -289,6 +336,7 @@
 								<td class="px-6 py-3 text-sm font-bold text-gray-900">
 									{signups.reduce((sum, s) => sum + (s.guestCount || 0) + 1, 0)}
 								</td>
+								<td class="px-6 py-3"></td>
 								<td class="px-6 py-3"></td>
 							</tr>
 						</tfoot>

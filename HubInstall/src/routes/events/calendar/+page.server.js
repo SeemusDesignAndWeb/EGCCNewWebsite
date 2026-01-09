@@ -1,6 +1,7 @@
 import { readCollection } from '$lib/crm/server/fileStore.js';
 import { ensureEventToken } from '$lib/crm/server/tokens.js';
 import { env } from '$env/dynamic/private';
+import { getPage } from '$lib/server/database.js';
 
 export async function load({ url }) {
 	const events = await readCollection('events');
@@ -33,10 +34,8 @@ export async function load({ url }) {
 		}
 	}
 
-	// Load page data for the banner (optional - can be customized)
-	// If you have a page database, you can import and use it here:
-	// import { getPage } from '$lib/server/database.js';
-	// const page = getPage('events-calendar');
+	// Load page data for the banner
+	const page = getPage('events-calendar');
 	const fallbackPage = {
 		id: 'events-calendar',
 		title: 'Event Calendar',
@@ -52,7 +51,7 @@ export async function load({ url }) {
 		events: publicEvents,
 		occurrences: enrichedOccurrences,
 		eventLinks: Object.fromEntries(eventLinks),
-		page: fallbackPage // Replace with your page data if you have a page database
+		page: page || fallbackPage
 	};
 }
 

@@ -19,6 +19,7 @@ This package contains all the files needed to install the Hub CRM component into
   - Newsletter creation and sending
   - Event management with recurrence
   - Volunteer rotas
+  - Meeting planners (planning tool for events with integrated rotas)
   - Dynamic forms
   - User management
   - Profile management
@@ -146,6 +147,13 @@ If you prefer to install manually:
 - Bulk invitation emails
 - **Automated reminder emails** - See `ROTA_REMINDER_SETUP.md` for setup instructions
 
+### Meeting Planners
+- Create meeting planners for events or specific occurrences
+- Automatically creates standard rotas (Meeting Leader, Worship Leader, Speaker, Call to Worship)
+- Integrated rota management within meeting planner interface
+- Quick view for upcoming meetings
+- Notes and planning fields for each meeting
+
 ### Dynamic Forms
 - Form builder with multiple field types
 - Public form submission
@@ -174,6 +182,7 @@ Data files:
 - `rotas.ndjson` - Volunteer rotas
 - `rota_tokens.ndjson` - Rota signup tokens
 - `event_tokens.ndjson` - Event signup tokens
+- `meeting_planners.ndjson` - Meeting planner records
 - `forms.ndjson` - Form definitions
 - `admins.ndjson` - Admin users
 - `sessions.ndjson` - Active sessions

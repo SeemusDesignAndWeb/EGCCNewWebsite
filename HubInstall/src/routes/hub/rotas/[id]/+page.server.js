@@ -88,18 +88,31 @@ export async function load({ params, cookies, url }) {
 	const assigneesByOccurrence = {};
 	const unassignedAssignees = []; // Assignees without a specific occurrence (old format, rota for all occurrences)
 	
+	console.log('[LOAD DEBUG] Grouping assignees by occurrence');
+	console.log('[LOAD DEBUG] Processed assignees:', JSON.stringify(processedAssignees, null, 2));
+	console.log('[LOAD DEBUG] Event occurrences:', eventOccurrences.map(o => ({ id: o.id, startsAt: o.startsAt })));
+	
 	processedAssignees.forEach(assignee => {
 		const occId = assignee.occurrenceId;
+		console.log('[LOAD DEBUG] Processing assignee:', assignee.name || assignee.email, 'occurrenceId:', occId);
 		if (occId === null || occId === undefined) {
 			// Assignee doesn't have an occurrenceId - this happens with old format when rota is for all occurrences
 			unassignedAssignees.push(assignee);
+			console.log('[LOAD DEBUG] Added to unassigned');
 		} else {
 			if (!assigneesByOccurrence[occId]) {
 				assigneesByOccurrence[occId] = [];
 			}
 			assigneesByOccurrence[occId].push(assignee);
+			console.log('[LOAD DEBUG] Added to occurrence', occId, 'Current count:', assigneesByOccurrence[occId].length);
 		}
 	});
+	
+	console.log('[LOAD DEBUG] Final assigneesByOccurrence:', JSON.stringify(Object.keys(assigneesByOccurrence).reduce((acc, key) => {
+		acc[key] = assigneesByOccurrence[key].map(a => ({ name: a.name, email: a.email, id: a.id }));
+		return acc;
+	}, {}), null, 2));
+	console.log('[LOAD DEBUG] Unassigned assignees:', unassignedAssignees.length);
 	
 	// If there are unassigned assignees and the rota is for all occurrences, 
 	// we need to handle them - for now, show them separately or distribute them
@@ -119,6 +132,9 @@ export async function load({ params, cookies, url }) {
 	// Get all contacts for the add assignees search (excluding those already assigned to this occurrence)
 	// For now, we'll show all contacts - filtering by occurrence will be handled in the UI
 	const availableContacts = contacts;
+
+	// Load all lists for filtering contacts
+	const lists = await readCollection('lists');
 
 	// Ensure a token exists for this rota and generate signup link
 	let signupLink = '';
@@ -146,6 +162,7 @@ export async function load({ params, cookies, url }) {
 		eventOccurrences,
 		assigneesByOccurrence,
 		availableContacts, 
+		lists,
 		owner,
 		signupLink, 
 		csrfToken 
@@ -175,7 +192,8 @@ export const actions = {
 				capacity: parseInt(data.get('capacity') || '1', 10),
 				notes: sanitized,
 				assignees: rota.assignees || [], // Preserve existing assignees
-				ownerId: data.get('ownerId') || null
+				ownerId: data.get('ownerId') || null,
+				visibility: data.get('visibility') || rota.visibility || 'public' // Preserve existing visibility or default to public
 			};
 
 			const validated = validateRota({ ...rotaData, eventId: rota.eventId });
@@ -265,34 +283,89 @@ export const actions = {
 				const occurrenceIdStr = data.get('occurrenceId');
 				const targetOccurrenceId = occurrenceIdStr || rota.occurrenceId || null;
 				
+				console.log('[ADD ASSIGNEES DEBUG] ===========================================');
+				console.log('[ADD ASSIGNEES DEBUG] Rota ID:', params.id);
+				console.log('[ADD ASSIGNEES DEBUG] Rota occurrenceId:', rota.occurrenceId);
+				console.log('[ADD ASSIGNEES DEBUG] Target occurrenceId (from form):', occurrenceIdStr);
+				console.log('[ADD ASSIGNEES DEBUG] Final targetOccurrenceId:', targetOccurrenceId);
+				console.log('[ADD ASSIGNEES DEBUG] Rota capacity:', rota.capacity);
+				console.log('[ADD ASSIGNEES DEBUG] New contact IDs to add:', newContactIds);
+				console.log('[ADD ASSIGNEES DEBUG] Existing assignees count:', existingAssignees.length);
+				console.log('[ADD ASSIGNEES DEBUG] Existing assignees:', JSON.stringify(existingAssignees, null, 2));
+				
 				// Check capacity per occurrence before adding
-				const assigneesForOccurrence = existingAssignees.filter(a => {
+				const assigneesForOccurrence = existingAssignees.filter((a, index) => {
+					console.log(`[ADD ASSIGNEES DEBUG] Checking assignee ${index}:`, JSON.stringify(a, null, 2));
+					
 					if (typeof a === 'string') {
-						return rota.occurrenceId === targetOccurrenceId;
+						// Old format: string is contact ID
+						// If rota is for a specific occurrence, only count if it matches
+						// If rota is for all occurrences (null), don't count old format for specific occurrences
+						if (rota.occurrenceId === null) {
+							// Rota is for all occurrences, old format assignees don't have occurrenceId
+							// They should not be counted for a specific occurrence
+							console.log(`[ADD ASSIGNEES DEBUG] Assignee ${index}: Old format string, rota.occurrenceId is null, returning false`);
+							return false;
+						}
+						const matches = rota.occurrenceId === targetOccurrenceId;
+						console.log(`[ADD ASSIGNEES DEBUG] Assignee ${index}: Old format string, rota.occurrenceId (${rota.occurrenceId}) === targetOccurrenceId (${targetOccurrenceId}): ${matches}`);
+						return matches;
 					}
 					if (a && typeof a === 'object') {
-						const aOccurrenceId = a.occurrenceId || rota.occurrenceId;
-						return aOccurrenceId === targetOccurrenceId;
+						// New format: object with occurrenceId
+						// If assignee has explicit occurrenceId, use it
+						// If assignee occurrenceId is null/undefined, fall back to rota.occurrenceId
+						const aOccurrenceId = a.occurrenceId !== null && a.occurrenceId !== undefined 
+							? a.occurrenceId 
+							: rota.occurrenceId;
+						const matches = aOccurrenceId === targetOccurrenceId;
+						console.log(`[ADD ASSIGNEES DEBUG] Assignee ${index}: New format object, a.occurrenceId: ${a.occurrenceId}, rota.occurrenceId: ${rota.occurrenceId}, resolved aOccurrenceId: ${aOccurrenceId}, matches targetOccurrenceId (${targetOccurrenceId}): ${matches}`);
+						return matches;
 					}
+					console.log(`[ADD ASSIGNEES DEBUG] Assignee ${index}: Unknown format, returning false`);
 					return false;
 				});
 				
-				if (assigneesForOccurrence.length + newContactIds.length > rota.capacity) {
-					return fail(400, { error: `Cannot add ${newContactIds.length} contact(s). This occurrence can only have ${rota.capacity} assignee(s) and currently has ${assigneesForOccurrence.length}.` });
-				}
+				console.log('[ADD ASSIGNEES DEBUG] Assignees for occurrence after filter:', assigneesForOccurrence.length);
+				console.log('[ADD ASSIGNEES DEBUG] Filtered assignees:', JSON.stringify(assigneesForOccurrence, null, 2));
+				console.log('[ADD ASSIGNEES DEBUG] Current count:', assigneesForOccurrence.length);
+				console.log('[ADD ASSIGNEES DEBUG] Trying to add:', newContactIds.length);
 				
-				// Add new assignees with occurrenceId
-				const newAssignees = newContactIds.map(contactId => ({
-					contactId: contactId,
-					occurrenceId: targetOccurrenceId
-				}));
-				
-				// Merge with existing (avoid duplicates for this occurrence)
+				// Get existing contact IDs for this occurrence to check for duplicates
 				const existingContactIdsForOcc = assigneesForOccurrence
 					.map(a => typeof a === 'string' ? a : (a.contactId && typeof a.contactId === 'string' ? a.contactId : null))
 					.filter(id => id !== null);
 				
-				const uniqueNewAssignees = newAssignees.filter(a => !existingContactIdsForOcc.includes(a.contactId));
+				// Filter out duplicates from new contact IDs BEFORE checking capacity
+				const uniqueNewContactIds = newContactIds.filter(contactId => !existingContactIdsForOcc.includes(contactId));
+				
+				console.log('[ADD ASSIGNEES DEBUG] Unique new contact IDs (after filtering duplicates):', uniqueNewContactIds.length);
+				console.log('[ADD ASSIGNEES DEBUG] Total would be:', assigneesForOccurrence.length + uniqueNewContactIds.length);
+				console.log('[ADD ASSIGNEES DEBUG] Capacity:', rota.capacity);
+				console.log('[ADD ASSIGNEES DEBUG] ===========================================');
+				
+				// If all were duplicates, return early
+				if (uniqueNewContactIds.length === 0) {
+					return { success: true, type: 'addAssignees', message: 'All selected contacts are already assigned to this occurrence', skipped: newContactIds.length };
+				}
+				
+				// If some were duplicates, include that in the response
+				if (uniqueNewContactIds.length < newContactIds.length) {
+					const skipped = newContactIds.length - uniqueNewContactIds.length;
+					return { success: true, type: 'addAssignees', message: `Added ${uniqueNewContactIds.length} contact(s). ${skipped} contact(s) were already assigned and skipped.`, added: uniqueNewContactIds.length, skipped: skipped };
+				}
+				
+				// Check capacity with only the unique new assignees
+				if (assigneesForOccurrence.length + uniqueNewContactIds.length > rota.capacity) {
+					return fail(400, { error: `Cannot add ${uniqueNewContactIds.length} contact(s). This occurrence can only have ${rota.capacity} assignee(s) and currently has ${assigneesForOccurrence.length}.` });
+				}
+				
+				// Add new assignees with occurrenceId (only unique ones)
+				const uniqueNewAssignees = uniqueNewContactIds.map(contactId => ({
+					contactId: contactId,
+					occurrenceId: targetOccurrenceId
+				}));
+				
 				const updatedAssignees = [...existingAssignees, ...uniqueNewAssignees];
 
 				// Update with all rota fields to preserve them
@@ -326,7 +399,7 @@ export const actions = {
 					}
 				}
 
-				return { success: true, type: 'addAssignees' };
+				return { success: true, type: 'addAssignees', message: `Added ${uniqueNewContactIds.length} contact(s) successfully.`, added: uniqueNewContactIds.length };
 			} catch (error) {
 				console.error('Error adding assignees:', error);
 				return fail(400, { error: error.message || 'Failed to add assignees' });
@@ -401,28 +474,8 @@ export const actions = {
 				const validated = validateRota(updatedRota);
 				await update('rotas', params.id, validated);
 
-				// Send notification to owner if rota has an owner
-				if (validated.ownerId) {
-					try {
-						const { sendRotaUpdateNotification } = await import('$lib/crm/server/email.js');
-						const event = await findById('events', rota.eventId);
-						const occurrence = rota.occurrenceId ? await findById('occurrences', rota.occurrenceId) : null;
-						const owner = await findById('contacts', validated.ownerId);
-						if (owner) {
-							await sendRotaUpdateNotification({
-								to: owner.email,
-								name: `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || owner.email
-							}, {
-								rota: validated,
-								event,
-								occurrence
-							}, { url: new URL(url.toString(), 'http://localhost') });
-						}
-					} catch (error) {
-						console.error('Error sending rota update notification:', error);
-						// Don't fail the update if notification fails
-					}
-				}
+				// Do NOT send notification when a contact is unassigned
+				// (Email notifications are only sent when contacts are added, not removed)
 
 				console.log('[SERVER] Rota updated successfully');
 				return { success: true, type: 'removeAssignee' };

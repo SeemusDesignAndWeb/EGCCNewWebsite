@@ -3,14 +3,18 @@
 	import Table from '$lib/crm/components/Table.svelte';
 	import Pager from '$lib/crm/components/Pager.svelte';
 	import { goto } from '$app/navigation';
+	import { dialog } from '$lib/crm/stores/notifications.js';
+	import { onMount } from 'svelte';
 
 	$: data = $page.data || {};
 	$: rotas = data.rotas || [];
 	$: currentPage = data.currentPage || 1;
 	$: totalPages = data.totalPages || 1;
 	$: search = data.search || '';
+	$: csrfToken = data.csrfToken || '';
 
 	let searchInput = search;
+	let tableContainer;
 
 	function handleSearch() {
 		const params = new URLSearchParams();
@@ -30,6 +34,58 @@
 		goto(`/hub/rotas?${params.toString()}`);
 	}
 
+	async function handleDelete(rotaId) {
+		const rota = rotas.find(r => r.id === rotaId);
+		if (!rota) return;
+		
+		const confirmed = await dialog.confirm(
+			`Are you sure you want to delete the rota "${rota.role}"? This action cannot be undone.`,
+			'Delete Rota',
+			{ confirmText: 'Delete', cancelText: 'Cancel' }
+		);
+		
+		if (confirmed) {
+			const form = document.createElement('form');
+			form.method = 'POST';
+			form.action = '?/delete';
+			
+			const csrfInput = document.createElement('input');
+			csrfInput.type = 'hidden';
+			csrfInput.name = '_csrf';
+			csrfInput.value = csrfToken;
+			form.appendChild(csrfInput);
+			
+			const rotaIdInput = document.createElement('input');
+			rotaIdInput.type = 'hidden';
+			rotaIdInput.name = 'rotaId';
+			rotaIdInput.value = rotaId;
+			form.appendChild(rotaIdInput);
+			
+			document.body.appendChild(form);
+			form.submit();
+		}
+	}
+
+	onMount(() => {
+		if (tableContainer) {
+			const handleClick = (e) => {
+				const deleteButton = e.target.closest('[data-delete-rota]');
+				if (deleteButton) {
+					e.preventDefault();
+					e.stopPropagation();
+					const rotaId = deleteButton.getAttribute('data-delete-rota');
+					handleDelete(rotaId);
+				}
+			};
+			
+			tableContainer.addEventListener('click', handleClick);
+			
+			return () => {
+				tableContainer.removeEventListener('click', handleClick);
+			};
+		}
+	});
+
 	const columns = [
 		{ key: 'eventTitle', label: 'Event' },
 		{ key: 'role', label: 'Role' },
@@ -38,6 +94,29 @@
 			key: 'assignees', 
 			label: 'Assigned',
 			render: (val) => Array.isArray(val) ? val.length : 0
+		},
+		{
+			key: 'visibility',
+			label: 'Visibility',
+			render: (val, row) => {
+				const visibility = row.visibility || 'public';
+				const badgeClass = visibility === 'public' 
+					? 'bg-green-100 text-green-800' 
+					: 'bg-gray-100 text-gray-800';
+				return `<span class="px-2 py-1 text-xs rounded ${badgeClass}">${visibility === 'public' ? 'Public' : 'Internal'}</span>`;
+			}
+		},
+		{
+			key: 'actions',
+			label: '',
+			render: (val, row) => {
+				return `<button 
+					class="text-red-600 hover:text-red-800 font-bold text-lg delete-rota-btn w-6 h-6 flex items-center justify-center"
+					data-delete-rota="${row.id}"
+					type="button"
+					title="Delete rota"
+				>×</button>`;
+			}
 		}
 	];
 </script>
@@ -68,7 +147,13 @@
 	</form>
 </div>
 
-<Table {columns} rows={rotas} onRowClick={(row) => goto(`/hub/rotas/${row.id}`)} />
+<div bind:this={tableContainer}>
+	<Table 
+		{columns} 
+		rows={rotas} 
+		onRowClick={(row) => goto(`/hub/rotas/${row.id}`)}
+	/>
+</div>
 
 <Pager {currentPage} {totalPages} onPageChange={handlePageChange} />
 

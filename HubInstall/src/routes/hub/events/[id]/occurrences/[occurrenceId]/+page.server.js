@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect, fail } from '@sveltejs/kit';
 import { findById, update, remove, findMany, readCollection } from '$lib/crm/server/fileStore.js';
 import { validateOccurrence } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
@@ -156,6 +156,38 @@ export const actions = {
 
 		await remove('occurrences', params.occurrenceId);
 		throw redirect(302, `/hub/events/${params.id}`);
+	},
+
+	deleteSignup: async ({ request, params, cookies }) => {
+		const data = await request.formData();
+		const csrfToken = data.get('_csrf');
+
+		if (!csrfToken || !verifyCsrfToken(cookies, csrfToken)) {
+			return fail(403, { error: 'CSRF token validation failed' });
+		}
+
+		try {
+			const signupId = data.get('signupId');
+			if (!signupId) {
+				return fail(400, { error: 'Signup ID is required' });
+			}
+
+			// Verify the signup belongs to this event and occurrence
+			const signup = await findById('event_signups', signupId);
+			if (!signup) {
+				return fail(404, { error: 'Signup not found' });
+			}
+
+			if (signup.eventId !== params.id || signup.occurrenceId !== params.occurrenceId) {
+				return fail(403, { error: 'Signup does not belong to this occurrence' });
+			}
+
+			await remove('event_signups', signupId);
+			return { success: true, type: 'deleteSignup' };
+		} catch (error) {
+			console.error('Error deleting signup:', error);
+			return fail(400, { error: error.message || 'Failed to delete signup' });
+		}
 	}
 };
 

@@ -23,7 +23,7 @@ This `HubInstall` folder contains everything needed to install the Hub CRM compo
   - `NotificationPopup.svelte` - Toast notifications
   - `ConfirmDialog.svelte` - Confirmation dialogs
 
-- **Server Utilities** (12 files):
+- **Server Utilities** (13 files):
   - `auth.js` - Authentication & session management
   - `fileStore.js` - NDJSON file-based storage
   - `crypto.js` - Encryption utilities
@@ -32,6 +32,7 @@ This `HubInstall` folder contains everything needed to install the Hub CRM compo
   - `sanitize.js` - HTML sanitization
   - `tokens.js` - Token management
   - `recurrence.js` - Event recurrence patterns
+  - `rotaReminders.js` - Automated rota reminder notifications
   - `ids.js` - ULID generation
   - `audit.js` - Audit logging
   - `logger.js` - Logging utilities
@@ -52,6 +53,7 @@ Complete admin interface with:
 - Newsletters (creation, templates, sending, PDF export)
 - Events (creation, calendar view, occurrences, ICS export)
 - Rotas (volunteer management, bulk invitations)
+- Meeting Planners (planning tool with integrated rotas, quick view)
 - Forms (dynamic form builder, submissions)
 - Users (admin user management)
 - Profile (user profile management)

@@ -232,37 +232,13 @@ async function main() {
       console.log('  ✓ Copied src/routes/calendar');
     }
     
-    const eventsCalendarSrc = join(INSTALL_DIR, 'src', 'routes', 'events', 'calendar');
-    const eventsCalendarDest = join(TARGET_DIR, 'src', 'routes', 'events', 'calendar');
-    if (existsSync(eventsCalendarSrc)) {
+    // Copy events routes (including calendar subdirectory)
+    const eventsSrc = join(INSTALL_DIR, 'src', 'routes', 'events');
+    const eventsDest = join(TARGET_DIR, 'src', 'routes', 'events');
+    if (existsSync(eventsSrc)) {
       await mkdir(join(TARGET_DIR, 'src', 'routes', 'events'), { recursive: true });
-      await copyDir(eventsCalendarSrc, eventsCalendarDest);
-      console.log('  ✓ Copied src/routes/events/calendar');
-    }
-    
-    const eventSrc = join(INSTALL_DIR, 'src', 'routes', 'event');
-    const eventDest = join(TARGET_DIR, 'src', 'routes', 'event');
-    if (existsSync(eventSrc)) {
-      await copyDir(eventSrc, eventDest);
-      console.log('  ✓ Copied src/routes/event');
-    }
-    console.log('');
-
-    // 4. Copy public calendar routes
-    console.log('📅 Copying public calendar routes...');
-    const calendarSrc = join(INSTALL_DIR, 'src', 'routes', 'calendar');
-    const calendarDest = join(TARGET_DIR, 'src', 'routes', 'calendar');
-    if (existsSync(calendarSrc)) {
-      await copyDir(calendarSrc, calendarDest);
-      console.log('  ✓ Copied src/routes/calendar');
-    }
-    
-    const eventsCalendarSrc = join(INSTALL_DIR, 'src', 'routes', 'events', 'calendar');
-    const eventsCalendarDest = join(TARGET_DIR, 'src', 'routes', 'events', 'calendar');
-    if (existsSync(eventsCalendarSrc)) {
-      await mkdir(join(TARGET_DIR, 'src', 'routes', 'events'), { recursive: true });
-      await copyDir(eventsCalendarSrc, eventsCalendarDest);
-      console.log('  ✓ Copied src/routes/events/calendar');
+      await copyDir(eventsSrc, eventsDest);
+      console.log('  ✓ Copied src/routes/events');
     }
     
     const eventSrc = join(INSTALL_DIR, 'src', 'routes', 'event');

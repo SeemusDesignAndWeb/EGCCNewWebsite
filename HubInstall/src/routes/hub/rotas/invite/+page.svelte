@@ -1,19 +1,15 @@
 <script>
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
-	import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
+	import { dialog } from '$lib/crm/stores/notifications.js';
 
 	$: data = $page.data || {};
 	$: events = data.events || [];
 	$: rotas = data.rotas || [];
-	$: occurrences = data.occurrences || [];
-	$: contacts = data.contacts || [];
 	$: lists = data.lists || [];
 	$: csrfToken = data.csrfToken || '';
 
 	let selectedEventId = '';
 	let selectedRotaIds = [];
-	let selectedOccurrenceIds = [];
 	let selectedListId = '';
 	let sending = false;
 	let results = null;
@@ -22,9 +18,13 @@
 		? rotas.filter(r => r.eventId === selectedEventId)
 		: [];
 
-	$: filteredOccurrences = selectedEventId
-		? occurrences.filter(o => o.eventId === selectedEventId)
-		: [];
+	function selectAllRotas() {
+		selectedRotaIds = filteredRotas.map(r => r.id);
+	}
+
+	function deselectAllRotas() {
+		selectedRotaIds = [];
+	}
 
 	async function sendInvites() {
 		if (!selectedEventId || selectedRotaIds.length === 0 || !selectedListId) {
@@ -43,7 +43,7 @@
 					_csrf: csrfToken,
 					eventId: selectedEventId,
 					rotaIds: selectedRotaIds,
-					occurrenceIds: selectedOccurrenceIds,
+					occurrenceIds: [], // Occurrences will be selected on the signup page
 					listId: selectedListId
 				})
 			});
@@ -58,77 +58,141 @@
 	}
 </script>
 
-<div class="bg-white shadow rounded-lg p-6">
-	<h2 class="text-2xl font-bold text-gray-900 mb-6">Bulk Rota Invitations</h2>
-
-	<div class="space-y-4">
-		<div>
-			<label class="block text-sm font-medium text-gray-700 mb-1">Event</label>
-			<select bind:value={selectedEventId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
-				<option value="">Select an event</option>
-				{#each events as event}
-					<option value={event.id}>{event.title}</option>
-				{/each}
-			</select>
-		</div>
-
-		{#if filteredRotas.length > 0}
-			<div>
-				<label class="block text-sm font-medium text-gray-700 mb-1">Rotas</label>
-				<div class="space-y-2">
-					{#each filteredRotas as rota}
-						<label class="flex items-center">
-							<input type="checkbox" bind:group={selectedRotaIds} value={rota.id} class="mr-2" />
-							<span>{rota.role} (Capacity: {rota.capacity})</span>
-						</label>
-					{/each}
-				</div>
+<div class="space-y-6">
+	<!-- Header with Title and Action Buttons -->
+	<div class="bg-white shadow rounded-lg p-6">
+		<div class="flex justify-between items-center">
+			<h2 class="text-2xl font-bold text-gray-900">Bulk Rota Invitations</h2>
+			<div class="flex gap-3">
+				<a
+					href="/hub/rotas"
+					class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 flex items-center gap-2"
+				>
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+					</svg>
+					Back
+				</a>
+				<button
+					on:click={sendInvites}
+					disabled={sending || !selectedEventId || selectedRotaIds.length === 0 || !selectedListId}
+					class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+				>
+					{#if sending}
+						<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+						</svg>
+						Sending...
+					{:else}
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+						</svg>
+						Send Invitations
+					{/if}
+				</button>
 			</div>
-		{/if}
-
-		{#if filteredOccurrences.length > 0}
-			<div>
-				<label class="block text-sm font-medium text-gray-700 mb-1">Occurrences (optional)</label>
-				<div class="space-y-2">
-					{#each filteredOccurrences as occurrence}
-						<label class="flex items-center">
-							<input type="checkbox" bind:group={selectedOccurrenceIds} value={occurrence.id} class="mr-2" />
-							<span>{formatDateTimeUK(occurrence.startsAt)}</span>
-						</label>
-					{/each}
-				</div>
-			</div>
-		{/if}
-
-		<div>
-			<label class="block text-sm font-medium text-gray-700 mb-1">Contact List</label>
-			<select bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-3 px-4">
-				<option value="">Select a list</option>
-				{#each lists as list}
-					<option value={list.id}>{list.name}</option>
-				{/each}
-			</select>
 		</div>
-
-		<button
-			on:click={sendInvites}
-			disabled={sending}
-			class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
-		>
-			{sending ? 'Sending...' : 'Send Invitations'}
-		</button>
 	</div>
 
+	<!-- Selection Panel: Event and Contact List in one row -->
+	<div class="bg-white shadow rounded-lg p-6">
+		<h3 class="text-lg font-semibold text-gray-900 mb-4">Selection</h3>
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div>
+				<label class="block text-sm font-medium text-gray-700 mb-1">Event <span class="text-red-500">*</span></label>
+				<select bind:value={selectedEventId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3">
+					<option value="">Select an event</option>
+					{#each events as event}
+						<option value={event.id}>{event.title}</option>
+					{/each}
+				</select>
+			</div>
+			<div>
+				<label class="block text-sm font-medium text-gray-700 mb-1">Contact List <span class="text-red-500">*</span></label>
+				<select bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3">
+					<option value="">Select a list</option>
+					{#each lists as list}
+						<option value={list.id}>{list.name}</option>
+					{/each}
+				</select>
+			</div>
+		</div>
+	</div>
+
+	<!-- Rotas Panel -->
+	<div class="bg-white shadow rounded-lg p-6">
+		<div class="flex justify-between items-center mb-4">
+			<h3 class="text-lg font-semibold text-gray-900">Rotas <span class="text-red-500">*</span></h3>
+			{#if filteredRotas.length > 0}
+				<div class="flex gap-2">
+					<button
+						on:click={selectAllRotas}
+						class="text-xs text-green-600 hover:text-green-800 underline"
+					>
+						Select All
+					</button>
+					<button
+						on:click={deselectAllRotas}
+						class="text-xs text-gray-600 hover:text-gray-800 underline"
+					>
+						Deselect All
+					</button>
+				</div>
+			{/if}
+		</div>
+		{#if !selectedEventId}
+			<p class="text-sm text-gray-500 italic">Select an event to see available rotas</p>
+		{:else if filteredRotas.length === 0}
+			<p class="text-sm text-gray-500 italic">No rotas available for this event</p>
+		{:else}
+			<div class="space-y-2 max-h-[400px] overflow-y-auto">
+				{#each filteredRotas as rota}
+					<label class="flex items-center p-2 bg-gray-50 rounded-md hover:bg-gray-100 cursor-pointer">
+						<input 
+							type="checkbox" 
+							bind:group={selectedRotaIds} 
+							value={rota.id} 
+							class="mr-3 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded" 
+						/>
+						<div class="flex-1">
+							<div class="font-medium text-sm text-gray-900">{rota.role}</div>
+							<div class="text-xs text-gray-500">Capacity: {rota.capacity}</div>
+						</div>
+					</label>
+				{/each}
+			</div>
+		{/if}
+	</div>
+
+	<!-- Results Panel -->
 	{#if results}
-		<div class="mt-6 p-4 bg-gray-50 rounded-md">
-			<h3 class="font-bold mb-2">Results</h3>
+		<div class="bg-white shadow rounded-lg p-6">
+			<h3 class="text-lg font-semibold text-gray-900 mb-4">Results</h3>
 			{#if results.error}
-				<p class="text-red-600">{results.error}</p>
+				<div class="p-4 bg-red-50 border border-red-200 rounded-md">
+					<p class="text-red-800 font-medium">{results.error}</p>
+				</div>
 			{:else if results.results}
-				<p class="text-green-600">Sent {results.results.filter(r => r.status === 'sent').length} invitations</p>
-				{#if results.results.some(r => r.status === 'error')}
-					<p class="text-red-600">Some errors occurred. Check console for details.</p>
-				{/if}
+				<div class="space-y-3">
+					<div class="p-4 bg-green-50 border border-green-200 rounded-md">
+						<p class="text-green-800 font-medium">
+							✓ Sent {results.results.filter(r => r.status === 'sent').length} invitation{results.results.filter(r => r.status === 'sent').length !== 1 ? 's' : ''} successfully
+						</p>
+					</div>
+					{#if results.results.some(r => r.status === 'error')}
+						<div class="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+							<p class="text-yellow-800 font-medium">
+								⚠ {results.results.filter(r => r.status === 'error').length} invitation{results.results.filter(r => r.status === 'error').length !== 1 ? 's' : ''} failed
+							</p>
+							<ul class="mt-2 space-y-1 text-sm text-yellow-700">
+								{#each results.results.filter(r => r.status === 'error') as result}
+									<li>• {result.contact?.email || 'Unknown'}: {result.error || 'Unknown error'}</li>
+								{/each}
+							</ul>
+						</div>
+					{/if}
+				</div>
 			{/if}
 		</div>
 	{/if}

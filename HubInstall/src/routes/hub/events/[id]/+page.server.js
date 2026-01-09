@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect, fail } from '@sveltejs/kit';
 import { findById, update, remove, readCollection, findMany } from '$lib/crm/server/fileStore.js';
 import { validateEvent } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
@@ -15,6 +15,7 @@ export async function load({ params, cookies, url }) {
 	const occurrences = await findMany('occurrences', o => o.eventId === params.id);
 	const rotas = await findMany('rotas', r => r.eventId === params.id);
 	const eventSignups = await findMany('event_signups', s => s.eventId === params.id);
+	const meetingPlanners = await findMany('meeting_planners', mp => mp.eventId === params.id);
 
 	// Calculate rota statistics and signup statistics for each occurrence
 	const occurrencesWithStats = occurrences.map(occ => {
@@ -108,7 +109,7 @@ export async function load({ params, cookies, url }) {
 	}
 
 	const csrfToken = getCsrfToken(cookies) || '';
-	return { event, occurrences: occurrencesWithStats, rotas, rotaSignupLink, publicEventLink, occurrenceLinks, csrfToken };
+	return { event, occurrences: occurrencesWithStats, rotas, meetingPlanners, rotaSignupLink, publicEventLink, occurrenceLinks, csrfToken };
 }
 
 export const actions = {
@@ -137,6 +138,7 @@ export const actions = {
 				visibility: ['public', 'private', 'internal'].includes(data.get('visibility')) ? data.get('visibility') : 'private',
 				enableSignup: data.get('enableSignup') === 'on' || data.get('enableSignup') === 'true',
 				maxSpaces: data.get('maxSpaces') ? parseInt(data.get('maxSpaces')) : null,
+				color: data.get('color') || existingEvent.color || '#9333ea',
 				// Preserve recurrence fields if they exist
 				repeatType: existingEvent.repeatType || 'none',
 				repeatInterval: existingEvent.repeatInterval || 1,
@@ -169,6 +171,38 @@ export const actions = {
 
 		await remove('events', params.id);
 		throw redirect(302, '/hub/events');
+	},
+
+	deleteSignup: async ({ request, params, cookies }) => {
+		const data = await request.formData();
+		const csrfToken = data.get('_csrf');
+
+		if (!csrfToken || !verifyCsrfToken(cookies, csrfToken)) {
+			return fail(403, { error: 'CSRF token validation failed' });
+		}
+
+		try {
+			const signupId = data.get('signupId');
+			if (!signupId) {
+				return fail(400, { error: 'Signup ID is required' });
+			}
+
+			// Verify the signup belongs to this event
+			const signup = await findById('event_signups', signupId);
+			if (!signup) {
+				return fail(404, { error: 'Signup not found' });
+			}
+
+			if (signup.eventId !== params.id) {
+				return fail(403, { error: 'Signup does not belong to this event' });
+			}
+
+			await remove('event_signups', signupId);
+			return { success: true, type: 'deleteSignup' };
+		} catch (error) {
+			console.error('Error deleting signup:', error);
+			return fail(400, { error: error.message || 'Failed to delete signup' });
+		}
 	}
 };
 
