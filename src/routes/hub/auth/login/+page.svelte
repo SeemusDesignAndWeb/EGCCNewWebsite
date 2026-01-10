@@ -13,7 +13,7 @@
 
 <div class="h-screen flex items-center justify-center bg-gray-50 py-4 px-4 sm:py-12 sm:px-6 lg:px-8">
 	<div class="max-w-md w-full space-y-8">
-		<div class="text-center">
+		<div class="text-center -mt-8">
 			<img
 				src="/images/egcc-color.png"
 				alt="Eltham Green Community Church"
