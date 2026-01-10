@@ -120,7 +120,7 @@
 						on:click={() => editing = false}
 						class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
 					>
-						Cancel
+						Back
 					</button>
 				{:else}
 					<button
@@ -211,7 +211,7 @@
 						}}
 						class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
 					>
-						Cancel
+						Back
 					</button>
 				</div>
 			</form>
@@ -384,7 +384,7 @@
 							}}
 							class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
 						>
-							Cancel
+							Back
 						</button>
 					</div>
 				</form>

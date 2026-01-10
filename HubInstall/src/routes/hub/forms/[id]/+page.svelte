@@ -177,7 +177,7 @@
 						on:click={() => editing = false}
 						class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
 					>
-						Cancel
+						Back
 					</button>
 				{:else}
 					<a href="/forms/{form.id}" target="_blank" class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700">
@@ -297,7 +297,7 @@
 					</button>
 					{#if editingField !== null}
 						<button type="button" on:click={() => { editingField = null; fieldForm = { type: 'text', label: '', name: '', required: false, placeholder: '', options: [] }; }} class="mt-4 ml-2 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
-							Cancel
+							Back
 						</button>
 					{/if}
 				</div>
