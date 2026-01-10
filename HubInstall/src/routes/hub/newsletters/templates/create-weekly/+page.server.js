@@ -55,7 +55,7 @@ export const actions = {
 		<div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #666; font-size: 14px;">
 			<p style="margin: 0 0 10px 0;">Blessings,</p>
 			<p style="margin: 0; font-weight: bold;">Eltham Green Community Church</p>
-			<p style="margin: 10px 0 0 0;">542 Westhorne Avenue, Eltham, London, SE9 6RR</p>
+			<p style="margin: 10px 0 0 0;">542 Westhorne Avenue, Eltham, London, SE9 6DH</p>
 		</div>
 	</div>
 </body>
@@ -76,7 +76,7 @@ YOUR ROTAS
 
 Blessings,
 Eltham Green Community Church
-542 Westhorne Avenue, Eltham, London, SE9 6RR`;
+542 Westhorne Avenue, Eltham, London, SE9 6DH`;
 
 			const templateData = {
 				name: 'Weekly Newsletter',

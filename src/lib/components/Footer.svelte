@@ -1,6 +1,6 @@
 <script lang="js">
 	export let contactInfo = {
-		address: '542 Westhorne Avenue, Eltham, London, SE9 6RR',
+		address: '542 Westhorne Avenue, Eltham, London, SE9 6DH',
 		phone: '020 8850 1331',
 		email: 'enquiries@egcc.co.uk'
 	};

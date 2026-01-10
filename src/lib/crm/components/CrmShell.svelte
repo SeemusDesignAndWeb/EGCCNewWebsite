@@ -253,7 +253,7 @@
 						/>
 						<div class="text-sm text-gray-600">
 							<div class="font-semibold text-gray-900">Eltham Green Community Church</div>
-							<div class="text-xs">542 Westhorne Avenue, Eltham, London, SE9 6RR</div>
+							<div class="text-xs">542 Westhorne Avenue, Eltham, London, SE9 6DH</div>
 						</div>
 					</div>
 					<div class="text-sm text-gray-500">

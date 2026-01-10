@@ -794,7 +794,7 @@ export async function sendCombinedRotaInvites(contactInvites, eventData, eventPa
 						<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
 							<div style="text-align: center; margin-bottom: 15px;">
 								<p style="margin: 0 0 8px 0; color: #333; font-size: 14px; font-weight: 600;">Eltham Green Community Church</p>
-								<p style="margin: 0 0 4px 0; color: #666; font-size: 12px;">542 Westhorne Avenue, Eltham, London, SE9 6RR</p>
+								<p style="margin: 0 0 4px 0; color: #666; font-size: 12px;">542 Westhorne Avenue, Eltham, London, SE9 6DH</p>
 								<p style="margin: 0 0 4px 0; color: #666; font-size: 12px;">
 									<a href="tel:02088501331" style="color: #2d7a32; text-decoration: none;">020 8850 1331</a> | 
 									<a href="mailto:enquiries@egcc.co.uk" style="color: #2d7a32; text-decoration: none;">enquiries@egcc.co.uk</a>
@@ -847,7 +847,7 @@ ${upcomingRotasText}
 
 ---
 Eltham Green Community Church
-542 Westhorne Avenue, Eltham, London, SE9 6RR
+542 Westhorne Avenue, Eltham, London, SE9 6DH
 Phone: 020 8850 1331
 Email: enquiries@egcc.co.uk
 Website: ${baseUrl}
@@ -1259,7 +1259,7 @@ export async function sendEventSignupConfirmation({ to, name, event, occurrence,
 				
 				<div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; text-align: center; color: #666; font-size: 12px;">
 					<p style="margin: 0;">Eltham Green Community Church</p>
-					<p style="margin: 4px 0 0 0;">542 Westhorne Avenue, Eltham, London, SE9 6RR</p>
+					<p style="margin: 4px 0 0 0;">542 Westhorne Avenue, Eltham, London, SE9 6DH</p>
 				</div>
 				</div>
 			</div>
@@ -1285,7 +1285,7 @@ Attendees: ${totalAttendees === 1
 We look forward to seeing you there!
 
 Eltham Green Community Church
-542 Westhorne Avenue, Eltham, London, SE9 6RR
+542 Westhorne Avenue, Eltham, London, SE9 6DH
 	`.trim();
 
 	try {
