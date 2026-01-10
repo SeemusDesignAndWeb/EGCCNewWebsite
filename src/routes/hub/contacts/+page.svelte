@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/stores';
+	import { enhance } from '$app/forms';
 	import Table from '$lib/crm/components/Table.svelte';
 	import Pager from '$lib/crm/components/Pager.svelte';
 	import { goto } from '$app/navigation';
@@ -10,8 +11,16 @@
 	$: currentPage = data.currentPage || 1;
 	$: totalPages = data.totalPages || 1;
 	$: search = data.search || '';
+	$: csrfToken = data.csrfToken || '';
+	$: isSuperAdmin = data.isSuperAdmin || false;
 
 	let searchInput = search;
+	let showBulkUpdateDialog = false;
+	let bulkUpdateResult = null;
+	let isSubmitting = false;
+	let updateField = 'membershipStatus';
+	let updateValue = 'member';
+	let filterCondition = 'empty';
 
 	function handleSearch() {
 		const params = new URLSearchParams();
@@ -52,11 +61,39 @@
 			render: (val) => val ? formatDateUK(val) : ''
 		}
 	];
+
+	$: formResult = $page.form;
+	
+	// Handle form result
+	$: if (formResult) {
+		isSubmitting = false;
+		if (formResult.error) {
+			bulkUpdateResult = { error: formResult.error };
+		} else if (formResult.success !== undefined) {
+			bulkUpdateResult = {
+				message: formResult.message || `Successfully updated ${formResult.updatedCount || 0} contact(s).`,
+				updatedCount: formResult.updatedCount || 0
+			};
+			showBulkUpdateDialog = false;
+			// Reload the page after a short delay to show the updated data
+			setTimeout(() => {
+				window.location.reload();
+			}, 2000);
+		}
+	}
 </script>
 
 <div class="mb-4 flex justify-between items-center">
 	<h2 class="text-2xl font-bold text-gray-900">Contacts</h2>
 	<div class="flex gap-2">
+		{#if isSuperAdmin}
+			<button
+				on:click={() => showBulkUpdateDialog = true}
+				class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700"
+			>
+				Bulk Update
+			</button>
+		{/if}
 		<a href="/signup/member" target="_blank" rel="noopener noreferrer" class="bg-hub-yellow-600 text-white px-4 py-2 rounded-md hover:bg-hub-yellow-700 inline-flex items-center gap-2">
 			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -86,7 +123,139 @@
 	</form>
 </div>
 
+{#if bulkUpdateResult}
+	<div class="mb-4 p-4 rounded-md {bulkUpdateResult.error ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}">
+		{#if bulkUpdateResult.error}
+			<p class="text-red-800">{bulkUpdateResult.error}</p>
+		{:else}
+			<p class="text-green-800">{bulkUpdateResult.message || `Successfully updated ${bulkUpdateResult.updatedCount || 0} contact(s).`}</p>
+		{/if}
+	</div>
+{/if}
+
 <Table {columns} rows={contacts} onRowClick={(row) => goto(`/hub/contacts/${row.id}`)} />
 
 <Pager {currentPage} {totalPages} onPageChange={handlePageChange} />
+
+{#if showBulkUpdateDialog}
+	<div 
+		class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
+		role="button"
+		tabindex="0"
+		on:click={() => showBulkUpdateDialog = false}
+		on:keydown={(e) => e.key === 'Escape' && (showBulkUpdateDialog = false)}
+		aria-label="Close modal"
+	>
+		<div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto" on:click|stopPropagation role="dialog" aria-labelledby="bulk-update-title" aria-modal="true">
+			<h3 id="bulk-update-title" class="text-xl font-bold text-gray-900 mb-4">Bulk Update Contacts</h3>
+			<p class="text-gray-700 mb-6 text-sm">
+				This will update contacts based on your selection. This action cannot be undone. Are you sure you want to continue?
+			</p>
+			<form
+				method="POST"
+				action="?/bulkUpdateMembershipStatus"
+				use:enhance={() => {
+					isSubmitting = true;
+					bulkUpdateResult = null;
+					return async ({ update }) => {
+						await update();
+					};
+				}}
+			>
+				<input type="hidden" name="_csrf" value={csrfToken} />
+				
+				<div class="space-y-4 mb-6">
+					<!-- Field Selection -->
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-2">Field to Update</label>
+						<select 
+							bind:value={updateField}
+							on:change={() => {
+								// Reset value when field changes
+								if (updateField === 'membershipStatus') {
+									updateValue = 'member';
+								} else {
+									updateValue = '';
+								}
+							}}
+							class="w-full rounded-md border border-gray-300 shadow-sm focus:border-hub-blue-500 focus:ring-hub-blue-500 py-2 px-3"
+						>
+							<option value="membershipStatus">Membership Status</option>
+							<option value="dateJoined">Date Joined</option>
+						</select>
+					</div>
+
+					<!-- Value Input -->
+					{#if updateField === 'membershipStatus'}
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-2">Membership Status</label>
+							<select 
+								bind:value={updateValue}
+								name="updateValue"
+								class="w-full rounded-md border border-gray-300 shadow-sm focus:border-hub-blue-500 focus:ring-hub-blue-500 py-2 px-3"
+							>
+								<option value="member">Member</option>
+								<option value="regular-attender">Regular Attender</option>
+								<option value="visitor">Visitor</option>
+								<option value="former-member">Former Member</option>
+								<option value="">(Empty)</option>
+							</select>
+						</div>
+					{:else}
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-2">Date Joined</label>
+							<input
+								type="date"
+								bind:value={updateValue}
+								name="updateValue"
+								class="w-full rounded-md border border-gray-300 shadow-sm focus:border-hub-blue-500 focus:ring-hub-blue-500 py-2 px-3"
+							/>
+							<p class="mt-1 text-xs text-gray-500">Leave empty to clear the date</p>
+						</div>
+					{/if}
+
+					<!-- Filter Condition -->
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-2">Update Which Contacts?</label>
+						<select 
+							bind:value={filterCondition}
+							name="filterCondition"
+							class="w-full rounded-md border border-gray-300 shadow-sm focus:border-hub-blue-500 focus:ring-hub-blue-500 py-2 px-3"
+						>
+							<option value="empty">Only contacts where field is empty</option>
+							<option value="all">All contacts (override existing values)</option>
+						</select>
+					</div>
+				</div>
+
+				<input type="hidden" name="updateField" value={updateField} />
+				<input type="hidden" name="filterCondition" value={filterCondition} />
+
+				<div class="flex gap-3 justify-end">
+					<button
+						type="button"
+						on:click={() => {
+							showBulkUpdateDialog = false;
+							bulkUpdateResult = null;
+							updateField = 'membershipStatus';
+							updateValue = 'member';
+							filterCondition = 'empty';
+						}}
+						class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+						disabled={isSubmitting}
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						class="px-4 py-2 bg-hub-blue-600 text-white rounded-md hover:bg-hub-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+						disabled={isSubmitting}
+					>
+						{isSubmitting ? 'Updating...' : 'Update Contacts'}
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
 
