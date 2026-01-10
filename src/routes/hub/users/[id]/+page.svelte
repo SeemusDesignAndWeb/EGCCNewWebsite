@@ -171,13 +171,12 @@
 					isSubmitting = true;
 					try {
 						if (result.type === 'success') {
-							notifications.success(result.data?.message || 'Admin user updated successfully');
 							editing = false;
 							// Update data but don't reset form
+							// Notification will be shown by the reactive formResult watcher
 							await update({ reset: false });
-						} else if (result.type === 'failure') {
-							notifications.error(result.data?.error || 'Failed to update admin user');
 						}
+						// Error notification will be shown by the reactive formResult watcher
 					} finally {
 						isSubmitting = false;
 					}
