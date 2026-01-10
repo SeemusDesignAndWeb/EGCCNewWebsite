@@ -46,14 +46,15 @@
 	];
 </script>
 
-<div class="mb-4 flex justify-between items-center">
-	<h2 class="text-2xl font-bold text-gray-900">Meeting Planners</h2>
-	<div class="flex gap-2">
-		<a href="/hub/meeting-planners/quick-view" class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700">
+<div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+	<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Meeting Planners</h2>
+	<div class="flex flex-wrap gap-2">
+		<a href="/hub/meeting-planners/quick-view" class="bg-hub-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-blue-700 text-sm sm:text-base">
 			Quick View
 		</a>
-		<a href="/hub/meeting-planners/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
-			New Meeting Planner
+		<a href="/hub/meeting-planners/new" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
+			<span class="hidden sm:inline">New Meeting Planner</span>
+			<span class="sm:hidden">New Planner</span>
 		</a>
 	</div>
 </div>
@@ -66,7 +67,7 @@
 			placeholder="Search meeting planners..."
 			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-4 py-2"
 		/>
-		<button type="submit" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+		<button type="submit" class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base">
 			Search
 		</button>
 	</form>

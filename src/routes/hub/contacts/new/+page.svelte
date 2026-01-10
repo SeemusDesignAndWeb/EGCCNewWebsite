@@ -60,25 +60,25 @@
 
 <div class="space-y-6">
 	<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 shadow-lg rounded-lg p-6 text-white">
-		<div class="flex justify-between items-center">
+		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 			<div>
 				<div class="flex items-center gap-3">
-					<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
 					</svg>
-					<h2 class="text-3xl font-bold text-white">New Contact</h2>
+					<h2 class="text-2xl sm:text-3xl font-bold text-white">New Contact</h2>
 				</div>
-				<p class="mt-2 text-hub-blue-100">Add a new contact to your database</p>
+				<p class="mt-2 text-hub-blue-100 text-sm sm:text-base">Add a new contact to your database</p>
 			</div>
-			<div class="flex gap-3">
-				<a href="/hub/contacts" class="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-md font-medium inline-flex items-center gap-2 border border-white/30">
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<div class="flex flex-wrap gap-2 sm:gap-3">
+				<a href="/hub/contacts" class="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 sm:px-6 sm:py-3 rounded-md font-medium inline-flex items-center gap-1.5 sm:gap-2 border border-white/30 text-sm sm:text-base">
+					<svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 					</svg>
 					Cancel
 				</a>
-				<button type="submit" form="contact-create-form" class="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-md font-medium inline-flex items-center gap-2 border border-white/30">
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<button type="submit" form="contact-create-form" class="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 sm:px-6 sm:py-3 rounded-md font-medium inline-flex items-center gap-1.5 sm:gap-2 border border-white/30 text-sm sm:text-base">
+					<svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 					</svg>
 					Create Contact
@@ -198,7 +198,7 @@
 								class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-4 py-2"
 								on:keydown={(e) => e.key === 'Enter' && (e.preventDefault(), addServingArea())}
 							/>
-							<button type="button" on:click={addServingArea} class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
+							<button type="button" on:click={addServingArea} class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
 								Add
 							</button>
 						</div>
@@ -222,7 +222,7 @@
 								class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-blue-500 focus:ring-hub-blue-500 px-4 py-2"
 								on:keydown={(e) => e.key === 'Enter' && (e.preventDefault(), addGifting())}
 							/>
-							<button type="button" on:click={addGifting} class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700">
+							<button type="button" on:click={addGifting} class="bg-hub-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-blue-700 text-sm sm:text-base">
 								Add
 							</button>
 						</div>

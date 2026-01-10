@@ -333,8 +333,9 @@
 			<table class="min-w-full divide-y divide-gray-200">
 				<thead class="bg-gray-50">
 					<tr>
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">First Name</th>
+						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Name</th>
 						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
 						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
 						<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">City</th>
 					</tr>
@@ -347,10 +348,9 @@
 						{@const phoneField = Object.keys(fieldMapping).find(k => fieldMapping[k] === 'phone')}
 						{@const cityField = Object.keys(fieldMapping).find(k => fieldMapping[k] === 'city')}
 						<tr>
+							<td class="px-4 py-3 text-sm text-gray-900">{row[firstNameField] || '-'}</td>
+							<td class="px-4 py-3 text-sm text-gray-900">{row[lastNameField] || '-'}</td>
 							<td class="px-4 py-3 text-sm text-gray-900">{row[emailField] || '-'}</td>
-							<td class="px-4 py-3 text-sm text-gray-900">
-								{row[firstNameField] || ''} {row[lastNameField] || ''}
-							</td>
 							<td class="px-4 py-3 text-sm text-gray-500">{row[phoneField] || '-'}</td>
 							<td class="px-4 py-3 text-sm text-gray-500">{row[cityField] || '-'}</td>
 						</tr>

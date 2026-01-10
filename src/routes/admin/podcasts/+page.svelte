@@ -897,11 +897,11 @@
 	</div>
 	{/if}
 
-	<div class="flex justify-between items-center mb-6">
-		<h2 class="text-2xl font-bold">Podcasts</h2>
+	<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+		<h2 class="text-xl sm:text-2xl font-bold">Podcasts</h2>
 		<button
 			on:click={() => startEdit()}
-			class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+			class="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm sm:text-base"
 		>
 			Add New Podcast
 		</button>

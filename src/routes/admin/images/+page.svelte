@@ -226,8 +226,8 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-	<div class="flex justify-between items-center mb-6">
-		<h1 class="text-3xl font-bold">Manage Images</h1>
+	<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+		<h1 class="text-2xl sm:text-3xl font-bold">Manage Images</h1>
 	</div>
 
 	<!-- Upload Section -->

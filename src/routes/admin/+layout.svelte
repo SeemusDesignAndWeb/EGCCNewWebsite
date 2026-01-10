@@ -267,99 +267,66 @@
 			<!-- Mobile Navigation -->
 			{#if mobileMenuOpen}
 				<div class="md:hidden pb-4 border-t border-blue-600 mt-4 pt-4">
-					<!-- Dashboard -->
-					{#each navItems as item}
-						<a
-							href={item.href}
-							on:click={() => mobileMenuOpen = false}
-							class="block px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mb-1 text-white hover:bg-blue-600"
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d={item.icon}
-								></path>
-							</svg>
-							{item.label}
-						</a>
-					{/each}
-
-					<!-- Dropdown Menus -->
-					{#each dropdownMenus as menu}
-						<div class="mb-2">
-							<button
-								on:click={() => toggleDropdown(menu.id)}
-								class="w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-between text-white hover:bg-blue-600"
+					<nav class="flex flex-col space-y-1">
+						<!-- Dashboard -->
+						{#each navItems as item}
+							<a
+								href={item.href}
+								on:click={() => mobileMenuOpen = false}
+								class="block px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 text-white hover:bg-blue-600"
 							>
-								<div class="flex items-center gap-2">
+								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d={item.icon}
+									></path>
+								</svg>
+								{item.label}
+							</a>
+						{/each}
+
+						<!-- All Dropdown Items Flattened -->
+						{#each dropdownMenus as menu}
+							{#each menu.items as item}
+								<a
+									href={item.href}
+									on:click={() => mobileMenuOpen = false}
+									class="block px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 text-white hover:bg-blue-600"
+								>
 									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path
 											stroke-linecap="round"
 											stroke-linejoin="round"
 											stroke-width="2"
-											d={menu.icon}
+											d={item.icon}
 										></path>
 									</svg>
-									{menu.label}
-								</div>
-								<svg
-									class="w-4 h-4 transition-transform {openDropdown === menu.id ? 'rotate-180' : ''}"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
+									{item.label}
+								</a>
+							{/each}
+						{/each}
+
+						<!-- Standalone Items -->
+						{#each standaloneItems as item}
+							<a
+								href={item.href}
+								on:click={() => mobileMenuOpen = false}
+								class="block px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 text-white hover:bg-blue-600"
+							>
+								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
 										stroke-linecap="round"
 										stroke-linejoin="round"
 										stroke-width="2"
-										d="M19 9l-7 7-7-7"
+										d={item.icon}
 									></path>
 								</svg>
-							</button>
-							{#if openDropdown === menu.id}
-								<div class="ml-4 mt-1 space-y-1">
-									{#each menu.items as item}
-										<a
-											href={item.href}
-											on:click={() => { openDropdown = null; mobileMenuOpen = false; }}
-											class="block px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 bg-gray-50 text-gray-700 hover:bg-gray-100"
-										>
-											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d={item.icon}
-												></path>
-											</svg>
-											{item.label}
-										</a>
-									{/each}
-								</div>
-							{/if}
-						</div>
-					{/each}
-
-					<!-- Standalone Items -->
-					{#each standaloneItems as item}
-						<a
-							href={item.href}
-							on:click={() => mobileMenuOpen = false}
-							class="block px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mb-1 text-white hover:bg-blue-600"
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d={item.icon}
-								></path>
-							</svg>
-							{item.label}
-						</a>
-					{/each}
+								{item.label}
+							</a>
+						{/each}
+					</nav>
 				</div>
 			{/if}
 		</div>

@@ -169,13 +169,13 @@
 </script>
 
 	<div class="mb-6">
-		<div class="flex justify-between items-center mb-4">
-			<h2 class="text-2xl font-bold text-gray-900">Event Calendar</h2>
-			<div class="flex gap-2">
-				<a href="/hub/events?view=list" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+			<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Event Calendar</h2>
+			<div class="flex flex-wrap gap-2">
+				<a href="/hub/events?view=list" class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base">
 					List View
 				</a>
-				<a href="/hub/events/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
+				<a href="/hub/events/new" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
 					New Event
 				</a>
 			</div>

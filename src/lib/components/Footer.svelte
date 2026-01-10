@@ -16,12 +16,12 @@
 	<div class="container mx-auto px-4">
 		<div class="grid md:grid-cols-3 gap-8 mb-8">
 			<!-- Contact -->
-			<div>
+			<div class="text-center md:text-left">
 				<a href="/" class="inline-block mb-6">
 					<img
 						src="/images/egcc-logo-text.png"
 						alt="Eltham Green Community Church"
-						class="h-12 w-auto"
+						class="h-12 w-auto mx-auto md:mx-0"
 					/>
 				</a>
 				<h3 class="text-white font-semibold mb-4">Contact</h3>
@@ -41,7 +41,7 @@
 			</div>
 
 			<!-- Service Times -->
-			<div>
+			<div class="text-center md:text-left">
 				<h3 class="text-white font-semibold mb-4">Service Times</h3>
 				<div class="space-y-2 text-sm text-white">
 					{#if serviceTimes.sunday && serviceTimes.sunday.trim() !== ''}
@@ -65,7 +65,7 @@
 			</div>
 
 			<!-- Links -->
-			<div>
+			<div class="text-center md:text-left">
 				<h3 class="text-white font-semibold mb-4">Quick Links</h3>
 				<div class="space-y-2 text-sm text-white">
 					<p>

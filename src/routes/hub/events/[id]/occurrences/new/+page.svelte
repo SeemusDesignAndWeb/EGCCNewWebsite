@@ -45,17 +45,18 @@
 </script>
 
 <div class="bg-white shadow rounded-lg p-6">
-	<div class="flex justify-between items-center mb-6">
+	<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
 		<div>
-			<h2 class="text-2xl font-bold text-gray-900">New Occurrence</h2>
-			<p class="text-gray-600 mt-1">Event: {event?.title}</p>
+			<h2 class="text-xl sm:text-2xl font-bold text-gray-900">New Occurrence</h2>
+			<p class="text-gray-600 mt-1 text-sm sm:text-base">Event: {event?.title}</p>
 		</div>
-		<div class="flex gap-2">
-			<a href="/hub/events/{event?.id}" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+		<div class="flex flex-wrap gap-2">
+			<a href="/hub/events/{event?.id}" class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base">
 				Cancel
 			</a>
-			<button type="submit" form="occurrence-create-form" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
-				Create Occurrence{formData.repeatType !== 'none' ? 's' : ''}
+			<button type="submit" form="occurrence-create-form" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
+				<span class="hidden sm:inline">Create Occurrence{formData.repeatType !== 'none' ? 's' : ''}</span>
+				<span class="sm:hidden">Create</span>
 			</button>
 		</div>
 	</div>

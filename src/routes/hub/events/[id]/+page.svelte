@@ -292,34 +292,34 @@
 
 {#if event}
 	<div class="bg-white shadow rounded-lg p-4 mb-4">
-		<div class="flex justify-between items-center mb-3">
-			<h2 class="text-xl font-bold text-gray-900">Event Details</h2>
-			<div class="flex gap-2">
+		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-3">
+			<h2 class="text-lg sm:text-xl font-bold text-gray-900">Event Details</h2>
+			<div class="flex flex-wrap gap-2">
 				{#if editing}
 					<button
 						type="submit"
 						form="event-edit-form"
-						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
+						class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base"
 					>
 						Save Changes
 					</button>
 					<button
 						type="button"
 						on:click={() => editing = false}
-						class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+						class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base"
 					>
 						Back
 					</button>
 				{:else}
 					<button
 						on:click={() => editing = true}
-						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
+						class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base"
 					>
 						Edit
 					</button>
 					<button
 						on:click={handleDelete}
-						class="bg-hub-red-600 text-white px-4 py-2 rounded-md hover:bg-hub-red-700"
+						class="bg-hub-red-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-red-700 text-sm sm:text-base"
 					>
 						Delete
 					</button>
@@ -445,59 +445,63 @@
 					{#if publicEventLink}
 						<button
 							on:click={copyPublicEventLink}
-							class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 flex items-center gap-2"
+							class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
 						>
 							{#if publicLinkCopied}
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 								</svg>
 								Copied!
 							{:else}
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
 								</svg>
-								Copy Event Link (All)
+								<span class="hidden sm:inline">Copy Event Link (All)</span>
+								<span class="sm:hidden">Copy Link</span>
 							{/if}
 						</button>
 						<a
 							href={publicEventLink}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 flex items-center gap-2"
+							class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
 						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
 							</svg>
-							Open Event (All)
+							<span class="hidden sm:inline">Open Event (All)</span>
+							<span class="sm:hidden">Open</span>
 						</a>
 					{/if}
 					{#if rotaSignupLink}
 						<button
 							on:click={copyRotaSignupLink}
-							class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700 flex items-center gap-2"
+							class="bg-hub-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-blue-700 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
 						>
 							{#if rotaLinkCopied}
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 								</svg>
 								Copied!
 							{:else}
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
 								</svg>
-								Copy Rota Link
+								<span class="hidden sm:inline">Copy Rota Link</span>
+								<span class="sm:hidden">Copy</span>
 							{/if}
 						</button>
 						<a
 							href={rotaSignupLink}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700 flex items-center gap-2"
+							class="bg-hub-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-blue-700 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
 						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
 							</svg>
-							Open Rota Signup
+							<span class="hidden sm:inline">Open Rota Signup</span>
+							<span class="sm:hidden">Rota</span>
 						</a>
 					{/if}
 				</div>
@@ -507,9 +511,9 @@
 	</div>
 
 	<div class="bg-white shadow rounded-lg p-4 mb-4">
-		<div class="flex justify-between items-center mb-3">
-			<h3 class="text-lg font-bold text-gray-900">Occurrences</h3>
-			<a href="/hub/events/{event.id}/occurrences/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
+		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
+			<h3 class="text-base sm:text-lg font-bold text-gray-900">Occurrences</h3>
+			<a href="/hub/events/{event.id}/occurrences/new" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
 				Add Occurrence
 			</a>
 		</div>
@@ -580,10 +584,11 @@
 
 	{#if meetingPlanners.length > 0}
 		<div class="bg-white shadow rounded-lg p-4 mb-4">
-			<div class="flex justify-between items-center mb-3">
-				<h3 class="text-lg font-bold text-gray-900">Meeting Planners</h3>
-				<a href="/hub/meeting-planners/new?eventId={event.id}" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
-					New Meeting Planner
+			<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
+				<h3 class="text-base sm:text-lg font-bold text-gray-900">Meeting Planners</h3>
+				<a href="/hub/meeting-planners/new?eventId={event.id}" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
+					<span class="hidden sm:inline">New Meeting Planner</span>
+					<span class="sm:hidden">New Planner</span>
 				</a>
 			</div>
 			<div class="space-y-2">
@@ -614,9 +619,9 @@
 	{/if}
 
 	<div class="bg-white shadow rounded-lg p-4">
-		<div class="flex justify-between items-center mb-3">
-			<h3 class="text-lg font-bold text-gray-900">Rotas</h3>
-			<a href="/hub/rotas/new?eventId={event.id}" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
+		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
+			<h3 class="text-base sm:text-lg font-bold text-gray-900">Rotas</h3>
+			<a href="/hub/rotas/new?eventId={event.id}" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
 				Add Rota
 			</a>
 		</div>

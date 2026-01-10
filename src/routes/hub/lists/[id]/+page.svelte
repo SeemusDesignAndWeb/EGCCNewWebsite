@@ -179,26 +179,26 @@
 
 {#if list}
 	<div class="bg-white shadow rounded-lg p-6 mb-6">
-		<div class="flex justify-between items-center mb-6">
-			<h2 class="text-2xl font-bold text-gray-900">List Details</h2>
-			<div class="flex gap-2">
+		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+			<h2 class="text-xl sm:text-2xl font-bold text-gray-900">List Details</h2>
+			<div class="flex flex-wrap gap-2">
 				{#if editing}
 					<button
 						on:click={() => editing = false}
-						class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+						class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base"
 					>
 						Back
 					</button>
 				{:else}
 					<button
 						on:click={() => editing = true}
-						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700"
+						class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base"
 					>
 						Edit
 					</button>
 					<button
 						on:click={handleDelete}
-						class="bg-hub-red-600 text-white px-4 py-2 rounded-md hover:bg-hub-red-700"
+						class="bg-hub-red-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-red-700 text-sm sm:text-base"
 					>
 						Delete
 					</button>
@@ -287,8 +287,9 @@
 											class="rounded border-gray-300 text-hub-green-600 focus:ring-hub-green-500"
 										/>
 									</th>
+									<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">First Name</th>
+									<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Last Name</th>
 									<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-									<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
 								</tr>
 							</thead>
 							<tbody class="bg-white divide-y divide-gray-200">
@@ -302,10 +303,9 @@
 												class="rounded border-gray-300 text-hub-green-600 focus:ring-hub-green-500"
 											/>
 										</td>
-										<td class="px-4 py-2 text-sm text-gray-900">{contact.email}</td>
-										<td class="px-4 py-2 text-sm text-gray-900">
-											{`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || '-'}
-										</td>
+										<td class="px-4 py-2 text-sm text-gray-900">{contact.firstName || '-'}</td>
+										<td class="px-4 py-2 text-sm text-gray-900">{contact.lastName || '-'}</td>
+										<td class="px-4 py-2 text-sm text-gray-900">{contact.email || '-'}</td>
 									</tr>
 								{/each}
 							</tbody>
@@ -335,7 +335,8 @@
 				<table class="min-w-full divide-y divide-gray-200">
 					<thead class="bg-gray-50">
 						<tr>
-							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">First Name</th>
+							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Name</th>
 							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
 							<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
 						</tr>
@@ -345,12 +346,17 @@
 							<tr class="hover:bg-gray-50">
 								<td class="px-4 py-3 text-sm">
 									<a href="/hub/contacts/{contact.id}" class="text-hub-blue-600 hover:text-hub-blue-800 font-medium">
-										{`${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email || '-'}
+										{contact.firstName || '-'}
+									</a>
+								</td>
+								<td class="px-4 py-3 text-sm">
+									<a href="/hub/contacts/{contact.id}" class="text-hub-blue-600 hover:text-hub-blue-800 font-medium">
+										{contact.lastName || '-'}
 									</a>
 								</td>
 								<td class="px-4 py-3 text-sm text-gray-900">
 									<a href="/hub/contacts/{contact.id}" class="text-hub-blue-600 hover:text-hub-blue-800">
-										{contact.email}
+										{contact.email || '-'}
 									</a>
 								</td>
 								<td class="px-4 py-3 text-sm">

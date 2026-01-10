@@ -41,10 +41,10 @@
 	}
 
 	const columns = [
-		{ key: 'email', label: 'Email' },
-		{ key: 'firstName', label: 'First Name' },
-		{ key: 'lastName', label: 'Last Name' },
-		{ key: 'phone', label: 'Phone' },
+		{ key: 'firstName', label: 'First Name', render: (val) => val || '-' },
+		{ key: 'lastName', label: 'Last Name', render: (val) => val || '-' },
+		{ key: 'email', label: 'Email', render: (val) => val || '-' },
+		{ key: 'phone', label: 'Phone', render: (val) => val || '-' },
 		{ 
 			key: 'city', 
 			label: 'City',
@@ -83,27 +83,28 @@
 	}
 </script>
 
-<div class="mb-4 flex justify-between items-center">
-	<h2 class="text-2xl font-bold text-gray-900">Contacts</h2>
-	<div class="flex gap-2">
+<div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+	<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Contacts</h2>
+	<div class="flex flex-wrap gap-2">
 		{#if isSuperAdmin}
 			<button
 				on:click={() => showBulkUpdateDialog = true}
-				class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700"
+				class="bg-hub-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-blue-700 text-sm sm:text-base"
 			>
 				Bulk Update
 			</button>
 		{/if}
-		<a href="/signup/member" target="_blank" rel="noopener noreferrer" class="bg-hub-yellow-600 text-white px-4 py-2 rounded-md hover:bg-hub-yellow-700 inline-flex items-center gap-2">
-			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<a href="/signup/member" target="_blank" rel="noopener noreferrer" class="bg-hub-yellow-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-yellow-700 inline-flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
+			<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
 			</svg>
-			Public Signup Form
+			<span class="hidden sm:inline">Public Signup Form</span>
+			<span class="sm:hidden">Signup Form</span>
 		</a>
-		<a href="/hub/contacts/import" class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700">
-			Import Contacts
+		<a href="/hub/contacts/import" class="bg-hub-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-blue-700 text-sm sm:text-base">
+			Import
 		</a>
-		<a href="/hub/contacts/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
+		<a href="/hub/contacts/new" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
 			Add Contact
 		</a>
 	</div>
@@ -117,7 +118,7 @@
 			placeholder="Search contacts..."
 			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-4 py-2"
 		/>
-		<button type="submit" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+		<button type="submit" class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base">
 			Search
 		</button>
 	</form>

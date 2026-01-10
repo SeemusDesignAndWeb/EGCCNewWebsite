@@ -160,71 +160,25 @@
 				<!-- Mobile menu -->
 				{#if mobileMenuOpen}
 					<div class="md:hidden pb-4 border-t border-hub-blue-300 mt-4 pt-4">
-						<nav class="flex flex-col space-y-2">
+						<nav class="flex flex-col space-y-1">
 							<a href="/hub" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {($page.url.pathname === '/hub' || $page.url.pathname === '/hub/') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'} flex items-center gap-2">
 								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
 								</svg>
 								<span>Dashboard</span>
 							</a>
-							<div class="px-4 py-2">
-								<button
-									on:click={() => contactsDropdownOpen = !contactsDropdownOpen}
-									class="flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-lg transition-colors w-full {isContactsActive ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}"
-								>
-									<span>Contacts</span>
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-									</svg>
-								</button>
-								{#if contactsDropdownOpen}
-									<div class="ml-6 mt-2 space-y-1">
-										<a href="/hub/contacts" on:click={() => { mobileMenuOpen = false; contactsDropdownOpen = false; }} class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/contacts') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Contacts</a>
-										<a href="/hub/lists" on:click={() => { mobileMenuOpen = false; contactsDropdownOpen = false; }} class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/lists') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Lists</a>
-									</div>
-								{/if}
-							</div>
+							<a href="/hub/contacts" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/contacts') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Contacts</a>
+							<a href="/hub/lists" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/lists') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Lists</a>
 							<a href="/hub/newsletters" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/newsletters') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Newsletters</a>
-							<div class="px-4 py-2">
-								<button
-									on:click={() => eventsDropdownOpen = !eventsDropdownOpen}
-									class="flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-lg transition-colors w-full {isEventsActive ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}"
-								>
-									<span>Events</span>
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-									</svg>
-								</button>
-								{#if eventsDropdownOpen}
-									<div class="ml-6 mt-2 space-y-1">
-										<a href="/hub/events/calendar" on:click={() => { mobileMenuOpen = false; eventsDropdownOpen = false; }} class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/events') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Events</a>
-										<a href="/hub/meeting-planners" on:click={() => { mobileMenuOpen = false; eventsDropdownOpen = false; }} class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/meeting-planners') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Meeting Planners</a>
-									</div>
-								{/if}
-							</div>
+							<a href="/hub/events/calendar" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/events') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Events</a>
+							<a href="/hub/meeting-planners" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/meeting-planners') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Meeting Planners</a>
 							<a href="/hub/rotas" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/rotas') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Rotas</a>
 							<a href="/hub/forms" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/forms') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Forms</a>
-							<div class="px-4 py-2">
-								<button
-									on:click={() => settingsDropdownOpen = !settingsDropdownOpen}
-									class="flex items-center gap-2 text-sm font-medium px-2 py-1 rounded-lg transition-colors w-full {isSettingsActive ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}"
-								>
-									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-									</svg>
-									<span>Settings</span>
-								</button>
-								{#if settingsDropdownOpen}
-									<div class="ml-6 mt-2 space-y-1">
-										{#if admin}
-											<a href="/hub/profile" on:click={() => { mobileMenuOpen = false; settingsDropdownOpen = false; }} class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/profile') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Profile</a>
-										{/if}
-										<a href="/hub/users" on:click={() => { mobileMenuOpen = false; settingsDropdownOpen = false; }} class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/users') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Users</a>
-										<a href="/hub/help" on:click={() => { mobileMenuOpen = false; settingsDropdownOpen = false; }} class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/help') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Help</a>
-									</div>
-								{/if}
-							</div>
+							{#if admin}
+								<a href="/hub/profile" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/profile') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Profile</a>
+							{/if}
+							<a href="/hub/users" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/users') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Users</a>
+							<a href="/hub/help" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/help') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Help</a>
 							<a href="/hub/auth/logout" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors text-white hover:bg-white hover:text-hub-blue-600 border-t border-hub-blue-300 pt-2 mt-2">
 								Logout
 							</a>
@@ -243,20 +197,20 @@
 	<!-- Footer -->
 	{#if !isAuthPage}
 		<footer class="bg-white border-t border-gray-200 mt-12 flex-shrink-0">
-			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-				<div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-					<div class="flex items-center space-x-3">
+			<div class="max-w-7xl mx-auto px-4 py-6">
+				<div class="flex flex-col md:flex-row justify-center md:justify-between items-center space-y-4 md:space-y-0">
+					<div class="flex flex-col md:flex-row items-center md:items-center space-y-2 md:space-y-0 md:space-x-3">
 						<img
 							src="/images/egcc-logo.png"
 							alt="Eltham Green Community Church"
 							class="h-8 w-auto"
 						/>
-						<div class="text-sm text-gray-600">
+						<div class="text-sm text-gray-600 text-center">
 							<div class="font-semibold text-gray-900">Eltham Green Community Church</div>
 							<div class="text-xs">542 Westhorne Avenue, Eltham, London, SE9 6DH</div>
 						</div>
 					</div>
-					<div class="text-sm text-gray-500">
+					<div class="text-sm text-gray-500 text-center md:text-right">
 						<a href="/" class="text-brand-blue hover:text-brand-blue/80 transition-colors">Visit Website</a>
 					</div>
 				</div>
