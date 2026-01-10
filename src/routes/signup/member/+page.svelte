@@ -3,7 +3,6 @@
 	import { page } from '$app/stores';
 	import { notifications } from '$lib/crm/stores/notifications.js';
 	import NotificationPopup from '$lib/crm/components/NotificationPopup.svelte';
-	import Navbar from '$lib/components/Navbar.svelte';
 
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
@@ -53,10 +52,7 @@
 </script>
 
 <div class="min-h-screen bg-gray-50">
-	<!-- Header with EGCC branding - matching main website -->
-	<Navbar bannerVisible={false} />
-
-	<div class="max-w-4xl mx-auto py-8 px-4 sm:py-12 sm:px-6 lg:px-8 mt-16">
+	<div class="max-w-4xl mx-auto py-8 px-4 sm:py-12 sm:px-6 lg:px-8 pt-20 sm:pt-24">
 		<div class="bg-white shadow rounded-lg p-6 sm:p-8">
 			<div class="mb-8">
 				<h1 class="text-3xl font-bold text-brand-blue mb-2">Member Sign Up</h1>
