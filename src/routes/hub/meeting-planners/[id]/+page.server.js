@@ -25,7 +25,20 @@ export async function load({ params, cookies, url }) {
 	const callToWorshipRota = meetingPlanner.callToWorshipRotaId ? rotas.find(r => r.id === meetingPlanner.callToWorshipRotaId) : null;
 
 	// Load contacts for assignee selection
-	const contacts = await readCollection('contacts');
+	const contactsRaw = await readCollection('contacts');
+	
+	// Sort contacts alphabetically by last name, then first name
+	const contacts = contactsRaw.sort((a, b) => {
+		const aLastName = (a.lastName || '').toLowerCase();
+		const bLastName = (b.lastName || '').toLowerCase();
+		const aFirstName = (a.firstName || '').toLowerCase();
+		const bFirstName = (b.firstName || '').toLowerCase();
+		
+		if (aLastName !== bLastName) {
+			return aLastName.localeCompare(bLastName);
+		}
+		return aFirstName.localeCompare(bFirstName);
+	});
 	
 	// Load all lists for filtering contacts
 	const lists = await readCollection('lists');

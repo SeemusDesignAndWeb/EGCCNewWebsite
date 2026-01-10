@@ -86,13 +86,32 @@
 	let searchTerm = '';
 	let selectedContactIds = new Set();
 	
-	$: filteredAvailableContacts = searchTerm
-		? availableContacts.filter(c => 
-			(c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-			(c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-			(c.lastName || '').toLowerCase().includes(searchTerm.toLowerCase())
-		)
-		: availableContacts;
+	// Helper function to sort contacts by last name, then first name
+	function sortContacts(contacts) {
+		return contacts.sort((a, b) => {
+			const aLastName = (a.lastName || '').toLowerCase();
+			const bLastName = (b.lastName || '').toLowerCase();
+			const aFirstName = (a.firstName || '').toLowerCase();
+			const bFirstName = (b.firstName || '').toLowerCase();
+			
+			if (aLastName !== bLastName) {
+				return aLastName.localeCompare(bLastName);
+			}
+			return aFirstName.localeCompare(bFirstName);
+		});
+	}
+	
+	$: filteredAvailableContacts = (() => {
+		const filtered = searchTerm
+			? availableContacts.filter(c => 
+				(c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+				(c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+				(c.lastName || '').toLowerCase().includes(searchTerm.toLowerCase())
+			)
+			: availableContacts;
+		// Sort by last name, then first name (server already sorts, but maintain sort after filtering)
+		return sortContacts([...filtered]);
+	})();
 	
 	function toggleContactSelection(contactId) {
 		if (selectedContactIds.has(contactId)) {

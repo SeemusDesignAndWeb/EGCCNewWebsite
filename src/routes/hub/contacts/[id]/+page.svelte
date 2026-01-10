@@ -26,7 +26,7 @@
 	}
 
 	let editing = false;
-	let initialized = false;
+	let initializedContactId = null;
 	let formData = {
 		email: '',
 		firstName: '',
@@ -47,8 +47,8 @@
 		subscribed: true
 	};
 
-	// Only initialize formData when contact loads and not currently editing
-	$: if (contact && !editing && !initialized) {
+	// Initialize formData when contact loads or changes (including after successful save)
+	$: if (contact && contact.id !== initializedContactId) {
 		formData = {
 			email: contact.email || '',
 			firstName: contact.firstName || '',
@@ -68,12 +68,7 @@
 			notes: contact.notes || '',
 			subscribed: contact.subscribed !== false // Default to true if not set
 		};
-		initialized = true;
-	}
-
-	// Reset initialized flag when exiting edit mode
-	$: if (!editing && initialized) {
-		initialized = false;
+		initializedContactId = contact.id;
 	}
 
 	let servingAreaInput = '';
@@ -158,7 +153,12 @@
 		</div>
 
 		{#if editing}
-			<form id="contact-edit-form" method="POST" action="?/update" use:enhance>
+			<form id="contact-edit-form" method="POST" action="?/update" use:enhance={({ formData: fd, cancel }) => {
+				return async ({ result, update }) => {
+					// After successful save, update the page data without resetting the form
+					await update({ reset: false });
+				};
+			}}>
 				<input type="hidden" name="_csrf" value={csrfToken} />
 				<input type="hidden" name="servingAreas" value={JSON.stringify(formData.servingAreas)} />
 				<input type="hidden" name="giftings" value={JSON.stringify(formData.giftings)} />

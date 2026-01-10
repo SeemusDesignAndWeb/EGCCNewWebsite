@@ -225,17 +225,34 @@
 		return result;
 	})();
 
+	// Helper function to sort contacts by last name, then first name
+	function sortContacts(contacts) {
+		return contacts.sort((a, b) => {
+			const aLastName = (a.lastName || '').toLowerCase();
+			const bLastName = (b.lastName || '').toLowerCase();
+			const aFirstName = (a.firstName || '').toLowerCase();
+			const bFirstName = (b.firstName || '').toLowerCase();
+			
+			if (aLastName !== bLastName) {
+				return aLastName.localeCompare(bLastName);
+			}
+			return aFirstName.localeCompare(bFirstName);
+		});
+	}
+
 	$: filteredContacts = (() => {
 		const result = {};
 		Object.keys(rotas).forEach(rotaKey => {
 			const baseContacts = contactsFilteredByList[rotaKey] || availableContacts;
-			result[rotaKey] = searchTerm[rotaKey]
+			const filtered = searchTerm[rotaKey]
 				? baseContacts.filter(c => 
 					(c.email || '').toLowerCase().includes(searchTerm[rotaKey].toLowerCase()) ||
 					(c.firstName || '').toLowerCase().includes(searchTerm[rotaKey].toLowerCase()) ||
 					(c.lastName || '').toLowerCase().includes(searchTerm[rotaKey].toLowerCase())
 				)
 				: baseContacts;
+			// Sort by last name, then first name
+			result[rotaKey] = sortContacts([...filtered]);
 		});
 		return result;
 	})();

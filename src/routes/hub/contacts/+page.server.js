@@ -8,10 +8,25 @@ export async function load({ url }) {
 
 	const contacts = await readCollection('contacts');
 	
-	let filtered = contacts;
+	// Sort contacts alphabetically by last name, then first name
+	const sorted = contacts.sort((a, b) => {
+		const aLastName = (a.lastName || '').toLowerCase();
+		const bLastName = (b.lastName || '').toLowerCase();
+		const aFirstName = (a.firstName || '').toLowerCase();
+		const bFirstName = (b.firstName || '').toLowerCase();
+		
+		// First sort by last name
+		if (aLastName !== bLastName) {
+			return aLastName.localeCompare(bLastName);
+		}
+		// If last names are the same, sort by first name
+		return aFirstName.localeCompare(bFirstName);
+	});
+	
+	let filtered = sorted;
 	if (search) {
 		const searchLower = search.toLowerCase();
-		filtered = contacts.filter(c => 
+		filtered = sorted.filter(c => 
 			c.email?.toLowerCase().includes(searchLower) ||
 			c.firstName?.toLowerCase().includes(searchLower) ||
 			c.lastName?.toLowerCase().includes(searchLower)

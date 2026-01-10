@@ -131,7 +131,18 @@ export async function load({ params, cookies, url }) {
 
 	// Get all contacts for the add assignees search (excluding those already assigned to this occurrence)
 	// For now, we'll show all contacts - filtering by occurrence will be handled in the UI
-	const availableContacts = contacts;
+	// Sort contacts alphabetically by last name, then first name
+	const availableContacts = contacts.sort((a, b) => {
+		const aLastName = (a.lastName || '').toLowerCase();
+		const bLastName = (b.lastName || '').toLowerCase();
+		const aFirstName = (a.firstName || '').toLowerCase();
+		const bFirstName = (b.firstName || '').toLowerCase();
+		
+		if (aLastName !== bLastName) {
+			return aLastName.localeCompare(bLastName);
+		}
+		return aFirstName.localeCompare(bFirstName);
+	});
 
 	// Load all lists for filtering contacts
 	const lists = await readCollection('lists');

@@ -11,20 +11,36 @@ export async function load({ params, cookies, url }) {
 
 	// Get contact IDs in this list
 	const contacts = await readCollection('contacts');
-	const listContacts = contacts.filter(c => list.contactIds?.includes(c.id));
+	
+	// Sort contacts alphabetically by last name, then first name
+	const sortContacts = (contacts) => {
+		return contacts.sort((a, b) => {
+			const aLastName = (a.lastName || '').toLowerCase();
+			const bLastName = (b.lastName || '').toLowerCase();
+			const aFirstName = (a.firstName || '').toLowerCase();
+			const bFirstName = (b.firstName || '').toLowerCase();
+			
+			if (aLastName !== bLastName) {
+				return aLastName.localeCompare(bLastName);
+			}
+			return aFirstName.localeCompare(bFirstName);
+		});
+	};
+	
+	const listContacts = sortContacts(contacts.filter(c => list.contactIds?.includes(c.id)));
 	
 	// Get all contacts for the add contacts search (excluding those already in list)
-	const availableContacts = contacts.filter(c => !list.contactIds?.includes(c.id));
+	const availableContacts = sortContacts(contacts.filter(c => !list.contactIds?.includes(c.id)));
 	
 	// Search filter if provided
 	const search = url.searchParams.get('search') || '';
 	const filteredContacts = search 
-		? availableContacts.filter(c => 
+		? sortContacts(availableContacts.filter(c => 
 			(c.email || '').toLowerCase().includes(search.toLowerCase()) ||
 			(c.firstName || '').toLowerCase().includes(search.toLowerCase()) ||
 			(c.lastName || '').toLowerCase().includes(search.toLowerCase())
-		)
-		: availableContacts; // Show all available contacts
+		))
+		: availableContacts; // Show all available contacts (already sorted)
 
 	const csrfToken = getCsrfToken(cookies) || '';
 	return { list, contacts: listContacts, availableContacts: filteredContacts, csrfToken };

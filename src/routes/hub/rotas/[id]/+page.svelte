@@ -103,6 +103,21 @@
 		}
 	}
 
+	// Helper function to sort contacts by last name, then first name
+	function sortContacts(contacts) {
+		return contacts.sort((a, b) => {
+			const aLastName = (a.lastName || '').toLowerCase();
+			const bLastName = (b.lastName || '').toLowerCase();
+			const aFirstName = (a.firstName || '').toLowerCase();
+			const bFirstName = (b.firstName || '').toLowerCase();
+			
+			if (aLastName !== bLastName) {
+				return aLastName.localeCompare(bLastName);
+			}
+			return aFirstName.localeCompare(bFirstName);
+		});
+	}
+
 	$: filteredOwnerContacts = (() => {
 		if (!availableContacts || availableContacts.length === 0) {
 			return [];
@@ -130,7 +145,8 @@
 			}
 		}
 		
-		return filtered;
+		// Sort by last name, then first name
+		return sortContacts([...filtered]);
 	})();
 
 	async function handleDelete() {
@@ -189,13 +205,17 @@
 		})()
 		: availableContacts;
 	
-	$: filteredAvailableContacts = searchTerm
-		? contactsFilteredByList.filter(c => 
-			(c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-			(c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-			(c.lastName || '').toLowerCase().includes(searchTerm.toLowerCase())
-		)
-		: contactsFilteredByList;
+	$: filteredAvailableContacts = (() => {
+		const filtered = searchTerm
+			? contactsFilteredByList.filter(c => 
+				(c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+				(c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+				(c.lastName || '').toLowerCase().includes(searchTerm.toLowerCase())
+			)
+			: contactsFilteredByList;
+		// Sort by last name, then first name
+		return sortContacts([...filtered]);
+	})();
 	
 	function toggleContactSelection(contactId) {
 		if (selectedContactIds.has(contactId)) {
