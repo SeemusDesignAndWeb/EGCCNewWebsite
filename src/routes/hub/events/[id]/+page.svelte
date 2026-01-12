@@ -17,13 +17,11 @@
 	$: rotas = $page.data?.rotas || [];
 	$: meetingPlanners = $page.data?.meetingPlanners || [];
 	$: rotaSignupLink = $page.data?.rotaSignupLink || '';
-	$: publicEventLink = $page.data?.publicEventLink || '';
 	$: occurrenceLinks = $page.data?.occurrenceLinks || [];
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
 	
 	let rotaLinkCopied = false;
-	let publicLinkCopied = false;
 	let occurrenceLinkCopied = {};
 
 	async function copyRotaSignupLink() {
@@ -40,20 +38,6 @@
 		}
 	}
 
-	async function copyPublicEventLink() {
-		if (!publicEventLink) return;
-		try {
-			await navigator.clipboard.writeText(publicEventLink);
-			publicLinkCopied = true;
-			notifications.success('Public event link copied to clipboard!');
-			setTimeout(() => {
-				publicLinkCopied = false;
-			}, 2000);
-		} catch (error) {
-			notifications.error('Failed to copy link');
-		}
-	}
-	
 	// Track last processed form result to avoid duplicate notifications
 	let lastProcessedFormResult = null;
 
@@ -439,40 +423,9 @@
 			</div>
 		{/if}
 
-		{#if publicEventLink || rotaSignupLink || occurrenceLinks.length > 0}
+		{#if rotaSignupLink || occurrenceLinks.length > 0}
 			<div class="mt-6 space-y-3">
 				<div class="flex flex-wrap gap-2">
-					{#if publicEventLink}
-						<button
-							on:click={copyPublicEventLink}
-							class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
-						>
-							{#if publicLinkCopied}
-								<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-								</svg>
-								Copied!
-							{:else}
-								<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-								</svg>
-								<span class="hidden sm:inline">Copy Event Link (All)</span>
-								<span class="sm:hidden">Copy Link</span>
-							{/if}
-						</button>
-						<a
-							href={publicEventLink}
-							target="_blank"
-							rel="noopener noreferrer"
-							class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
-						>
-							<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-							</svg>
-							<span class="hidden sm:inline">Open Event (All)</span>
-							<span class="sm:hidden">Open</span>
-						</a>
-					{/if}
 					{#if rotaSignupLink}
 						<button
 							on:click={copyRotaSignupLink}

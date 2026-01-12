@@ -67,6 +67,10 @@ export async function load() {
 			.filter(name => name !== null);
 	}
 
+	// Get today's date at midnight for comparison (exclude today's meetings)
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+
 	// Process each meeting planner to get rota assignees
 	const processed = meetingPlanners
 		.map(mp => {
@@ -123,6 +127,21 @@ export async function load() {
 				callToWorship: getAssigneeNames(callToWorshipRota, mp.occurrenceId),
 				otherRotas: otherRotasData
 			};
+		})
+		// Filter out past dates (keep "All occurrences" and future dates)
+		.filter(mp => {
+			// If no occurrence date (All occurrences), keep it
+			if (!mp.occurrenceDate) return true;
+			
+			// Parse the occurrence date
+			const occurrenceDate = new Date(mp.occurrenceDate);
+			if (isNaN(occurrenceDate.getTime())) return true; // Keep invalid dates
+			
+			// Set to midnight for comparison
+			occurrenceDate.setHours(0, 0, 0, 0);
+			
+			// Keep if date is today or in the future
+			return occurrenceDate >= today;
 		})
 		// Sort by event name, then by occurrence date
 		.sort((a, b) => {
