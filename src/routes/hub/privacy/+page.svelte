@@ -56,18 +56,48 @@
 	}
 
 	:global(.prose p) {
-		margin-bottom: 1.25em;
+		margin-bottom: 1em;
+		margin-top: 1em;
 		line-height: 1.75;
+		font-size: 1em;
+	}
+
+	:global(.prose p:first-child) {
+		margin-top: 0;
+	}
+
+	:global(.prose p:last-child) {
+		margin-bottom: 0;
+	}
+
+	:global(.prose h1 + p, .prose h2 + p, .prose h3 + p, .prose h4 + p) {
+		margin-top: 0.5em;
+	}
+
+	:global(.prose p + ul, .prose p + ol) {
+		margin-top: 0.5em;
+	}
+
+	:global(.prose ul + p, .prose ol + p) {
+		margin-top: 1em;
 	}
 
 	:global(.prose ul, .prose ol) {
-		margin-bottom: 1.25em;
+		margin-bottom: 1em;
+		margin-top: 1em;
 		padding-left: 1.625em;
+		list-style-type: disc;
+	}
+
+	:global(.prose ol) {
+		list-style-type: decimal;
 	}
 
 	:global(.prose li) {
 		margin-bottom: 0.5em;
 		line-height: 1.75;
+		display: list-item;
+		font-size: 1em;
 	}
 
 	:global(.prose strong) {

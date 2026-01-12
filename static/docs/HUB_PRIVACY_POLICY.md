@@ -52,10 +52,10 @@ We store personal information in the Hub to support the church's mission and ope
 - Scheduling meetings with church leadership
 
 ### Event and Volunteer Coordination
-**Why we store this**: To organize church events, manage volunteer rotas, and coordinate participation in church activities.
+**Why we store this**: To organise church events, manage volunteer rotas, and coordinate participation in church activities.
 
 **What this enables**:
-- Planning and organizing church events and activities
+- Planning and organising church events and activities
 - Managing event signups and attendance
 - Creating and managing volunteer rotas for services and events
 - Sending event invitations and reminders
@@ -148,7 +148,7 @@ Access to personal information in the Hub is strictly controlled based on role-b
 
 **Why they need access**: To handle safeguarding concerns confidentially and in accordance with legal requirements.
 
-**What they can do**: View and manage safeguarding form submissions (encrypted data); cannot access other sensitive information unless specifically authorized.
+**What they can do**: View and manage safeguarding form submissions (encrypted data); cannot access other sensitive information unless specifically authorised.
 
 ### General Administrators
 **Who**: General church administrators
@@ -176,12 +176,12 @@ Personal information in the Hub is used exclusively for church operations and mi
 
 ### Church Administration
 - Maintaining accurate membership and contact records
-- Organizing and managing the church contact database
+- Organising and managing the church contact database
 - Facilitating church community connections
 - Coordinating serving opportunities and volunteer assignments
 
 ### Event Management
-- Planning and organizing church events and activities
+- Planning and organising church events and activities
 - Managing event registrations and attendance
 - Maintaining church calendar and event schedules
 - Displaying public events on the church website
@@ -230,7 +230,7 @@ Personal information may be shared within the church in the following ways:
 ### Contact Lists
 - Contact information may be included in lists for specific groups (e.g., small groups, ministry teams)
 - Lists are used for targeted communication and coordination
-- List membership is managed by authorized administrators
+- List membership is managed by authorised administrators
 
 ### Rota Information
 - Names and contact information may be visible to other volunteers on the same rota
@@ -268,12 +268,12 @@ We take data security seriously and have implemented multiple security measures:
 - **Change logs**: All data changes are logged with timestamps and user information
 - **Audit trails**: Complete audit trails are maintained for sensitive operations
 - **IP addresses**: IP addresses of Hub administrators are recorded when they access the system or perform actions for security and accountability purposes
-- **User agent information**: Browser and device information is logged to help identify and prevent unauthorized access
+- **User agent information**: Browser and device information is logged to help identify and prevent unauthorised access
 
 ### Data Storage
 - **Secure storage**: Data is stored securely on Railway hosting platform
 - **Backup procedures**: Regular backups are maintained for data recovery
-- **Access restrictions**: Data files are accessible only to authorized administrators
+- **Access restrictions**: Data files are accessible only to authorised administrators
 
 ### Input Validation
 - **Input sanitization**: All user input is sanitized to prevent security vulnerabilities

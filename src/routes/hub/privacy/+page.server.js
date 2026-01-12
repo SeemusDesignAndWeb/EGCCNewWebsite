@@ -45,7 +45,7 @@ function markdownToHtml(md) {
 	// Horizontal rules
 	html = html.replace(/^---$/gm, '<hr>');
 	
-	// Process lists
+	// Process lists - handle both - and * for unordered lists
 	const lines = html.split('\n');
 	const processed = [];
 	let inList = false;
@@ -53,8 +53,9 @@ function markdownToHtml(md) {
 	
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
-		const olMatch = line.match(/^(\d+)\.\s+(.*)$/);
-		const ulMatch = line.match(/^-\s+(.*)$/);
+		const trimmedLine = line.trim();
+		const olMatch = trimmedLine.match(/^(\d+)\.\s+(.*)$/);
+		const ulMatch = trimmedLine.match(/^[-*]\s+(.*)$/);
 		
 		if (olMatch) {
 			if (!inList || listType !== 'ol') {
@@ -89,20 +90,61 @@ function markdownToHtml(md) {
 	html = processed.join('\n');
 	
 	// Paragraphs (wrap consecutive non-empty lines that aren't already HTML)
-	html = html.split('\n').map(line => {
+	// But preserve list items and other block elements
+	// Process line by line to handle blank lines as paragraph breaks
+	const paragraphLines = html.split('\n');
+	const paragraphProcessed = [];
+	
+	for (let i = 0; i < paragraphLines.length; i++) {
+		const line = paragraphLines[i];
 		const trimmed = line.trim();
-		if (trimmed === '' || trimmed.startsWith('<') || trimmed.startsWith('</')) {
-			return line;
+		
+		if (trimmed === '') {
+			// Blank line - just add it for spacing
+			paragraphProcessed.push('');
+		} else if (trimmed.startsWith('<h') || trimmed.startsWith('</h')) {
+			// Headings - don't wrap in paragraphs
+			paragraphProcessed.push(line);
+		} else if (trimmed.startsWith('<ul>') || trimmed.startsWith('</ul>') || 
+		           trimmed.startsWith('<ol>') || trimmed.startsWith('</ol>') ||
+		           trimmed.startsWith('<li>') || trimmed.startsWith('</li>')) {
+			// List elements - don't wrap in paragraphs
+			paragraphProcessed.push(line);
+		} else if (trimmed.startsWith('<strong>')) {
+			// Lines starting with bold text (like "What this enables:", "Who:", "Access:", etc.)
+			// Each gets its own paragraph - this ensures proper line breaks
+			paragraphProcessed.push(`<p>${line}</p>`);
+		} else if (trimmed.startsWith('<') && trimmed.endsWith('>')) {
+			// Other HTML elements - don't wrap
+			paragraphProcessed.push(line);
+		} else {
+			// Regular text - wrap in paragraph
+			paragraphProcessed.push(`<p>${line}</p>`);
 		}
-		return `<p>${line}</p>`;
-	}).join('\n');
+	}
+	
+	html = paragraphProcessed.join('\n');
 	
 	// Clean up empty paragraphs and nested paragraphs
 	html = html.replace(/<p><\/p>/g, '');
-	html = html.replace(/<p>(<[^>]+>)/g, '$1');
-	html = html.replace(/(<\/[^>]+>)<\/p>/g, '$1');
-	html = html.replace(/<p>(<h[1-6])/g, '$1');
+	
+	// Remove paragraph tags from headings (but preserve content)
+	html = html.replace(/<p>(<h[1-6][^>]*>)/g, '$1');
 	html = html.replace(/(<\/h[1-6]>)<\/p>/g, '$1');
+	
+	// Remove paragraph tags from lists (but preserve content)
+	html = html.replace(/<p>(<ul[^>]*>)/g, '$1');
+	html = html.replace(/(<\/ul>)<\/p>/g, '$1');
+	html = html.replace(/<p>(<ol[^>]*>)/g, '$1');
+	html = html.replace(/(<\/ol>)<\/p>/g, '$1');
+	html = html.replace(/<p>(<li[^>]*>)/g, '$1');
+	html = html.replace(/(<\/li>)<\/p>/g, '$1');
+	
+	// IMPORTANT: Preserve paragraphs that start with <strong> (like "What this enables:")
+	// These should remain wrapped in <p> tags, so we explicitly avoid removing them
+	// Only remove paragraph tags from other block elements that shouldn't be in paragraphs
+	html = html.replace(/<p>(<(?!strong|p|h[1-6]|ul|ol|li)[a-zA-Z][^>]*>)/g, '$1');
+	html = html.replace(/(<\/(?!strong|p|h[1-6]|ul|ol|li)[a-zA-Z][^>]*>)<\/p>/g, '$1');
 	
 	return html;
 }
