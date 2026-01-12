@@ -1,8 +1,8 @@
-import { redirect } from '@sveltejs/kit';
-import { findById } from '$lib/crm/server/fileStore.js';
+import { redirect, fail } from '@sveltejs/kit';
+import { findById, update } from '$lib/crm/server/fileStore.js';
 import { decrypt } from '$lib/crm/server/crypto.js';
-import { getAdminFromCookies } from '$lib/crm/server/auth.js';
-import { logSensitiveOperation } from '$lib/crm/server/audit.js';
+import { getAdminFromCookies, getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
+import { logSensitiveOperation, logDataChange } from '$lib/crm/server/audit.js';
 
 export async function load({ params, cookies, request }) {
 	const admin = await getAdminFromCookies(cookies);
@@ -42,6 +42,89 @@ export async function load({ params, cookies, request }) {
 		}
 	}
 
-	return { form, register, data };
+	const csrfToken = getCsrfToken(cookies) || '';
+	return { form, register, data, csrfToken };
 }
+
+export const actions = {
+	archive: async ({ request, params, cookies, locals }) => {
+		const data = await request.formData();
+		const csrfToken = data.get('_csrf');
+
+		if (!csrfToken || !verifyCsrfToken(cookies, csrfToken)) {
+			return fail(403, { error: 'CSRF token validation failed' });
+		}
+
+		const admin = await getAdminFromCookies(cookies);
+		if (!admin) {
+			return fail(401, { error: 'Unauthorized' });
+		}
+
+		const register = await findById('registers', params.submissionId);
+		if (!register || register.formId !== params.id) {
+			return fail(404, { error: 'Submission not found' });
+		}
+
+		const form = await findById('forms', params.id);
+		if (!form) {
+			return fail(404, { error: 'Form not found' });
+		}
+
+		// Update submission to archived
+		await update('registers', params.submissionId, {
+			...register,
+			archived: true,
+			archivedAt: new Date().toISOString(),
+			archivedBy: admin.id
+		});
+
+		// Log the archive action
+		const event = { getClientAddress: () => 'unknown', request };
+		await logDataChange(admin.id, 'archive', 'registers', params.submissionId, {
+			formId: params.id,
+			formName: form.name,
+			submissionId: params.submissionId
+		}, event);
+
+		return { success: true, archived: true };
+	},
+
+	unarchive: async ({ request, params, cookies, locals }) => {
+		const data = await request.formData();
+		const csrfToken = data.get('_csrf');
+
+		if (!csrfToken || !verifyCsrfToken(cookies, csrfToken)) {
+			return fail(403, { error: 'CSRF token validation failed' });
+		}
+
+		const admin = await getAdminFromCookies(cookies);
+		if (!admin) {
+			return fail(401, { error: 'Unauthorized' });
+		}
+
+		const register = await findById('registers', params.submissionId);
+		if (!register || register.formId !== params.id) {
+			return fail(404, { error: 'Submission not found' });
+		}
+
+		const form = await findById('forms', params.id);
+		if (!form) {
+			return fail(404, { error: 'Form not found' });
+		}
+
+		// Update submission to unarchived
+		const { archived, archivedAt, archivedBy, ...rest } = register;
+		await update('registers', params.submissionId, rest);
+
+		// Log the unarchive action
+		const event = { getClientAddress: () => 'unknown', request };
+		await logDataChange(admin.id, 'unarchive', 'registers', params.submissionId, {
+			formId: params.id,
+			formName: form.name,
+			submissionId: params.submissionId
+		}, event);
+
+		return { success: true, archived: false };
+	}
+};
 

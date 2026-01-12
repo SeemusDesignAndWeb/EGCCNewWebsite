@@ -44,7 +44,9 @@ export async function load({ url, cookies }) {
 	const paginated = filtered.slice(start, end);
 
 	// Get latest 10 form submissions, sorted by submittedAt (most recent first)
+	// Filter out archived submissions
 	const latestSubmissions = [...registers]
+		.filter(r => !r.archived) // Exclude archived submissions
 		.sort((a, b) => {
 			const dateA = new Date(a.submittedAt || a.createdAt || 0);
 			const dateB = new Date(b.submittedAt || b.createdAt || 0);

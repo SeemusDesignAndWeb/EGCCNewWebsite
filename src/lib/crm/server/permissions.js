@@ -164,9 +164,14 @@ export function hasRouteAccess(admin, pathname) {
 		return true;
 	}
 	
-	// Dashboard, Profile and Help are accessible to all authenticated admins
-	if (pathname === '/hub' || pathname === '/hub/profile' || pathname === '/hub/help') {
+	// Dashboard, Profile, Help, and Video Tutorials (viewing) are accessible to all authenticated admins
+	if (pathname === '/hub' || pathname === '/hub/profile' || pathname === '/hub/help' || pathname === '/hub/video-tutorials') {
 		return true;
+	}
+	
+	// Video management pages (/hub/videos) are only for super admin
+	if (pathname.startsWith('/hub/videos')) {
+		return isSuperAdmin(admin);
 	}
 	
 	// Get the hub area for this route

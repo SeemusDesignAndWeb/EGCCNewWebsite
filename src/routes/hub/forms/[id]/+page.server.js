@@ -35,8 +35,8 @@ export async function load({ params, cookies, url, request }) {
 		}
 	}
 
-	// Get form submissions (registers)
-	const registers = await findMany('registers', r => r.formId === params.id);
+	// Get form submissions (registers) - exclude archived ones
+	const registers = await findMany('registers', r => r.formId === params.id && !r.archived);
 	
 	// Decrypt safeguarding submissions
 	const decryptedRegisters = await Promise.all(registers.map(async (register) => {

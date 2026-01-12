@@ -51,6 +51,18 @@ export async function crmHandle({ event, resolve }) {
 		return resolve(event);
 	}
 
+	// Privacy policy - public access (no auth required)
+	if (pathname === '/hub/privacy' || pathname === '/hub/privacy/api') {
+		// Set CSRF token on GET requests (only if not already set)
+		if (request.method === 'GET') {
+			if (!getCsrfToken(cookies)) {
+				const csrfToken = generateCsrfToken();
+				setCsrfToken(cookies, csrfToken, isProduction);
+			}
+		}
+		return resolve(event);
+	}
+
 	// All other /hub routes require authentication
 	const admin = await getAdminFromCookies(cookies);
 	
