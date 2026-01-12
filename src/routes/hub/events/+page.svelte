@@ -62,14 +62,14 @@
 </div>
 
 <div class="mb-4">
-	<form on:submit|preventDefault={handleSearch} class="flex gap-2">
+	<form on:submit|preventDefault={handleSearch} class="flex flex-col sm:flex-row gap-2">
 		<input
 			type="text"
 			bind:value={searchInput}
 			placeholder="Search events..."
-			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-4 py-2"
+			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-3 sm:px-4 py-2 text-sm sm:text-base"
 		/>
-		<button type="submit" class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base">
+		<button type="submit" class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base whitespace-nowrap">
 			Search
 		</button>
 	</form>

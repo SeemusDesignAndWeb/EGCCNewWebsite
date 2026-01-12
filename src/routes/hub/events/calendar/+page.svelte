@@ -182,35 +182,35 @@
 		</div>
 
 	<!-- View Mode Tabs -->
-	<div class="flex gap-2 mb-4 border-b border-gray-200">
+	<div class="flex gap-1 sm:gap-2 mb-4 border-b border-gray-200 overflow-x-auto">
 		<button
 			on:click={() => setView('year')}
-			class="px-4 py-2 font-medium transition-colors {viewMode === 'year' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
+			class="px-2 sm:px-4 py-2 text-xs sm:text-base font-medium transition-colors whitespace-nowrap {viewMode === 'year' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
 		>
 			Year
 		</button>
 		<button
 			on:click={() => setView('month')}
-			class="px-4 py-2 font-medium transition-colors {viewMode === 'month' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
+			class="px-2 sm:px-4 py-2 text-xs sm:text-base font-medium transition-colors whitespace-nowrap {viewMode === 'month' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
 		>
 			Month
 		</button>
 		<button
 			on:click={() => setView('week')}
-			class="px-4 py-2 font-medium transition-colors {viewMode === 'week' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
+			class="px-2 sm:px-4 py-2 text-xs sm:text-base font-medium transition-colors whitespace-nowrap {viewMode === 'week' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
 		>
 			Week
 		</button>
 		<button
 			on:click={() => setView('agenda')}
-			class="px-4 py-2 font-medium transition-colors {viewMode === 'agenda' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
+			class="px-2 sm:px-4 py-2 text-xs sm:text-base font-medium transition-colors whitespace-nowrap {viewMode === 'agenda' ? 'text-hub-green-600 border-b-2 border-hub-green-600' : 'text-gray-600 hover:text-gray-900'}"
 		>
 			Agenda
 		</button>
 	</div>
 
 	<!-- Navigation Controls -->
-	<div class="flex justify-between items-center mb-4">
+	<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
 		<div class="flex items-center gap-2">
 			<button
 				on:click={() => {
@@ -222,13 +222,13 @@
 						navigateWeek(-1);
 					}
 				}}
-				class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50"
+				class="px-2 sm:px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 text-sm sm:text-base"
 			>
 				←
 			</button>
 			<button
 				on:click={goToToday}
-				class="px-4 py-1 border border-gray-300 rounded-md hover:bg-gray-50"
+				class="px-3 sm:px-4 py-1 border border-gray-300 rounded-md hover:bg-gray-50 text-sm sm:text-base"
 			>
 				Today
 			</button>
@@ -242,23 +242,24 @@
 						navigateWeek(1);
 					}
 				}}
-				class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50"
+				class="px-2 sm:px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 text-sm sm:text-base"
 			>
 				→
 			</button>
 		</div>
-		<h3 class="text-xl font-semibold text-gray-900">
+		<h3 class="text-base sm:text-xl font-semibold text-gray-900 text-center sm:text-left">
 			{#if viewMode === 'year'}
 				{currentDate.getFullYear()}
 			{:else if viewMode === 'month'}
 				{getMonthName(currentDate)}
 			{:else if viewMode === 'week'}
-				Week of {weekDays[0]?.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })} - {weekDays[6]?.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}
+				<span class="hidden sm:inline">Week of {weekDays[0]?.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })} - {weekDays[6]?.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+				<span class="sm:hidden">{weekDays[0]?.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })} - {weekDays[6]?.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}</span>
 			{:else}
 				{getMonthName(currentDate)}
 			{/if}
 		</h3>
-		<div class="flex gap-2">
+		<div class="flex justify-center sm:justify-end">
 			{#if viewMode === 'year'}
 				<select
 					value={currentDate.getFullYear()}
@@ -266,7 +267,7 @@
 						const year = parseInt(e.target.value);
 						goto(`/hub/events/calendar?year=${year}&month=0&view=${viewMode}`);
 					}}
-					class="px-3 py-1 border border-gray-500 rounded-md"
+					class="px-2 sm:px-3 py-1 text-sm border border-gray-500 rounded-md"
 				>
 					{#each Array(10) as _, i}
 						{@const year = new Date().getFullYear() - 5 + i}
@@ -282,7 +283,7 @@
 						const [year, month] = e.target.value.split('-').map(Number);
 						goto(`/hub/events/calendar?year=${year}&month=${month - 1}&view=${viewMode}`);
 					}}
-					class="px-3 py-1 border border-gray-500 rounded-md"
+					class="px-2 sm:px-3 py-1 text-sm border border-gray-500 rounded-md"
 				>
 					{#each Array(12) as _, i}
 						{@const year = currentDate.getFullYear()}
@@ -300,33 +301,42 @@
 <!-- Year View -->
 {#if viewMode === 'year'}
 	<div class="bg-white shadow rounded-lg overflow-hidden">
-		<div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4">
+		<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4 p-2 sm:p-4">
 			{#each yearMonths as monthDate}
 				{@const monthOccurrences = getOccurrencesForMonth(monthDate.getFullYear(), monthDate.getMonth())}
 				{@const isCurrentMonth = monthDate.getMonth() === new Date().getMonth() && monthDate.getFullYear() === new Date().getFullYear()}
-				<div class="border border-gray-200 rounded-lg p-3 hover:border-hub-blue-300 hover:shadow-md transition-all cursor-pointer {isCurrentMonth ? 'bg-hub-blue-50 border-hub-blue-300' : ''}"
+				<div 
+					class="border border-gray-200 rounded-lg p-2 sm:p-3 hover:border-hub-blue-300 hover:shadow-md transition-all cursor-pointer {isCurrentMonth ? 'bg-hub-blue-50 border-hub-blue-300' : ''}"
+					role="button"
+					tabindex="0"
 					on:click={() => goto(`/hub/events/calendar?year=${monthDate.getFullYear()}&month=${monthDate.getMonth()}&view=month`)}
+					on:keydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							goto(`/hub/events/calendar?year=${monthDate.getFullYear()}&month=${monthDate.getMonth()}&view=month`);
+						}
+					}}
 				>
-					<div class="text-sm font-semibold text-gray-900 mb-2">
+					<div class="text-xs sm:text-sm font-semibold text-gray-900 mb-1 sm:mb-2">
 						{monthDate.toLocaleDateString('en-US', { month: 'long' })}
 					</div>
-					<div class="text-xs text-gray-500 mb-2">
+					<div class="text-xs text-gray-500 mb-1 sm:mb-2">
 						{monthOccurrences.length} {monthOccurrences.length === 1 ? 'event' : 'events'}
 					</div>
 					<div class="space-y-1">
-						{#each monthOccurrences.slice(0, 3) as occ}
+						{#each monthOccurrences.slice(0, 2) as occ}
 							{@const colorStyles = getEventColorStyles(occ.event)}
 							<div 
-								class="text-xs px-2 py-1 rounded truncate" 
+								class="text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded truncate" 
 								style="background-color: {colorStyles.backgroundColor}; color: {colorStyles.color}; border: 1px solid {colorStyles.borderColor};"
 								title="{occ.event?.title || 'Event'}"
 							>
-								{new Date(occ.startsAt).getDate()} - {occ.event?.title || 'Event'}
+								<span class="hidden sm:inline">{new Date(occ.startsAt).getDate()} - </span>{occ.event?.title || 'Event'}
 							</div>
 						{/each}
-						{#if monthOccurrences.length > 3}
-							<div class="text-xs text-gray-500 px-2">
-								+{monthOccurrences.length - 3} more
+						{#if monthOccurrences.length > 2}
+							<div class="text-xs text-gray-500 px-1.5 sm:px-2">
+								+{monthOccurrences.length - 2} more
 							</div>
 						{/if}
 					</div>
@@ -338,7 +348,52 @@
 
 <!-- Month View -->
 {#if viewMode === 'month'}
-	<div class="bg-white shadow rounded-lg overflow-hidden">
+	<!-- Mobile: List View -->
+	<div class="block md:hidden bg-white shadow rounded-lg overflow-hidden">
+		<div class="divide-y divide-gray-200">
+			{#each monthDays as day}
+				{#if day}
+					{@const dayOccurrences = getOccurrencesForDate(day)}
+					{@const isToday = day.toDateString() === new Date().toDateString()}
+					<div class="p-3 {isToday ? 'bg-hub-blue-50' : ''}">
+						<div class="flex items-center justify-between mb-2">
+							<div class="flex items-center gap-2">
+								<div class="text-sm font-semibold {isToday ? 'text-hub-blue-600' : 'text-gray-900'}">
+									{day.getDate()}
+								</div>
+								<div class="text-xs text-gray-500">
+									{dayNames[day.getDay()]}
+								</div>
+							</div>
+							{#if dayOccurrences.length > 0}
+								<div class="text-xs text-gray-500">
+									{dayOccurrences.length} {dayOccurrences.length === 1 ? 'event' : 'events'}
+								</div>
+							{/if}
+						</div>
+						<div class="space-y-1.5">
+							{#each dayOccurrences as occ}
+								{@const colorStyles = getEventColorStyles(occ.event)}
+								<a
+									href="/hub/events/{occ.eventId}"
+									class="block text-xs px-2 py-1.5 rounded hover:opacity-80 transition-colors"
+									style="background-color: {colorStyles.backgroundColor}; color: {colorStyles.color}; border: 1px solid {colorStyles.borderColor};"
+								>
+									<div class="font-medium truncate">{occ.event?.title || 'Event'}</div>
+									<div class="text-xs opacity-75 mt-0.5">
+										{new Date(occ.startsAt).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}
+									</div>
+								</a>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			{/each}
+		</div>
+	</div>
+	
+	<!-- Desktop: Grid View -->
+	<div class="hidden md:block bg-white shadow rounded-lg overflow-hidden">
 		<div class="grid grid-cols-7 border-b border-gray-200">
 			{#each dayNames as dayName}
 				<div class="px-4 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-50">
@@ -384,7 +439,50 @@
 
 <!-- Week View -->
 {#if viewMode === 'week'}
-	<div class="bg-white shadow rounded-lg overflow-hidden">
+	<!-- Mobile: List View -->
+	<div class="block md:hidden bg-white shadow rounded-lg overflow-hidden">
+		<div class="divide-y divide-gray-200">
+			{#each weekDays as day}
+				{@const dayOccurrences = getOccurrencesForDate(day)}
+				{@const isToday = day.toDateString() === new Date().toDateString()}
+				<div class="p-3 {isToday ? 'bg-hub-blue-50' : ''}">
+					<div class="flex items-center gap-2 mb-2">
+						<div class="text-sm font-semibold {isToday ? 'text-hub-blue-600' : 'text-gray-900'}">
+							{dayNames[day.getDay()]}
+						</div>
+						<div class="text-xs text-gray-500">
+							{day.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+						</div>
+						{#if dayOccurrences.length > 0}
+							<div class="text-xs text-gray-500 ml-auto">
+								{dayOccurrences.length} {dayOccurrences.length === 1 ? 'event' : 'events'}
+							</div>
+						{/if}
+					</div>
+					<div class="space-y-1.5">
+						{#each dayOccurrences as occ}
+							{@const startTime = new Date(occ.startsAt)}
+							{@const endTime = new Date(occ.endsAt)}
+							{@const colorStyles = getEventColorStyles(occ.event)}
+							<a
+								href="/hub/events/{occ.eventId}"
+								class="block text-xs px-2 py-1.5 rounded hover:opacity-80 transition-colors"
+								style="background-color: {colorStyles.backgroundColor}; color: {colorStyles.color}; border: 1px solid {colorStyles.borderColor};"
+							>
+								<div class="font-medium truncate">{occ.event?.title || 'Event'}</div>
+								<div class="text-xs opacity-75 mt-0.5">
+									{startTime.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} - {endTime.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}
+								</div>
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
+	</div>
+	
+	<!-- Desktop: Grid View -->
+	<div class="hidden md:block bg-white shadow rounded-lg overflow-hidden">
 		<div class="grid grid-cols-8 border-b border-gray-200">
 			<div class="px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-50"></div>
 			{#each weekDays as day}
@@ -435,7 +533,7 @@
 {#if viewMode === 'agenda'}
 	<div class="bg-white shadow rounded-lg overflow-hidden">
 		{#if agendaOccurrences.length === 0}
-			<div class="p-8 text-center text-gray-500">
+			<div class="p-6 sm:p-8 text-center text-gray-500">
 				No events scheduled for this month
 			</div>
 		{:else}
@@ -445,11 +543,11 @@
 					{@const occEnd = new Date(occ.endsAt)}
 					<a
 						href="/hub/events/{occ.eventId}"
-						class="block p-4 hover:bg-gray-50 transition-colors"
+						class="block p-3 sm:p-4 hover:bg-gray-50 transition-colors"
 					>
-						<div class="flex items-start gap-4">
-							<div class="flex-shrink-0 w-20 text-center">
-								<div class="text-sm font-semibold text-gray-900">
+						<div class="flex items-start gap-3 sm:gap-4">
+							<div class="flex-shrink-0 w-16 sm:w-20 text-center">
+								<div class="text-xs sm:text-sm font-semibold text-gray-900">
 									{occDate.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
 								</div>
 								<div class="text-xs text-gray-500">
@@ -457,10 +555,10 @@
 								</div>
 							</div>
 							<div class="flex-1 min-w-0">
-								<div class="font-medium text-gray-900 mb-1">
+								<div class="text-sm sm:text-base font-medium text-gray-900 mb-1">
 									{occ.event?.title || 'Event'}
 								</div>
-								<div class="text-sm text-gray-600">
+								<div class="text-xs sm:text-sm text-gray-600">
 									{occDate.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} - {occEnd.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}
 									{#if occ.location}
 										<span class="ml-2">• {occ.location}</span>

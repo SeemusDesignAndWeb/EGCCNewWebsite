@@ -275,35 +275,35 @@
 </script>
 
 {#if event}
-	<div class="bg-white shadow rounded-lg p-4 mb-4">
-		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-3">
-			<h2 class="text-lg sm:text-xl font-bold text-gray-900">Event Details</h2>
+	<div class="bg-white shadow rounded-lg p-3 sm:p-4 mb-4">
+		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-3">
+			<h2 class="text-base sm:text-lg md:text-xl font-bold text-gray-900">Event Details</h2>
 			<div class="flex flex-wrap gap-2">
 				{#if editing}
 					<button
 						type="submit"
 						form="event-edit-form"
-						class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base"
+						class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base flex-1 sm:flex-none"
 					>
 						Save Changes
 					</button>
 					<button
 						type="button"
 						on:click={() => editing = false}
-						class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base"
+						class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base flex-1 sm:flex-none"
 					>
 						Back
 					</button>
 				{:else}
 					<button
 						on:click={() => editing = true}
-						class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base"
+						class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base flex-1 sm:flex-none"
 					>
 						Edit
 					</button>
 					<button
 						on:click={handleDelete}
-						class="bg-hub-red-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-red-700 text-sm sm:text-base"
+						class="bg-hub-red-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-red-700 text-sm sm:text-base flex-1 sm:flex-none"
 					>
 						Delete
 					</button>
@@ -316,10 +316,10 @@
 				<input type="hidden" name="_csrf" value={csrfToken} />
 				<input type="hidden" name="description" value={description || ''} />
 				
-				<div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+				<div class="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4">
 					<!-- Basic Information Panel - Narrow Column -->
 					<div class="lg:col-span-1 bg-gray-50 rounded-lg p-3">
-						<h3 class="text-base font-semibold text-gray-900 mb-3">Basic Information</h3>
+						<h3 class="text-sm sm:text-base font-semibold text-gray-900 mb-3">Basic Information</h3>
 						<div class="space-y-3">
 							<FormField label="Title" name="title" bind:value={formData.title} required />
 							<FormField label="Location" name="location" bind:value={formData.location} />
@@ -365,7 +365,7 @@
 					
 					<!-- Description Panel - Wide Column -->
 					<div class="lg:col-span-3 bg-gray-50 rounded-lg p-3">
-						<h3 class="text-base font-semibold text-gray-900 mb-3">Description</h3>
+						<h3 class="text-sm sm:text-base font-semibold text-gray-900 mb-3">Description</h3>
 						<div>
 							<HtmlEditor bind:value={description} name="description" />
 						</div>
@@ -373,10 +373,10 @@
 				</div>
 			</form>
 		{:else}
-			<div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+			<div class="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4">
 				<!-- Basic Information Panel - Narrow Column -->
 				<div class="lg:col-span-1 bg-gray-50 rounded-lg p-3">
-					<h3 class="text-base font-semibold text-gray-900 mb-3">Basic Information</h3>
+					<h3 class="text-sm sm:text-base font-semibold text-gray-900 mb-3">Basic Information</h3>
 					<dl class="space-y-3">
 						<div>
 							<dt class="text-xs font-medium text-gray-500 uppercase">Title</dt>
@@ -411,7 +411,7 @@
 				
 				<!-- Description Panel - Wide Column -->
 				<div class="lg:col-span-3 bg-gray-50 rounded-lg p-3">
-					<h3 class="text-base font-semibold text-gray-900 mb-3">Description</h3>
+					<h3 class="text-sm sm:text-base font-semibold text-gray-900 mb-3">Description</h3>
 					<div class="text-sm text-gray-900 prose prose-sm max-w-none">
 						{#if event.description}
 							{@html event.description}
@@ -463,10 +463,10 @@
 
 	</div>
 
-	<div class="bg-white shadow rounded-lg p-4 mb-4">
+	<div class="bg-white shadow rounded-lg p-3 sm:p-4 mb-4">
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
 			<h3 class="text-base sm:text-lg font-bold text-gray-900">Occurrences</h3>
-			<a href="/hub/events/{event.id}/occurrences/new" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
+			<a href="/hub/events/{event.id}/occurrences/new" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base whitespace-nowrap">
 				Add Occurrence
 			</a>
 		</div>
@@ -474,23 +474,23 @@
 		
 		<!-- Signup Details for Each Occurrence -->
 		{#if occurrences.some(occ => occ.signupStats?.signupCount > 0)}
-			<div class="mt-6 pt-6 border-t border-gray-200">
-				<h4 class="text-lg font-semibold text-gray-900 mb-4">Event Signups</h4>
-				<div class="space-y-6">
+			<div class="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
+				<h4 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Event Signups</h4>
+				<div class="space-y-4 sm:space-y-6">
 					{#each occurrences as occ}
 						{#if occ.signupStats?.signupCount > 0}
-							<div class="border border-gray-200 rounded-lg p-4">
-								<div class="flex justify-between items-start mb-3">
-									<div>
-										<h5 class="font-medium text-gray-900">
+							<div class="border border-gray-200 rounded-lg p-3 sm:p-4">
+								<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
+									<div class="flex-1">
+										<h5 class="text-sm sm:text-base font-medium text-gray-900">
 											{formatDateTimeUK(occ.startsAt)}
 										</h5>
-										<p class="text-sm text-gray-600 mt-1">
+										<p class="text-xs sm:text-sm text-gray-600 mt-1">
 											{occ.signupStats.signupCount} {occ.signupStats.signupCount === 1 ? 'person has' : 'people have'} signed up
 											({occ.signupStats.totalAttendees} total attendees including guests)
 										</p>
 										{#if occ.maxSpaces}
-											<p class="text-sm text-gray-600 mt-1">
+											<p class="text-xs sm:text-sm text-gray-600 mt-1">
 												Spots: {occ.signupStats.totalAttendees} / {occ.maxSpaces}
 												{#if occ.signupStats.isFull}
 													<span class="text-hub-red-600 font-medium ml-2">(Full)</span>
@@ -502,15 +502,16 @@
 									</div>
 								</div>
 								<div class="mt-3">
-									<h6 class="text-sm font-medium text-gray-700 mb-2">Signups:</h6>
+									<h6 class="text-xs sm:text-sm font-medium text-gray-700 mb-2">Signups:</h6>
 									<ul class="space-y-2">
 										{#each occ.signupStats.signups as signup}
-											<li class="text-sm text-gray-600 flex items-start justify-between gap-2">
-												<div class="flex items-start gap-2 flex-1">
-													<span class="w-2 h-2 bg-hub-green-500 rounded-full mt-2"></span>
-													<div>
+											<li class="text-xs sm:text-sm text-gray-600 flex items-start justify-between gap-2">
+												<div class="flex items-start gap-2 flex-1 min-w-0">
+													<span class="w-2 h-2 bg-hub-green-500 rounded-full mt-2 flex-shrink-0"></span>
+													<div class="min-w-0 flex-1">
 														<span class="font-medium">{signup.name}</span>
-														<span class="text-gray-400"> ({signup.email})</span>
+														<span class="text-gray-400 hidden sm:inline"> ({signup.email})</span>
+														<span class="text-gray-400 sm:hidden block text-xs truncate">{signup.email}</span>
 														{#if signup.guestCount > 0}
 															<span class="text-gray-500"> - {signup.guestCount} {signup.guestCount === 1 ? 'guest' : 'guests'}</span>
 														{/if}
@@ -518,7 +519,7 @@
 												</div>
 												<button
 													on:click={() => handleDeleteSignup(signup.id)}
-													class="text-hub-red-600 hover:text-hub-red-800 font-medium text-xs ml-2"
+													class="text-hub-red-600 hover:text-hub-red-800 font-medium text-xs ml-2 flex-shrink-0"
 													title="Remove signup"
 												>
 													Remove
@@ -536,10 +537,10 @@
 	</div>
 
 	{#if meetingPlanners.length > 0}
-		<div class="bg-white shadow rounded-lg p-4 mb-4">
+		<div class="bg-white shadow rounded-lg p-3 sm:p-4 mb-4">
 			<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
 				<h3 class="text-base sm:text-lg font-bold text-gray-900">Meeting Planners</h3>
-				<a href="/hub/meeting-planners/new?eventId={event.id}" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
+				<a href="/hub/meeting-planners/new?eventId={event.id}" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base whitespace-nowrap">
 					<span class="hidden sm:inline">New Meeting Planner</span>
 					<span class="sm:hidden">New Planner</span>
 				</a>
@@ -571,10 +572,10 @@
 		</div>
 	{/if}
 
-	<div class="bg-white shadow rounded-lg p-4">
+	<div class="bg-white shadow rounded-lg p-3 sm:p-4">
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
 			<h3 class="text-base sm:text-lg font-bold text-gray-900">Rotas</h3>
-			<a href="/hub/rotas/new?eventId={event.id}" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
+			<a href="/hub/rotas/new?eventId={event.id}" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base whitespace-nowrap">
 				Add Rota
 			</a>
 		</div>

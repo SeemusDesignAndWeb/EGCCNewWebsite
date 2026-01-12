@@ -124,97 +124,170 @@
 	$: totalColumns = 8 + otherRotaRoles.length + 1;
 </script>
 
-<div class="mb-4 flex justify-between items-center">
-	<h2 class="text-2xl font-bold text-gray-900">Meeting Planners - Quick View</h2>
-	<div class="flex gap-2">
+<div class="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+	<h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Meeting Planners - Quick View</h2>
+	<div class="flex flex-wrap gap-2">
 		<button 
 			on:click={toggleFullscreen}
-			class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700 flex items-center gap-2"
+			class="bg-hub-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-blue-700 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
 			title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
 		>
 			{#if isFullscreen}
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 				</svg>
-				Exit Fullscreen
+				<span class="hidden sm:inline">Exit Fullscreen</span>
+				<span class="sm:hidden">Exit</span>
 			{:else}
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
 				</svg>
-				Fullscreen
+				<span class="hidden sm:inline">Fullscreen</span>
+				<span class="sm:hidden">Full</span>
 			{/if}
 		</button>
-		<a href="/hub/meeting-planners" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+		<a href="/hub/meeting-planners" class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-xs sm:text-sm whitespace-nowrap">
 			Back to List
 		</a>
-		<a href="/hub/meeting-planners/new" class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700">
-			New Meeting Planner
+		<a href="/hub/meeting-planners/new" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-xs sm:text-sm whitespace-nowrap">
+			<span class="hidden sm:inline">New Meeting Planner</span>
+			<span class="sm:hidden">New</span>
 		</a>
 	</div>
 </div>
 
-<div bind:this={tableContainer} class="bg-white shadow rounded-lg overflow-hidden">
+<!-- Mobile Card View -->
+<div class="block md:hidden space-y-3">
+	{#each meetingPlanners as mp}
+		<div 
+			class="bg-white shadow rounded-lg p-3 border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+			on:click={() => goto(`/hub/meeting-planners/${mp.id}`)}
+			role="button"
+			tabindex="0"
+			on:keydown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					goto(`/hub/meeting-planners/${mp.id}`);
+				}
+			}}
+		>
+			<div class="mb-2 pb-2 border-b border-gray-200">
+				<div class="font-semibold text-sm text-gray-900 mb-1">{mp.eventName}</div>
+				<div class="text-xs text-gray-600">{formatDateWithOrdinal(mp.occurrenceDate)}</div>
+			</div>
+			<div class="space-y-2 text-xs">
+				<div>
+					<span class="font-medium text-gray-700">Call to Worship:</span>
+					<span class="ml-1 text-gray-600">{formatContactList(mp.callToWorship)}</span>
+				</div>
+				<div>
+					<span class="font-medium text-gray-700">Meeting Leader:</span>
+					<span class="ml-1 text-gray-600">{formatContactList(mp.meetingLeader)}</span>
+				</div>
+				<div>
+					<span class="font-medium text-gray-700">Speaker:</span>
+					<span class="ml-1 text-gray-600">{formatContactList(mp.speaker)}</span>
+				</div>
+				{#if mp.speakerTopic}
+					<div>
+						<span class="font-medium text-gray-700">Speaker Topic:</span>
+						<span class="ml-1 text-gray-600">{mp.speakerTopic}</span>
+					</div>
+				{/if}
+				<div>
+					<span class="font-medium text-gray-700">Worship:</span>
+					<span class="ml-1 text-gray-600">{formatContactList(mp.worshipLeader)}</span>
+				</div>
+				<div>
+					<span class="font-medium text-gray-700">Communion:</span>
+					<span class="ml-1 text-gray-600">{mp.communionHappening ? '✓ Yes' : 'No'}</span>
+				</div>
+				{#each otherRotaRoles as role}
+					{#if mp.otherRotas[role] && mp.otherRotas[role].length > 0}
+						<div>
+							<span class="font-medium text-gray-700">{role}:</span>
+							<span class="ml-1 text-gray-600">{formatContactList(mp.otherRotas[role])}</span>
+						</div>
+					{/if}
+				{/each}
+				{#if formatNotes(mp.notes) !== '-'}
+					<div>
+						<span class="font-medium text-gray-700">Notes:</span>
+						<span class="ml-1 text-gray-600">{formatNotes(mp.notes)}</span>
+					</div>
+				{/if}
+			</div>
+		</div>
+	{:else}
+		<div class="bg-white shadow rounded-lg p-6 text-center text-gray-500">
+			No meeting planners found
+		</div>
+	{/each}
+</div>
+
+<!-- Desktop Table View -->
+<div bind:this={tableContainer} class="hidden md:block bg-white shadow rounded-lg overflow-hidden">
 	<div class="overflow-x-auto overflow-y-auto" style="max-height: calc(100vh - 200px);">
 		<table class="min-w-full divide-y divide-gray-200 border-collapse table-fixed">
 			<thead class="bg-gray-50 sticky top-0 z-20">
 				<tr>
-					<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 sticky left-0 bg-gray-50 z-30 resizable-header" style="width: 200px; min-width: 150px;">
+					<th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 sticky left-0 bg-gray-50 z-30 resizable-header" style="width: 200px; min-width: 150px;">
 						<div class="flex items-center justify-between">
 							<span>Event Name</span>
 							<div class="resize-handle" on:mousedown={(e) => handleMouseDown(e, e.currentTarget.closest('th'))}></div>
 						</div>
 					</th>
-					<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 150px; min-width: 120px;">
+					<th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 150px; min-width: 120px;">
 						<div class="flex items-center justify-between">
 							<span>Date</span>
 							<div class="resize-handle" on:mousedown={(e) => handleMouseDown(e, e.currentTarget.closest('th'))}></div>
 						</div>
 					</th>
-					<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 150px; min-width: 120px;">
+					<th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 150px; min-width: 120px;">
 						<div class="flex items-center justify-between">
 							<span>Call to Worship</span>
 							<div class="resize-handle" on:mousedown={(e) => handleMouseDown(e, e.currentTarget.closest('th'))}></div>
 						</div>
 					</th>
-					<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 180px; min-width: 150px;">
+					<th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 180px; min-width: 150px;">
 						<div class="flex items-center justify-between">
 							<span>Meeting Leader</span>
 							<div class="resize-handle" on:mousedown={(e) => handleMouseDown(e, e.currentTarget.closest('th'))}></div>
 						</div>
 					</th>
-					<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 180px; min-width: 150px;">
+					<th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 180px; min-width: 150px;">
 						<div class="flex items-center justify-between">
 							<span>Speaker</span>
 							<div class="resize-handle" on:mousedown={(e) => handleMouseDown(e, e.currentTarget.closest('th'))}></div>
 						</div>
 					</th>
-					<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 200px; min-width: 150px;">
+					<th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 200px; min-width: 150px;">
 						<div class="flex items-center justify-between">
 							<span>Speaker Topic</span>
 							<div class="resize-handle" on:mousedown={(e) => handleMouseDown(e, e.currentTarget.closest('th'))}></div>
 						</div>
 					</th>
-					<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 250px; min-width: 200px;">
+					<th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 250px; min-width: 200px;">
 						<div class="flex items-center justify-between">
 							<span>Worship</span>
 							<div class="resize-handle" on:mousedown={(e) => handleMouseDown(e, e.currentTarget.closest('th'))}></div>
 						</div>
 					</th>
-					<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 100px; min-width: 80px;">
+					<th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 100px; min-width: 80px;">
 						<div class="flex items-center justify-between">
 							<span>Communion</span>
 							<div class="resize-handle" on:mousedown={(e) => handleMouseDown(e, e.currentTarget.closest('th'))}></div>
 						</div>
 					</th>
 					{#each otherRotaRoles as role}
-						<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 200px; min-width: 150px;">
+						<th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 200px; min-width: 150px;">
 							<div class="flex items-center justify-between">
 								<span>{role}</span>
 								<div class="resize-handle" on:mousedown={(e) => handleMouseDown(e, e.currentTarget.closest('th'))}></div>
 							</div>
 						</th>
 					{/each}
-					<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 300px; min-width: 200px;">
+					<th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border border-gray-300 resizable-header" style="width: 300px; min-width: 200px;">
 						<div class="flex items-center justify-between">
 							<span>Notes</span>
 							<div class="resize-handle" on:mousedown={(e) => handleMouseDown(e, e.currentTarget.closest('th'))}></div>
@@ -225,42 +298,42 @@
 			<tbody class="bg-white divide-y divide-gray-200">
 				{#each meetingPlanners as mp}
 					<tr class="hover:bg-gray-50 cursor-pointer" on:click={() => goto(`/hub/meeting-planners/${mp.id}`)}>
-						<td class="px-4 py-3 text-sm text-gray-900 border border-gray-300 sticky left-0 bg-white z-10 font-medium" style="width: 200px; min-width: 150px;">
+						<td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900 border border-gray-300 sticky left-0 bg-white z-10 font-medium" style="width: 200px; min-width: 150px;">
 							{mp.eventName}
 						</td>
-						<td class="px-4 py-3 text-sm text-gray-700 border border-gray-300 whitespace-nowrap" style="width: 150px; min-width: 120px;">
+						<td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border border-gray-300 whitespace-nowrap" style="width: 150px; min-width: 120px;">
 							{formatDateWithOrdinal(mp.occurrenceDate)}
 						</td>
-						<td class="px-4 py-3 text-sm text-gray-700 border border-gray-300" style="width: 150px; min-width: 120px;">
+						<td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border border-gray-300" style="width: 150px; min-width: 120px;">
 							{formatContactList(mp.callToWorship)}
 						</td>
-						<td class="px-4 py-3 text-sm text-gray-700 border border-gray-300" style="width: 180px; min-width: 150px;">
+						<td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border border-gray-300" style="width: 180px; min-width: 150px;">
 							{formatContactList(mp.meetingLeader)}
 						</td>
-						<td class="px-4 py-3 text-sm text-gray-700 border border-gray-300" style="width: 180px; min-width: 150px;">
+						<td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border border-gray-300" style="width: 180px; min-width: 150px;">
 							{formatContactList(mp.speaker)}
 						</td>
-						<td class="px-4 py-3 text-sm text-gray-700 border border-gray-300" style="width: 200px; min-width: 150px;">
+						<td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border border-gray-300" style="width: 200px; min-width: 150px;">
 							{mp.speakerTopic || '-'}
 						</td>
-						<td class="px-4 py-3 text-sm text-gray-700 border border-gray-300" style="width: 250px; min-width: 200px;">
+						<td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border border-gray-300" style="width: 250px; min-width: 200px;">
 							{formatContactList(mp.worshipLeader)}
 						</td>
-						<td class="px-4 py-3 text-sm text-gray-700 border border-gray-300 text-center" style="width: 100px; min-width: 80px;">
+						<td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border border-gray-300 text-center" style="width: 100px; min-width: 80px;">
 							{mp.communionHappening ? '✓' : '-'}
 						</td>
 						{#each otherRotaRoles as role}
-							<td class="px-4 py-3 text-sm text-gray-700 border border-gray-300" style="width: 200px; min-width: 150px;">
+							<td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border border-gray-300" style="width: 200px; min-width: 150px;">
 								{formatContactList(mp.otherRotas[role] || [])}
 							</td>
 						{/each}
-						<td class="px-4 py-3 text-sm text-gray-700 border border-gray-300" style="width: 300px; min-width: 200px;">
+						<td class="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border border-gray-300" style="width: 300px; min-width: 200px;">
 							{formatNotes(mp.notes)}
 						</td>
 					</tr>
 				{:else}
 					<tr>
-						<td colspan={totalColumns} class="px-4 py-8 text-center text-gray-500 border border-gray-300">
+						<td colspan={totalColumns} class="px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 border border-gray-300">
 							No meeting planners found
 						</td>
 					</tr>
@@ -375,6 +448,18 @@
 	/* Improve readability */
 	tbody td {
 		vertical-align: top;
-		padding: 0.75rem 1rem;
+	}
+	
+	/* Mobile responsive table padding */
+	@media (max-width: 768px) {
+		tbody td {
+			padding: 0.5rem 0.75rem;
+		}
+	}
+	
+	@media (min-width: 769px) {
+		tbody td {
+			padding: 0.75rem 1rem;
+		}
 	}
 </style>

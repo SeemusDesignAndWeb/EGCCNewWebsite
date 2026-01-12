@@ -542,17 +542,17 @@
 
 {#if meetingPlanner}
 	<!-- Header Panel -->
-	<div class="bg-white shadow rounded-lg p-4 mb-4">
-		<div class="flex justify-between items-start">
-			<div class="flex-1">
-				<h2 class="text-xl font-bold text-gray-900 mb-2">Meeting Planner</h2>
-				<div class="flex flex-wrap items-center gap-3 text-xl text-gray-600">
+	<div class="bg-white shadow rounded-lg p-3 sm:p-4 mb-4">
+		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+			<div class="flex-1 min-w-0">
+				<h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Meeting Planner</h2>
+				<div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 text-base sm:text-xl text-gray-600">
 					<div>
-						<a href="/hub/events/{event.id}" class="text-hub-green-600 hover:text-hub-green-700 underline font-bold">
+						<a href="/hub/events/{event.id}" class="text-hub-green-600 hover:text-hub-green-700 underline font-bold break-words">
 							{event?.title || 'Unknown'}
 						</a>
 					</div>
-					<div>
+					<div class="text-sm sm:text-base">
 						{#if occurrence}
 							{formatDateWithOrdinal(occurrence.startsAt)}
 						{:else}
@@ -561,12 +561,12 @@
 					</div>
 				</div>
 			</div>
-			<div class="flex gap-2">
+			<div class="flex flex-wrap gap-2 w-full sm:w-auto">
 				<a
 					href="/hub/meeting-planners"
-					class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 text-sm flex items-center gap-1"
+					class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-xs sm:text-sm flex items-center gap-1 flex-1 sm:flex-none justify-center"
 				>
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
 					</svg>
 					Back
@@ -574,13 +574,14 @@
 				<button
 					type="submit"
 					form="meeting-planner-edit-form"
-					class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 text-sm"
+					class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-xs sm:text-sm flex-1 sm:flex-none"
 				>
-					Save Changes
+					<span class="hidden sm:inline">Save Changes</span>
+					<span class="sm:hidden">Save</span>
 				</button>
 				<button
 					on:click={handleDelete}
-					class="bg-hub-red-600 text-white px-4 py-2 rounded-md hover:bg-hub-red-700 text-sm"
+					class="bg-hub-red-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-red-700 text-xs sm:text-sm flex-1 sm:flex-none"
 				>
 					Delete
 				</button>
@@ -589,7 +590,7 @@
 	</div>
 
 	<!-- Main Content Grid -->
-	<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
+	<div class="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
 		<!-- Left Column: Meeting Details (1/4 width) -->
 		<div class="lg:col-span-1">
 			<form id="meeting-planner-edit-form" method="POST" action="?/update" use:enhance={({ formData: fd, cancel }) => {
@@ -606,9 +607,9 @@
 				<input type="hidden" name="notes" value={notes} />
 				
 				<!-- Meeting Details Panel -->
-				<div class="bg-white shadow rounded-lg p-3 mb-4">
-					<h3 class="text-base font-semibold text-gray-900 mb-3">Meeting Details</h3>
-					<div class="space-y-3">
+				<div class="bg-white shadow rounded-lg p-2.5 sm:p-3 mb-3 sm:mb-4">
+					<h3 class="text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">Meeting Details</h3>
+					<div class="space-y-2.5 sm:space-y-3">
 						<div class="flex items-center">
 							<input
 								type="checkbox"
@@ -654,8 +655,8 @@
 				</div>
 
 				<!-- Notes Panel -->
-				<div class="bg-white shadow rounded-lg p-3">
-					<h3 class="text-base font-semibold text-gray-900 mb-3">Notes</h3>
+				<div class="bg-white shadow rounded-lg p-2.5 sm:p-3">
+					<h3 class="text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">Notes</h3>
 					<div>
 						<HtmlEditor bind:value={notes} name="notes" />
 					</div>
@@ -665,28 +666,28 @@
 
 		<!-- Right Column: Rotas Grid (3/4 width) -->
 		<div class="lg:col-span-3">
-			<div class="bg-white shadow rounded-lg p-4">
+			<div class="bg-white shadow rounded-lg p-3 sm:p-4">
 				<div class="flex justify-between items-center mb-3">
-					<h3 class="text-lg font-bold text-gray-900">Rotas</h3>
+					<h3 class="text-base sm:text-lg font-bold text-gray-900">Rotas</h3>
 				</div>
 				
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 					{#each Object.keys(rotas) as rotaKey}
 						{@const rota = rotas[rotaKey]}
 						{@const rawRota = rawRotas[rotaKey]}
 						{#if rota}
-							<div class="border border-gray-200 rounded-lg p-3 flex flex-col">
-								<div class="flex justify-between items-start mb-3">
+							<div class="border border-gray-200 rounded-lg p-2.5 sm:p-3 flex flex-col">
+								<div class="flex justify-between items-start mb-2 sm:mb-3">
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-1.5 mb-1">
-											<h4 class="text-sm font-semibold text-gray-900 truncate">{getRotaDisplayName(rotaKey)}</h4>
+											<h4 class="text-xs sm:text-sm font-semibold text-gray-900 truncate">{getRotaDisplayName(rotaKey)}</h4>
 											<a 
 												href="/hub/rotas/{rota.id}" 
 												class="text-hub-blue-600 hover:text-hub-blue-800 flex-shrink-0"
 												target="_blank"
 												title="View full details"
 											>
-												<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
 												</svg>
 											</a>
@@ -707,7 +708,7 @@
 										<div class="space-y-1.5">
 											{#each rota.assignees as assignee, index}
 												<div class="flex items-center justify-between p-1.5 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
-													<div class="flex-1 min-w-0">
+													<div class="flex-1 min-w-0 pr-1.5">
 														{#if assignee.id}
 															<a href="/hub/contacts/{assignee.id}" class="text-hub-green-600 hover:text-hub-green-700 underline font-medium text-xs block truncate">
 																{assignee.name || 'Unknown'}
@@ -720,10 +721,10 @@
 													</div>
 													<button
 														on:click={() => handleRemoveAssignee(rotaKey, assignee, index)}
-														class="text-hub-red-600 hover:text-hub-red-800 p-1 rounded text-xs ml-1.5 flex-shrink-0"
+														class="text-hub-red-600 hover:text-hub-red-800 p-1 rounded text-xs flex-shrink-0"
 														title="Remove assignee"
 													>
-														<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 														</svg>
 													</button>
@@ -742,7 +743,7 @@
 										selectedContactIds[rotaKey] = new Set();
 										selectedListId[rotaKey] = '';
 									}}
-									class="w-full bg-hub-green-600 text-white px-3 py-1.5 rounded-md hover:bg-hub-green-700 text-xs transition-colors"
+									class="w-full bg-hub-green-600 text-white px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-md hover:bg-hub-green-700 text-xs transition-colors"
 								>
 									+ Add Assignees
 								</button>
@@ -750,15 +751,15 @@
 
 							<!-- Add Assignees Modal -->
 							{#if showAddAssignees[rotaKey]}
-								<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" on:click={() => showAddAssignees[rotaKey] = false}>
-									<div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] flex flex-col" on:click|stopPropagation>
-										<div class="p-4 border-b border-gray-200">
-											<h3 class="text-lg font-bold text-gray-900 mb-3">Add Assignees - {getRotaDisplayName(rotaKey)}</h3>
+								<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4" on:click={() => showAddAssignees[rotaKey] = false}>
+									<div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] sm:max-h-[80vh] flex flex-col" on:click|stopPropagation>
+										<div class="p-3 sm:p-4 border-b border-gray-200">
+											<h3 class="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3">Add Assignees - {getRotaDisplayName(rotaKey)}</h3>
 											
 											{#if eventOccurrences.length > 0}
-												<div class="mb-3">
+												<div class="mb-2 sm:mb-3">
 													<label class="block text-xs font-medium text-gray-700 mb-1">Occurrence <span class="text-hub-red-500">*</span></label>
-													<select bind:value={selectedOccurrenceId[rotaKey]} required class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-3 text-sm">
+													<select bind:value={selectedOccurrenceId[rotaKey]} required class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2.5 sm:px-3 text-xs sm:text-sm">
 														<option value="">Select an occurrence</option>
 														{#each eventOccurrences as occ}
 															<option value={occ.id}>
@@ -770,9 +771,9 @@
 												</div>
 											{/if}
 											
-											<div class="mb-3">
+											<div class="mb-2 sm:mb-3">
 												<label class="block text-xs font-medium text-gray-700 mb-1">Filter by List (optional)</label>
-												<select bind:value={selectedListId[rotaKey]} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-3 text-sm">
+												<select bind:value={selectedListId[rotaKey]} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2.5 sm:px-3 text-xs sm:text-sm">
 													<option value="">All Contacts</option>
 													{#each lists as list}
 														<option value={list.id}>{list.name}</option>
@@ -786,12 +787,12 @@
 													type="text"
 													bind:value={searchTerm[rotaKey]}
 													placeholder="Search contacts..."
-													class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-3 text-sm"
+													class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2.5 sm:px-3 text-xs sm:text-sm"
 												/>
 											</div>
 										</div>
 
-										<div class="flex-1 overflow-y-auto p-4">
+										<div class="flex-1 overflow-y-auto p-3 sm:p-4">
 											{#if filteredContacts[rotaKey] && filteredContacts[rotaKey].length > 0}
 												<div class="mb-3 flex justify-between items-center">
 													<span class="text-xs text-gray-600">
@@ -835,7 +836,7 @@
 											{/if}
 										</div>
 
-										<div class="p-4 border-t border-gray-200 flex gap-2 justify-end">
+										<div class="p-3 sm:p-4 border-t border-gray-200 flex flex-col sm:flex-row gap-2 sm:justify-end">
 											<button
 												on:click={() => { 
 													showAddAssignees[rotaKey] = false; 
@@ -843,14 +844,14 @@
 													selectedContactIds[rotaKey] = new Set(); 
 													selectedListId[rotaKey] = '';
 												}}
-												class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 text-sm"
+												class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-xs sm:text-sm w-full sm:w-auto"
 											>
 												Back
 											</button>
 											<button
 												on:click={() => handleAddAssignees(rotaKey)}
 												disabled={!selectedContactIds[rotaKey] || selectedContactIds[rotaKey].size === 0 || (eventOccurrences.length > 0 && !selectedOccurrenceId[rotaKey])}
-												class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 disabled:opacity-50 text-sm"
+												class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 disabled:opacity-50 text-xs sm:text-sm w-full sm:w-auto"
 											>
 												Add Selected ({selectedContactIds[rotaKey]?.size || 0})
 											</button>
