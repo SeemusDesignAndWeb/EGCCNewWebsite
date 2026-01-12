@@ -1,4 +1,7 @@
 <script>
+	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
+	
 	export let embedCode = '';
 	export let title = '';
 	export let description = '';
@@ -7,8 +10,10 @@
 	let iframeSrc = '';
 	let aspectRatio = 64.86161251504213; // Default from Loom embed
 
-	$: {
-		if (embedCode) {
+	function parseEmbedCode() {
+		if (!browser || !embedCode) return;
+		
+		try {
 			// Try to extract iframe src from embed code
 			const parser = new DOMParser();
 			const doc = parser.parseFromString(embedCode, 'text/html');
@@ -32,7 +37,59 @@
 					iframeSrc = urlMatch[0];
 				}
 			}
+		} catch (error) {
+			console.error('Error parsing embed code:', error);
+			// Fallback: try to extract URL directly
+			const urlMatch = embedCode.match(/https:\/\/www\.loom\.com\/embed\/[\w]+/);
+			if (urlMatch) {
+				iframeSrc = urlMatch[0];
+			}
 		}
+	}
+
+	onMount(() => {
+		parseEmbedCode();
+		
+		// Suppress Loom's internal console errors/warnings (only set up once)
+		if (browser && !window._loomConsoleSuppressed) {
+			window._loomConsoleSuppressed = true;
+			const originalError = console.error;
+			const originalWarn = console.warn;
+			
+			// Filter out Loom-specific errors
+			const loomErrorPatterns = [
+				'analytics_cross_product_interaction_tracking',
+				'Client must be initialized',
+				'Multiple versions of FeatureGateClients',
+				'go.apollo.dev/c/err',
+				'ApolloClient',
+				'useLazyQuery',
+				'useQuery',
+				'onCompleted',
+				'No storage available for session',
+				'Player w/ mediaElement has been deprecated',
+				'streaming.useNativeHlsOnSafari'
+			];
+			
+			console.error = function(...args) {
+				const message = args.join(' ');
+				if (!loomErrorPatterns.some(pattern => message.includes(pattern))) {
+					originalError.apply(console, args);
+				}
+			};
+			
+			console.warn = function(...args) {
+				const message = args.join(' ');
+				if (!loomErrorPatterns.some(pattern => message.includes(pattern))) {
+					originalWarn.apply(console, args);
+				}
+			};
+		}
+	});
+
+	// Also parse when embedCode changes (client-side only)
+	$: if (browser && embedCode) {
+		parseEmbedCode();
 	}
 </script>
 

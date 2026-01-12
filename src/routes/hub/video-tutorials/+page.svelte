@@ -5,8 +5,10 @@
 
 	let selectedCategory = null;
 	let isLoadingVideo = false;
+	let initialLoad = true;
 	
 	$: videos = $page.data?.videos || [];
+	$: isLoading = $page.status === 'loading' || initialLoad;
 	
 	// Create tabs based on video titles
 	$: videoTabs = videos.map(video => ({
@@ -33,12 +35,28 @@
 		return videos;
 	})();
 	
+	// Hide initial loading when videos are loaded
+	$: if (videos.length > 0 && initialLoad) {
+		setTimeout(() => {
+			initialLoad = false;
+		}, 300);
+	}
+	
 	// Hide loading when filtered videos change (video has loaded)
 	$: if (filteredVideos.length > 0 && isLoadingVideo) {
 		setTimeout(() => {
 			isLoadingVideo = false;
 		}, 500);
 	}
+	
+	onMount(() => {
+		// Set initial load to false after mount if videos are already loaded
+		if (videos.length > 0) {
+			setTimeout(() => {
+				initialLoad = false;
+			}, 300);
+		}
+	});
 </script>
 
 <div class="flex-1 p-6">
@@ -61,11 +79,11 @@
 			</div>
 		{/if}
 		
-		{#if isLoadingVideo}
+		{#if isLoading || isLoadingVideo}
 			<div class="flex items-center justify-center py-12">
 				<div class="text-center">
 					<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
-					<p class="text-gray-600">Loading video...</p>
+					<p class="text-gray-600">{isLoading ? 'Loading videos...' : 'Loading video...'}</p>
 				</div>
 			</div>
 		{:else if filteredVideos.length > 0}
