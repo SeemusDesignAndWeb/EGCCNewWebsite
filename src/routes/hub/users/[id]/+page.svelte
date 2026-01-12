@@ -10,7 +10,7 @@
 	$: admin = $page.data?.admin;
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
-	$: availableLevels = $page.data?.availableLevels || [];
+	$: availableAreas = $page.data?.availableAreas || [];
 	
 	// Track last processed form result to avoid duplicate notifications
 	let lastProcessedFormResult = null;
@@ -20,7 +20,7 @@
 		lastProcessedFormResult = formResult;
 		
 		if (formResult?.success) {
-			notifications.success(formResult.message || 'Admin user updated successfully');
+			notifications.success(formResult.message || 'Admin updated successfully');
 		} else if (formResult?.error) {
 			notifications.error(formResult.error);
 		}
@@ -31,7 +31,7 @@
 	let formData = {
 		email: '',
 		name: '',
-		adminLevel: 'level_2'
+		permissions: []
 	};
 
 	let passwordData = {
@@ -46,12 +46,25 @@
 	let isSubmitting = false;
 	
 	$: if (admin && !editing && !isSubmitting) {
+		// Get permissions from admin object
+		const permissions = admin.permissions || [];
 		formData = {
 			email: admin.email || '',
 			name: admin.name || '',
-			adminLevel: admin.adminLevel || 'level_2'
+			permissions: [...permissions] // Create a copy
 		};
 	}
+	
+	function togglePermission(area) {
+		if (formData.permissions.includes(area)) {
+			formData.permissions = formData.permissions.filter(p => p !== area);
+		} else {
+			formData.permissions = [...formData.permissions, area];
+		}
+	}
+	
+	// Check if email is super admin email
+	$: isSuperAdminEmail = formData.email && formData.email.toLowerCase() === 'john.watson@egcc.co.uk';
 
 	function isAccountLocked() {
 		if (!admin?.accountLockedUntil) return false;
@@ -59,7 +72,7 @@
 	}
 
 	async function handleDelete() {
-		const confirmed = await dialog.confirm('Are you sure you want to delete this admin user? This action cannot be undone.', 'Delete Admin User');
+		const confirmed = await dialog.confirm('Are you sure you want to delete this admin? This action cannot be undone.', 'Delete Admin');
 		if (confirmed) {
 			const form = document.createElement('form');
 			form.method = 'POST';
@@ -95,7 +108,7 @@
 	}
 
 	async function handleVerify() {
-		const confirmed = await dialog.confirm('Mark this admin user\'s email as verified?', 'Verify Email');
+		const confirmed = await dialog.confirm('Mark this admin\'s email as verified?', 'Verify Email');
 		if (confirmed) {
 			const form = document.createElement('form');
 			form.method = 'POST';
@@ -116,8 +129,17 @@
 {#if admin}
 	<div class="bg-white shadow rounded-lg p-6">
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-			<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Admin User Details</h2>
+			<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Admin Details</h2>
 			<div class="flex flex-wrap gap-2">
+				<a 
+					href="/hub/users" 
+					class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 inline-flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
+				>
+					<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+					</svg>
+					Back to Admins
+				</a>
 				{#if editing}
 					<button
 						type="submit"
@@ -130,7 +152,7 @@
 						on:click={() => editing = false}
 						class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base"
 					>
-						Back
+						Cancel
 					</button>
 				{:else}
 					<button
@@ -204,30 +226,50 @@
 					/>
 					
 					<div>
-						<label for="adminLevel" class="block text-sm font-medium text-gray-700 mb-1">
-							Admin Level
+						<label class="block text-sm font-medium text-gray-700 mb-3">
+							Hub Area Permissions
 						</label>
-						<div class="mb-4">
-							<select
-								id="adminLevel"
-								name="adminLevel"
-								bind:value={formData.adminLevel}
-								required
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4"
-							>
-								{#each availableLevels as level}
-									<option value={level.value}>{level.label}</option>
-								{/each}
-							</select>
-						</div>
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-							{#each availableLevels as level}
-								<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 {level.value === formData.adminLevel ? 'ring-2 ring-blue-500' : ''}">
-									<h4 class="text-sm font-semibold text-blue-900 mb-1">{level.label}</h4>
-									<p class="text-xs text-blue-800">{level.description}</p>
-								</div>
+						{#if isSuperAdminEmail}
+							<div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+								<p class="text-sm text-blue-800">
+									<strong>Super Admin:</strong> This user has full access to all areas automatically. Permissions cannot be modified.
+								</p>
+							</div>
+						{:else}
+							<p class="text-sm text-gray-600 mb-4">
+								Select the areas of the hub this admin can access.
+							</p>
+						{/if}
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+							{#each availableAreas as area}
+								<label class="flex items-start p-3 border rounded-lg {isSuperAdminEmail ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-50'} {formData.permissions.includes(area.value) ? 'border-hub-green-500 bg-hub-green-50' : 'border-gray-300'}">
+									<input
+										type="checkbox"
+										name="permissions"
+										value={area.value}
+										checked={isSuperAdminEmail || formData.permissions.includes(area.value)}
+										disabled={isSuperAdminEmail}
+										on:change={() => !isSuperAdminEmail && togglePermission(area.value)}
+										class="mt-1 mr-3 h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded"
+									/>
+									<div class="flex-1">
+										<div class="text-sm font-semibold text-gray-900">{area.label}</div>
+										<div class="text-xs text-gray-600 mt-1">{area.description}</div>
+									</div>
+								</label>
 							{/each}
 						</div>
+						<!-- Hidden inputs for form submission -->
+						{#if isSuperAdminEmail}
+							<!-- Super admin gets all permissions -->
+							{#each availableAreas as area}
+								<input type="hidden" name="permissions" value={area.value} />
+							{/each}
+						{:else}
+							{#each formData.permissions as permission}
+								<input type="hidden" name="permissions" value={permission} />
+							{/each}
+						{/if}
 					</div>
 				</div>
 			</form>
@@ -249,38 +291,27 @@
 							<dd class="mt-1 text-sm text-gray-900 capitalize">{admin.role || 'admin'}</dd>
 						</div>
 						<div>
-							<dt class="text-sm font-medium text-gray-500">Admin Level</dt>
+							<dt class="text-sm font-medium text-gray-500">Permissions</dt>
 							<dd class="mt-1">
-								<div class="text-sm font-medium text-gray-900">
-									{#if admin.adminLevel === 'super_admin'}
-										Super Admin
-									{:else if admin.adminLevel === 'level_2'}
-										Events
-									{:else if admin.adminLevel === 'level_2b'}
-										Communications
-									{:else if admin.adminLevel === 'level_3'}
-										Safeguarding
-									{:else if admin.adminLevel === 'level_4'}
-										Forms
+								{#if admin.email && admin.email.toLowerCase() === 'john.watson@egcc.co.uk'}
+									<div class="text-sm font-medium text-gray-900">Super Admin</div>
+									<div class="text-xs text-gray-500 mt-1">Full access to all areas, can create other admins</div>
+								{:else}
+									{@const adminPermissions = admin.permissions || []}
+									{#if adminPermissions.length === 0}
+										<div class="text-sm text-gray-500 italic">No permissions assigned</div>
 									{:else}
-										Events
+										<div class="flex flex-wrap gap-2 mt-1">
+											{#each availableAreas as area}
+												{#if adminPermissions.includes(area.value)}
+													<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-hub-green-100 text-hub-green-800">
+														{area.label}
+													</span>
+												{/if}
+											{/each}
+										</div>
 									{/if}
-								</div>
-								<div class="text-xs text-gray-500 mt-1">
-									{#if admin.adminLevel === 'super_admin'}
-										Full access to all areas, can create other admins
-									{:else if admin.adminLevel === 'level_2'}
-										Contacts, Lists, Rotas, Events, Meeting Planner
-									{:else if admin.adminLevel === 'level_2b'}
-										Contacts, Lists, Rotas, Events, Meeting Planner, Newsletters
-									{:else if admin.adminLevel === 'level_3'}
-										Contacts, Lists, Rotas, Events, Meeting Planner, Newsletters, Safeguarding Forms
-									{:else if admin.adminLevel === 'level_4'}
-										Contacts, Lists, Rotas, Events, Meeting Planner, Newsletters, Forms (non-safeguarding)
-									{:else}
-										Contacts, Lists, Rotas, Events, Meeting Planner
-									{/if}
-								</div>
+								{/if}
 							</dd>
 						</div>
 						<div>

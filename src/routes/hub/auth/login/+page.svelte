@@ -62,7 +62,9 @@
 			{/if}
 			
 			{#if error}
-				<div class="mt-4 text-sm text-hub-red-600">{error}</div>
+				<div class="mt-4 p-3 rounded-md text-sm bg-hub-red-50 text-hub-red-800 border border-hub-red-200">
+					{error}
+				</div>
 			{/if}
 
 			<div class="flex items-center justify-between mt-4">

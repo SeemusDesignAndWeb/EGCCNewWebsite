@@ -6,7 +6,7 @@
 
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
-	$: availableLevels = $page.data?.availableLevels || [];
+	$: availableAreas = $page.data?.availableAreas || [];
 	
 	// Show notifications from form results
 	$: if (formResult?.error) {
@@ -17,21 +17,32 @@
 		email: '',
 		password: '',
 		name: '',
-		adminLevel: 'level_2'
+		permissions: []
 	};
+	
+	function togglePermission(area) {
+		if (formData.permissions.includes(area)) {
+			formData.permissions = formData.permissions.filter(p => p !== area);
+		} else {
+			formData.permissions = [...formData.permissions, area];
+		}
+	}
+	
+	// Check if email is super admin email
+	$: isSuperAdminEmail = formData.email && formData.email.toLowerCase() === 'john.watson@egcc.co.uk';
 
 	let showPassword = false;
 </script>
 
 <div class="bg-white shadow rounded-lg p-6">
 	<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-		<h2 class="text-xl sm:text-2xl font-bold text-gray-900">New Admin User</h2>
+		<h2 class="text-xl sm:text-2xl font-bold text-gray-900">New Admin</h2>
 		<div class="flex flex-wrap gap-2">
 			<a href="/hub/users" class="bg-gray-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-gray-700 text-sm sm:text-base">
 				Cancel
 			</a>
 			<button type="submit" form="user-create-form" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
-				<span class="hidden sm:inline">Create Admin User</span>
+				<span class="hidden sm:inline">Create Admin</span>
 				<span class="sm:hidden">Create</span>
 			</button>
 		</div>
@@ -60,32 +71,50 @@
 			/>
 			
 			<div>
-				<label for="adminLevel" class="block text-sm font-medium text-gray-700 mb-1">
-					Admin Level
+				<label class="block text-sm font-medium text-gray-700 mb-3">
+					Hub Area Permissions
 				</label>
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<div>
-						<select
-							id="adminLevel"
-							name="adminLevel"
-							bind:value={formData.adminLevel}
-							required
-							class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4"
-						>
-							{#each availableLevels as level}
-								<option value={level.value}>{level.label}</option>
-							{/each}
-						</select>
+				{#if isSuperAdminEmail}
+					<div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+						<p class="text-sm text-blue-800">
+							<strong>Super Admin:</strong> This user will have full access to all areas automatically.
+						</p>
 					</div>
-					<div class="space-y-3">
-						{#each availableLevels as level}
-							<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 {level.value === formData.adminLevel ? 'ring-2 ring-blue-500' : ''}">
-								<h4 class="text-sm font-semibold text-blue-900 mb-1">{level.label}</h4>
-								<p class="text-xs text-blue-800">{level.description}</p>
+				{:else}
+					<p class="text-sm text-gray-600 mb-4">
+						Select the areas of the hub this admin can access.
+					</p>
+				{/if}
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+					{#each availableAreas as area}
+						<label class="flex items-start p-3 border rounded-lg {isSuperAdminEmail ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-50'} {formData.permissions.includes(area.value) || isSuperAdminEmail ? 'border-hub-green-500 bg-hub-green-50' : 'border-gray-300'}">
+							<input
+								type="checkbox"
+								name="permissions"
+								value={area.value}
+								checked={isSuperAdminEmail || formData.permissions.includes(area.value)}
+								disabled={isSuperAdminEmail}
+								on:change={() => !isSuperAdminEmail && togglePermission(area.value)}
+								class="mt-1 mr-3 h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded"
+							/>
+							<div class="flex-1">
+								<div class="text-sm font-semibold text-gray-900">{area.label}</div>
+								<div class="text-xs text-gray-600 mt-1">{area.description}</div>
 							</div>
-						{/each}
-					</div>
+						</label>
+					{/each}
 				</div>
+				<!-- Hidden inputs for form submission -->
+				{#if isSuperAdminEmail}
+					<!-- Super admin gets all permissions -->
+					{#each availableAreas as area}
+						<input type="hidden" name="permissions" value={area.value} />
+					{/each}
+				{:else}
+					{#each formData.permissions as permission}
+						<input type="hidden" name="permissions" value={permission} />
+					{/each}
+				{/if}
 			</div>
 			
 			<div>

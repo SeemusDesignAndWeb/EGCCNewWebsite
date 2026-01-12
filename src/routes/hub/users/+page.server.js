@@ -1,5 +1,6 @@
 import { readCollection } from '$lib/crm/server/fileStore.js';
 import { getCsrfToken } from '$lib/crm/server/auth.js';
+import { getAdminPermissions, isSuperAdmin } from '$lib/crm/server/permissions.js';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -25,16 +26,17 @@ export async function load({ url, cookies }) {
 
 	// Remove sensitive data before sending to client
 	const sanitized = paginated.map(admin => {
-		// Check if email is john.watson@egcc.co.uk for super admin
-		const normalizedEmail = admin.email?.toLowerCase().trim();
-		const adminLevel = normalizedEmail === 'john.watson@egcc.co.uk' ? 'super_admin' : (admin.adminLevel || 'level_2');
+		// Get permissions (handles both new permissions array and legacy adminLevel)
+		const permissions = admin.permissions || getAdminPermissions(admin) || [];
+		const isSuperAdminUser = isSuperAdmin(admin);
 		
 		return {
 			id: admin.id,
 			email: admin.email,
 			name: admin.name,
 			role: admin.role,
-			adminLevel: adminLevel,
+			permissions: permissions,
+			isSuperAdmin: isSuperAdminUser,
 			emailVerified: admin.emailVerified || false,
 			createdAt: admin.createdAt,
 			passwordChangedAt: admin.passwordChangedAt,

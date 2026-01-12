@@ -1,6 +1,6 @@
 import { readCollection } from '$lib/crm/server/fileStore.js';
 
-export async function load() {
+export async function load({ locals }) {
 	const [contacts, lists, newsletters, events, rotas, forms] = await Promise.all([
 		readCollection('contacts'),
 		readCollection('lists'),
@@ -45,6 +45,7 @@ export async function load() {
 	}));
 
 	return {
+		admin: locals.admin || null,
 		stats: {
 			contacts: contacts.length,
 			lists: lists.length,

@@ -60,6 +60,12 @@ export async function crmHandle({ event, resolve }) {
 
 	// Check if admin has permission to access this route
 	if (!hasRouteAccess(admin, pathname)) {
+		// Prevent redirect loop - if we're already on /hub with access_denied, don't redirect again
+		if (pathname === '/hub' && url.searchParams.get('error') === 'access_denied') {
+			// Allow access to show the error message
+			event.locals.admin = admin;
+			return resolve(event);
+		}
 		// Redirect to hub home with error message
 		throw redirect(302, '/hub?error=access_denied');
 	}

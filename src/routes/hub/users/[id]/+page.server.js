@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { findById, update, remove } from '$lib/crm/server/fileStore.js';
 import { getAdminById, getAdminByEmail, updateAdminPassword, verifyAdminEmail, getCsrfToken, verifyCsrfToken, getAdminFromCookies } from '$lib/crm/server/auth.js';
-import { getAdminLevel, isSuperAdmin, canCreateAdminWithLevel, getAvailableAdminLevels } from '$lib/crm/server/permissions.js';
+import { isSuperAdmin, getAdminPermissions, getAvailableHubAreas } from '$lib/crm/server/permissions.js';
 
 export async function load({ params, cookies }) {
 	const admin = await getAdminById(params.id);
@@ -19,13 +19,16 @@ export async function load({ params, cookies }) {
 		throw redirect(302, '/hub/users');
 	}
 
+	// Get permissions (handles both new permissions array and legacy adminLevel)
+	const permissions = admin.permissions || getAdminPermissions(admin) || [];
+	
 	// Remove sensitive data before sending to client
 	const sanitized = {
 		id: admin.id,
 		email: admin.email,
 		name: admin.name,
 		role: admin.role,
-		adminLevel: getAdminLevel(admin),
+		permissions: permissions,
 		emailVerified: admin.emailVerified || false,
 		createdAt: admin.createdAt,
 		passwordChangedAt: admin.passwordChangedAt,
@@ -34,8 +37,8 @@ export async function load({ params, cookies }) {
 	};
 
 	const csrfToken = getCsrfToken(cookies) || '';
-	const availableLevels = getAvailableAdminLevels(currentAdmin);
-	return { admin: sanitized, csrfToken, availableLevels };
+	const availableAreas = getAvailableHubAreas();
+	return { admin: sanitized, csrfToken, availableAreas };
 }
 
 export const actions = {
@@ -50,7 +53,7 @@ export const actions = {
 		try {
 			const email = data.get('email');
 			const name = data.get('name');
-			const adminLevel = data.get('adminLevel');
+			const permissions = data.getAll('permissions'); // Get all permissions checkboxes
 
 			if (!email || !name) {
 				return { error: 'Email and name are required' };
@@ -62,23 +65,15 @@ export const actions = {
 				return { error: 'Not authenticated' };
 			}
 
-			// Check if trying to change admin level
-			if (adminLevel) {
-				const targetLevel = adminLevel.toString();
-				// Check if trying to set super admin
-				if (targetLevel === 'super_admin') {
-					// Only super admins can set other super admins
-					if (!isSuperAdmin(currentAdmin)) {
-						return { error: 'You do not have permission to set super admin level' };
-					}
-				}
-			}
-
 			// Check if email is already taken by another admin
 			const existing = await getAdminByEmail(email.toString());
 			if (existing && existing.id !== params.id) {
 				return { error: 'An admin with this email already exists' };
 			}
+
+			// Check if email is john.watson@egcc.co.uk - always super admin (no permissions needed)
+			const normalizedEmail = email.toString().toLowerCase().trim();
+			const isSuperAdminEmail = normalizedEmail === 'john.watson@egcc.co.uk';
 
 			// Prepare update data
 			const updateData = {
@@ -86,23 +81,22 @@ export const actions = {
 				name: name.toString()
 			};
 
-			// Only update adminLevel if provided and current admin has permission
-			if (adminLevel) {
-				const targetLevel = adminLevel.toString();
-				// Check if email is john.watson@egcc.co.uk - always super admin
-				const normalizedEmail = email.toString().toLowerCase().trim();
-				if (normalizedEmail === 'john.watson@egcc.co.uk') {
-					updateData.adminLevel = 'super_admin';
-				} else {
-					updateData.adminLevel = targetLevel;
-				}
+			// Only update permissions if not super admin email
+			// Super admin email automatically gets all permissions via isSuperAdmin check
+			if (!isSuperAdminEmail) {
+				// Validate permissions array
+				const validPermissions = permissions.filter(p => {
+					const validAreas = getAvailableHubAreas().map(a => a.value);
+					return validAreas.includes(p.toString());
+				});
+				updateData.permissions = validPermissions;
 			}
 
 			await update('admins', params.id, updateData);
 
 			return { success: true };
 		} catch (error) {
-			return { error: error.message || 'Failed to update admin user' };
+			return { error: error.message || 'Failed to update admin' };
 		}
 	},
 
@@ -169,9 +163,9 @@ export const actions = {
 				emailVerificationTokenExpires: null
 			});
 
-			return { success: true, message: 'Admin user verified successfully' };
+			return { success: true, message: 'Admin verified successfully' };
 		} catch (error) {
-			return { error: error.message || 'Failed to verify admin user' };
+			return { error: error.message || 'Failed to verify admin' };
 		}
 	},
 

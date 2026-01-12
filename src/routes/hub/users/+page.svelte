@@ -4,6 +4,20 @@
 	import Pager from '$lib/crm/components/Pager.svelte';
 	import { goto } from '$app/navigation';
 	import { formatDateUK, formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
+	
+	// Area labels mapping
+	const areaLabels = {
+		contacts: 'Contacts',
+		lists: 'Lists',
+		rotas: 'Rotas',
+		events: 'Events',
+		meeting_planners: 'Meeting Planners',
+		newsletters: 'Newsletters',
+		forms: 'Forms',
+		safeguarding_forms: 'Safeguarding Forms',
+		members: 'Members',
+		users: 'Users'
+	};
 
 	$: data = $page.data || {};
 	$: admins = data.admins || [];
@@ -41,22 +55,29 @@
 		return { text: 'Active', class: 'bg-hub-green-100 text-hub-green-800' };
 	}
 
-	function getAdminLevelLabel(level) {
-		if (level === 'super_admin') return 'Super Admin';
-		if (level === 'level_2') return 'Events';
-		if (level === 'level_2b') return 'Communications';
-		if (level === 'level_3') return 'Safeguarding';
-		if (level === 'level_4') return 'Forms';
-		return 'Events';
+	function getAreaLabel(value) {
+		return areaLabels[value] || value;
+	}
+
+	function renderPermissions(permissions, isSuperAdmin) {
+		if (isSuperAdmin) {
+			return '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Super Admin</span>';
+		}
+		if (!permissions || permissions.length === 0) {
+			return '<span class="text-gray-500 italic">No permissions</span>';
+		}
+		const labels = permissions.slice(0, 3).map(p => getAreaLabel(p));
+		const more = permissions.length > 3 ? ` +${permissions.length - 3} more` : '';
+		return labels.join(', ') + more;
 	}
 
 	const columns = [
 		{ key: 'email', label: 'Email' },
 		{ key: 'name', label: 'Name', render: (val) => val || '-' },
 		{ 
-			key: 'adminLevel', 
-			label: 'Admin Level',
-			render: (val) => getAdminLevelLabel(val)
+			key: 'permissions', 
+			label: 'Permissions',
+			render: (val, row) => renderPermissions(val, row.isSuperAdmin)
 		},
 		{ 
 			key: 'status', 
@@ -80,10 +101,10 @@
 </script>
 
 <div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-	<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Admin Users</h2>
+	<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Admins</h2>
 	<div class="flex flex-wrap gap-2">
 		<a href="/hub/users/new" class="bg-hub-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-hub-green-700 text-sm sm:text-base">
-			Add Admin User
+			Add Admin
 		</a>
 	</div>
 </div>

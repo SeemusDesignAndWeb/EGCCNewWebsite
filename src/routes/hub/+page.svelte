@@ -3,7 +3,9 @@
 	import { goto } from '$app/navigation';
 	import { formatDateUK } from '$lib/crm/utils/dateFormat.js';
 	import { onMount } from 'svelte';
+	import { hasRouteAccess } from '$lib/crm/server/permissions.js';
 	
+	$: admin = $page.data?.admin || null;
 	$: stats = $page.data?.stats || {};
 	$: latestNewsletters = $page.data?.latestNewsletters || [];
 	$: latestRotas = $page.data?.latestRotas || [];
@@ -12,6 +14,14 @@
 	// Check for access denied error in URL
 	$: urlParams = new URLSearchParams($page.url.search);
 	$: accessDenied = urlParams.get('error') === 'access_denied';
+	
+	// Check permissions for various routes
+	$: canAccessContacts = admin && hasRouteAccess(admin, '/hub/contacts');
+	$: canAccessLists = admin && hasRouteAccess(admin, '/hub/lists');
+	$: canAccessNewsletters = admin && hasRouteAccess(admin, '/hub/newsletters');
+	$: canAccessEvents = admin && hasRouteAccess(admin, '/hub/events');
+	$: canAccessRotas = admin && hasRouteAccess(admin, '/hub/rotas');
+	$: canAccessForms = admin && hasRouteAccess(admin, '/hub/forms');
 	
 	onMount(() => {
 		// Clear error from URL after showing message
@@ -44,10 +54,12 @@
 {/if}
 
 <!-- Overview Cards with Quick Actions -->
-<h2 class="text-xl font-bold text-gray-900 mb-4">Overview</h2>
-<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6 mb-8">
-	<!-- Contacts -->
-	<div class="flex flex-col gap-2">
+{#if !accessDenied}
+	<h2 class="text-xl font-bold text-gray-900 mb-4">Overview</h2>
+	<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6 mb-8">
+		<!-- Contacts -->
+		{#if canAccessContacts}
+			<div class="flex flex-col gap-2">
 		<a href="/hub/contacts/new" class="bg-hub-blue-50 border-2 border-hub-blue-200 rounded-md p-2 hover:border-hub-blue-400 hover:bg-hub-blue-100 transition-all text-center group flex items-center justify-center gap-1">
 			<span class="text-lg font-bold text-hub-blue-600 group-hover:scale-110 transition-transform">+</span>
 			<span class="text-xs font-medium text-hub-blue-700">Contact</span>
@@ -73,11 +85,13 @@
 					<a href="/hub/contacts" class="font-medium text-hub-blue-600 hover:text-hub-blue-800">View all</a>
 				</div>
 			</div>
+			</div>
 		</div>
-	</div>
+		{/if}
 
-	<!-- Lists -->
-	<div class="flex flex-col gap-2">
+		<!-- Lists -->
+		{#if canAccessLists}
+			<div class="flex flex-col gap-2">
 		<a href="/hub/lists/new" class="bg-hub-blue-50 border-2 border-hub-blue-200 rounded-md p-2 hover:border-hub-blue-400 hover:bg-hub-blue-100 transition-all text-center group flex items-center justify-center gap-1">
 			<span class="text-lg font-bold text-hub-blue-600 group-hover:scale-110 transition-transform">+</span>
 			<span class="text-xs font-medium text-hub-blue-700">List</span>
@@ -103,11 +117,13 @@
 					<a href="/hub/lists" class="font-medium text-hub-blue-600 hover:text-hub-blue-800">View all</a>
 				</div>
 			</div>
+			</div>
 		</div>
-	</div>
+		{/if}
 
-	<!-- Newsletters -->
-	<div class="flex flex-col gap-2">
+		<!-- Newsletters -->
+		{#if canAccessNewsletters}
+			<div class="flex flex-col gap-2">
 		<a href="/hub/newsletters/new" class="bg-hub-green-50 border-2 border-hub-green-200 rounded-md p-2 hover:border-hub-green-400 hover:bg-hub-green-100 transition-all text-center group flex items-center justify-center gap-1">
 			<span class="text-lg font-bold text-hub-green-600 group-hover:scale-110 transition-transform">+</span>
 			<span class="text-xs font-medium text-hub-green-700">Newsletter</span>
@@ -133,11 +149,13 @@
 					<a href="/hub/newsletters" class="font-medium text-hub-green-600 hover:text-hub-green-800">View all</a>
 				</div>
 			</div>
+			</div>
 		</div>
-	</div>
+		{/if}
 
-	<!-- Events -->
-	<div class="flex flex-col gap-2">
+		<!-- Events -->
+		{#if canAccessEvents}
+			<div class="flex flex-col gap-2">
 		<a href="/hub/events/new" class="bg-hub-blue-50 border-2 border-hub-blue-200 rounded-md p-2 hover:border-hub-blue-400 hover:bg-hub-blue-100 transition-all text-center group flex items-center justify-center gap-1">
 			<span class="text-lg font-bold text-hub-blue-600 group-hover:scale-110 transition-transform">+</span>
 			<span class="text-xs font-medium text-hub-blue-700">Event</span>
@@ -163,11 +181,13 @@
 					<a href="/hub/events" class="font-medium text-hub-blue-600 hover:text-hub-blue-800">View all</a>
 				</div>
 			</div>
+			</div>
 		</div>
-	</div>
+		{/if}
 
-	<!-- Rotas -->
-	<div class="flex flex-col gap-2">
+		<!-- Rotas -->
+		{#if canAccessRotas}
+			<div class="flex flex-col gap-2">
 		<a href="/hub/rotas/new" class="bg-hub-yellow-50 border-2 border-hub-yellow-200 rounded-md p-2 hover:border-hub-yellow-400 hover:bg-hub-yellow-100 transition-all text-center group flex items-center justify-center gap-1">
 			<span class="text-lg font-bold text-hub-yellow-600 group-hover:scale-110 transition-transform">+</span>
 			<span class="text-xs font-medium text-hub-yellow-700">Rota</span>
@@ -193,11 +213,13 @@
 					<a href="/hub/rotas" class="font-medium text-hub-yellow-600 hover:text-hub-yellow-800">View all</a>
 				</div>
 			</div>
+			</div>
 		</div>
-	</div>
+		{/if}
 
-	<!-- Forms -->
-	<div class="flex flex-col gap-2">
+		<!-- Forms -->
+		{#if canAccessForms}
+			<div class="flex flex-col gap-2">
 		<a href="/hub/forms/new" class="bg-hub-red-50 border-2 border-hub-red-200 rounded-md p-2 hover:border-hub-red-400 hover:bg-hub-red-100 transition-all text-center group flex items-center justify-center gap-1">
 			<span class="text-lg font-bold text-hub-red-600 group-hover:scale-110 transition-transform">+</span>
 			<span class="text-xs font-medium text-hub-red-700">Form</span>
@@ -223,113 +245,121 @@
 					<a href="/hub/forms" class="font-medium text-hub-red-600 hover:text-hub-red-800">View all</a>
 				</div>
 			</div>
+			</div>
 		</div>
-	</div>
-</div>
-
-<!-- Recent Items -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-	<!-- Latest Newsletters -->
-	<div class="bg-white shadow rounded-lg p-6 border-t-4 border-hub-green-500">
-		<div class="flex justify-between items-center mb-4">
-			<h3 class="text-lg font-semibold text-gray-900">Latest Newsletters</h3>
-			<a href="/hub/newsletters" class="text-sm text-hub-green-600 hover:text-hub-green-800 font-medium">View all</a>
-		</div>
-		{#if latestNewsletters.length === 0}
-			<p class="text-sm text-gray-500">No newsletters yet</p>
-		{:else}
-			<ul class="space-y-3">
-				{#each latestNewsletters as newsletter}
-					<li class="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
-						<a 
-							href="/hub/newsletters/{newsletter.id}" 
-							class="block hover:text-hub-green-600 transition-colors"
-						>
-							<div class="flex justify-between items-start">
-								<div class="flex-1">
-									<div class="font-medium text-gray-900">{newsletter.subject || 'Untitled'}</div>
-									<div class="text-xs text-gray-500 mt-1">
-										{formatDateUK(newsletter.updatedAt || newsletter.createdAt || Date.now())}
-									</div>
-								</div>
-								<span class="ml-2 text-xs px-2 py-1 rounded-full {newsletter.status === 'sent' ? 'bg-hub-green-100 text-hub-green-800' : 'bg-gray-100 text-gray-800'}">
-									{newsletter.status || 'draft'}
-								</span>
-							</div>
-						</a>
-					</li>
-				{/each}
-			</ul>
 		{/if}
 	</div>
+
+	<!-- Recent Items -->
+	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+		<!-- Latest Newsletters -->
+		{#if canAccessNewsletters}
+			<div class="bg-white shadow rounded-lg p-6 border-t-4 border-hub-green-500">
+				<div class="flex justify-between items-center mb-4">
+					<h3 class="text-lg font-semibold text-gray-900">Latest Newsletters</h3>
+					<a href="/hub/newsletters" class="text-sm text-hub-green-600 hover:text-hub-green-800 font-medium">View all</a>
+				</div>
+				{#if latestNewsletters.length === 0}
+					<p class="text-sm text-gray-500">No newsletters yet</p>
+				{:else}
+					<ul class="space-y-3">
+						{#each latestNewsletters as newsletter}
+							<li class="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
+								<a 
+									href="/hub/newsletters/{newsletter.id}" 
+									class="block hover:text-hub-green-600 transition-colors"
+								>
+									<div class="flex justify-between items-start">
+										<div class="flex-1">
+											<div class="font-medium text-gray-900">{newsletter.subject || 'Untitled'}</div>
+											<div class="text-xs text-gray-500 mt-1">
+												{formatDateUK(newsletter.updatedAt || newsletter.createdAt || Date.now())}
+											</div>
+										</div>
+										<span class="ml-2 text-xs px-2 py-1 rounded-full {newsletter.status === 'sent' ? 'bg-hub-green-100 text-hub-green-800' : 'bg-gray-100 text-gray-800'}">
+											{newsletter.status || 'draft'}
+										</span>
+									</div>
+								</a>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
+		{/if}
 
 	<!-- Latest Rotas -->
-	<div class="bg-white shadow rounded-lg p-6 border-t-4 border-hub-yellow-500">
-		<div class="flex justify-between items-center mb-4">
-			<h3 class="text-lg font-semibold text-gray-900">Recently Edited Rotas</h3>
-			<a href="/hub/rotas" class="text-sm text-hub-yellow-600 hover:text-hub-yellow-800 font-medium">View all</a>
-		</div>
-		{#if latestRotas.length === 0}
-			<p class="text-sm text-gray-500">No rotas yet</p>
-		{:else}
-			<ul class="space-y-3">
-				{#each latestRotas as rota}
-					<li class="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
-						<a 
-							href="/hub/rotas/{rota.id}" 
-							class="block hover:text-hub-green-600 transition-colors"
-						>
-							<div class="flex justify-between items-start">
-								<div class="flex-1">
-									<div class="font-medium text-gray-900">{rota.role || 'Untitled'}</div>
-									<div class="text-xs text-gray-500 mt-1">
-										{rota.eventTitle || 'Unknown Event'} • {Array.isArray(rota.assignees) ? rota.assignees.length : 0} assigned
-									</div>
-									<div class="text-xs text-gray-400 mt-1">
-										{formatDateUK(rota.updatedAt || rota.createdAt || Date.now())}
+	{#if canAccessRotas}
+		<div class="bg-white shadow rounded-lg p-6 border-t-4 border-hub-yellow-500">
+			<div class="flex justify-between items-center mb-4">
+				<h3 class="text-lg font-semibold text-gray-900">Recently Edited Rotas</h3>
+				<a href="/hub/rotas" class="text-sm text-hub-yellow-600 hover:text-hub-yellow-800 font-medium">View all</a>
+			</div>
+			{#if latestRotas.length === 0}
+				<p class="text-sm text-gray-500">No rotas yet</p>
+			{:else}
+				<ul class="space-y-3">
+					{#each latestRotas as rota}
+						<li class="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
+							<a 
+								href="/hub/rotas/{rota.id}" 
+								class="block hover:text-hub-green-600 transition-colors"
+							>
+								<div class="flex justify-between items-start">
+									<div class="flex-1">
+										<div class="font-medium text-gray-900">{rota.role || 'Untitled'}</div>
+										<div class="text-xs text-gray-500 mt-1">
+											{rota.eventTitle || 'Unknown Event'} • {Array.isArray(rota.assignees) ? rota.assignees.length : 0} assigned
+										</div>
+										<div class="text-xs text-gray-400 mt-1">
+											{formatDateUK(rota.updatedAt || rota.createdAt || Date.now())}
+										</div>
 									</div>
 								</div>
-							</div>
-						</a>
-					</li>
-				{/each}
-			</ul>
-		{/if}
-	</div>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</div>
+	{/if}
 
 	<!-- Latest Events -->
-	<div class="bg-white shadow rounded-lg p-6 border-t-4 border-hub-blue-500">
-		<div class="flex justify-between items-center mb-4">
-			<h3 class="text-lg font-semibold text-gray-900">Recently Edited Events</h3>
-			<a href="/hub/events" class="text-sm text-hub-blue-600 hover:text-hub-blue-800 font-medium">View all</a>
-		</div>
-		{#if latestEvents.length === 0}
-			<p class="text-sm text-gray-500">No events yet</p>
-		{:else}
-			<ul class="space-y-3">
-				{#each latestEvents as event}
-					<li class="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
-						<a 
-							href="/hub/events/{event.id}" 
-							class="block hover:text-hub-blue-600 transition-colors"
-						>
-							<div class="flex justify-between items-start">
-								<div class="flex-1">
-									<div class="font-medium text-gray-900">{event.title || 'Untitled'}</div>
-									{#if event.location}
-										<div class="text-xs text-gray-500 mt-1">
-											{event.location}
+	{#if canAccessEvents}
+		<div class="bg-white shadow rounded-lg p-6 border-t-4 border-hub-blue-500">
+			<div class="flex justify-between items-center mb-4">
+				<h3 class="text-lg font-semibold text-gray-900">Recently Edited Events</h3>
+				<a href="/hub/events" class="text-sm text-hub-blue-600 hover:text-hub-blue-800 font-medium">View all</a>
+			</div>
+			{#if latestEvents.length === 0}
+				<p class="text-sm text-gray-500">No events yet</p>
+			{:else}
+				<ul class="space-y-3">
+					{#each latestEvents as event}
+						<li class="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
+							<a 
+								href="/hub/events/{event.id}" 
+								class="block hover:text-hub-blue-600 transition-colors"
+							>
+								<div class="flex justify-between items-start">
+									<div class="flex-1">
+										<div class="font-medium text-gray-900">{event.title || 'Untitled'}</div>
+										{#if event.location}
+											<div class="text-xs text-gray-500 mt-1">
+												{event.location}
+											</div>
+										{/if}
+										<div class="text-xs text-gray-400 mt-1">
+											{formatDateUK(event.updatedAt || event.createdAt || Date.now())}
 										</div>
-									{/if}
-									<div class="text-xs text-gray-400 mt-1">
-										{formatDateUK(event.updatedAt || event.createdAt || Date.now())}
 									</div>
 								</div>
-							</div>
-						</a>
-					</li>
-				{/each}
-			</ul>
-		{/if}
-	</div>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</div>
+	{/if}
 </div>
+{/if}

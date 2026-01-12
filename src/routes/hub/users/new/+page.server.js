@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import { createAdmin, getAdminFromCookies } from '$lib/crm/server/auth.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sendAdminWelcomeEmail } from '$lib/crm/server/email.js';
-import { isSuperAdmin, canCreateAdminWithLevel, getAvailableAdminLevels } from '$lib/crm/server/permissions.js';
+import { isSuperAdmin, canCreateAdmin, getAvailableHubAreas } from '$lib/crm/server/permissions.js';
 
 export async function load({ cookies }) {
 	const admin = await getAdminFromCookies(cookies);
@@ -16,8 +16,8 @@ export async function load({ cookies }) {
 	}
 	
 	const csrfToken = getCsrfToken(cookies) || '';
-	const availableLevels = getAvailableAdminLevels(admin);
-	return { csrfToken, availableLevels };
+	const availableAreas = getAvailableHubAreas();
+	return { csrfToken, availableAreas };
 }
 
 export const actions = {
@@ -32,7 +32,7 @@ export const actions = {
 		const email = data.get('email');
 		const password = data.get('password');
 		const name = data.get('name');
-		const adminLevel = data.get('adminLevel');
+		const permissions = data.getAll('permissions'); // Get all permissions checkboxes
 
 		if (!email || !password || !name) {
 			return { error: 'Email, password, and name are required' };
@@ -44,10 +44,23 @@ export const actions = {
 			return { error: 'Not authenticated' };
 		}
 
-		// Validate admin level
-		const targetLevel = adminLevel?.toString() || 'level_2';
-		if (!canCreateAdminWithLevel(currentAdmin, targetLevel)) {
-			return { error: 'You do not have permission to create an admin with this level' };
+		// Check if current admin can create admins
+		if (!canCreateAdmin(currentAdmin)) {
+			return { error: 'You do not have permission to create admins' };
+		}
+
+		// Check if email is john.watson@egcc.co.uk - always super admin (no permissions needed)
+		const normalizedEmail = email.toString().toLowerCase().trim();
+		const isSuperAdminEmail = normalizedEmail === 'john.watson@egcc.co.uk';
+
+		// Validate permissions array (only if not super admin)
+		let validPermissions = [];
+		if (!isSuperAdminEmail) {
+			const validAreas = getAvailableHubAreas().map(a => a.value);
+			validPermissions = permissions.filter(p => validAreas.includes(p.toString()));
+		} else {
+			// Super admin gets all permissions
+			validPermissions = getAvailableHubAreas().map(a => a.value);
 		}
 
 		try {
@@ -55,7 +68,7 @@ export const actions = {
 				email: email.toString(),
 				password: password.toString(),
 				name: name.toString(),
-				adminLevel: targetLevel
+				permissions: validPermissions
 			});
 
 			// Check if admin already exists (createAdmin returns existing admin without error to prevent enumeration)
@@ -89,7 +102,7 @@ export const actions = {
 			if (error.status === 302) {
 				throw error; // Re-throw redirects
 			}
-			return { error: error.message || 'Failed to create admin user' };
+			return { error: error.message || 'Failed to create admin' };
 		}
 	}
 };

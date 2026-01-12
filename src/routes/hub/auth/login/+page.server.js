@@ -56,11 +56,11 @@ export const actions = {
 
 		// Verify CSRF token
 		if (!csrfToken || !verifyCsrfToken(cookies, csrfToken)) {
-			return fail(403, { error: 'CSRF token validation failed' });
+			return fail(200, { error: 'CSRF token validation failed' });
 		}
 
 		if (!email || !password) {
-			return fail(400, { error: 'Email and password are required' });
+			return fail(200, { error: 'Email and password are required' });
 		}
 
 		// Rate limiting check
@@ -78,7 +78,7 @@ export const actions = {
 		// Check if locked out
 		if (attempts.lockedUntil && attempts.lockedUntil > Date.now()) {
 			const remainingMinutes = Math.ceil((attempts.lockedUntil - Date.now()) / (60 * 1000));
-			return fail(429, { error: `Too many login attempts. Please try again in ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}.` });
+			return fail(200, { error: `Too many login attempts. Please try again in ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}.` });
 		}
 
 		// Attempt authentication
@@ -88,7 +88,7 @@ export const actions = {
 		} catch (error) {
 			// Handle account lockout or password expiration errors
 			if (error.message.includes('locked') || error.message.includes('expired')) {
-				return fail(403, { error: error.message });
+				return fail(200, { error: error.message });
 			}
 			// For other errors, treat as failed login
 			admin = null;
@@ -105,7 +105,7 @@ export const actions = {
 			// Log failed login attempt
 			await logAuditEvent(null, 'login_failed', { email: email.toString(), attemptCount: attempts.count, locked: attempts.count >= MAX_ATTEMPTS }, { getClientAddress: () => clientIp, request });
 			
-			return fail(401, { error: 'Invalid email or password' });
+			return fail(200, { error: 'Invalid email or password' });
 		}
 
 		// Successful login - reset attempts
