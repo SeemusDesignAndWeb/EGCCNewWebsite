@@ -30,18 +30,21 @@ export async function load({ cookies, url }) {
 	// Check for verification status in URL
 	const verified = url.searchParams.get('verified');
 	const error = url.searchParams.get('error');
+	const unverified = url.searchParams.get('unverified');
 	
 	let message = null;
 	if (verified === 'true') {
 		message = { type: 'success', text: 'Email verified successfully! You can now log in.' };
 	} else if (url.searchParams.get('reset') === 'success') {
 		message = { type: 'success', text: 'Password reset successfully! You can now log in with your new password.' };
+	} else if (unverified === 'true') {
+		message = { type: 'error', text: 'Please verify your email address before logging in. Check your inbox for the verification link.' };
 	} else if (error === 'invalid_token') {
-		message = { type: 'error', text: 'Invalid or expired verification link. Please contact an administrator.' };
+		message = { type: 'error', text: 'Invalid or expired verification link. You can request a new verification email below.' };
 	} else if (error === 'missing_params') {
-		message = { type: 'error', text: 'Invalid verification link. Please contact an administrator.' };
+		message = { type: 'error', text: 'Invalid verification link. You can request a new verification email below.' };
 	} else if (error === 'verification_failed') {
-		message = { type: 'error', text: 'Email verification failed. Please contact an administrator.' };
+		message = { type: 'error', text: 'Email verification failed. You can request a new verification email below.' };
 	}
 
 	return { csrfToken, message };
@@ -83,18 +86,34 @@ export const actions = {
 
 		// Attempt authentication
 		let admin;
+		let unverifiedEmail = null;
 		try {
 			admin = await authenticateAdmin(email.toString(), password.toString());
 		} catch (error) {
+			// Handle email not verified error
+			if (error.message === 'EMAIL_NOT_VERIFIED') {
+				unverifiedEmail = email.toString();
+				admin = null;
+			}
 			// Handle account lockout or password expiration errors
-			if (error.message.includes('locked') || error.message.includes('expired')) {
+			else if (error.message.includes('locked') || error.message.includes('expired')) {
 				return fail(200, { error: error.message });
 			}
 			// For other errors, treat as failed login
-			admin = null;
+			else {
+				admin = null;
+			}
 		}
 		
 		if (!admin) {
+			// Handle unverified email case
+			if (unverifiedEmail) {
+				return fail(200, { 
+					error: 'EMAIL_NOT_VERIFIED',
+					email: unverifiedEmail
+				});
+			}
+			
 			// Increment failed attempt count (IP-based)
 			attempts.count++;
 			if (attempts.count >= MAX_ATTEMPTS) {

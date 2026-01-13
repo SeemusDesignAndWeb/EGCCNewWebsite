@@ -46,7 +46,21 @@ export async function load({ params, cookies, request }) {
 
 	const csrfToken = getCsrfToken(cookies) || '';
 	const availableAreas = getAvailableHubAreas();
-	return { admin: sanitized, csrfToken, availableAreas };
+	
+	// Check for creation success message
+	const url = new URL(request.url);
+	const created = url.searchParams.get('created') === 'true';
+	const createdEmail = url.searchParams.get('email') || '';
+	const emailFailed = url.searchParams.get('email_failed') === 'true';
+	
+	return { 
+		admin: sanitized, 
+		csrfToken, 
+		availableAreas,
+		created,
+		createdEmail,
+		emailFailed
+	};
 }
 
 export const actions = {

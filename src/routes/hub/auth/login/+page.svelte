@@ -4,12 +4,19 @@
 	import { onMount } from 'svelte';
 	
 	let error = '';
+	let unverifiedEmail = '';
 	let showPrivacyModal = false;
 	let privacyPolicyHtml = '';
 	let isLoadingPrivacy = false;
 	
 	$: if ($page.form?.error) {
-		error = $page.form.error;
+		if ($page.form.error === 'EMAIL_NOT_VERIFIED') {
+			error = 'Please verify your email address before logging in. Check your inbox for the verification link.';
+			unverifiedEmail = $page.form.email || '';
+		} else {
+			error = $page.form.error;
+			unverifiedEmail = '';
+		}
 	}
 	
 	$: message = $page.data?.message;
@@ -102,12 +109,26 @@
 			{#if message}
 				<div class="mt-4 p-3 rounded-md text-sm {message.type === 'success' ? 'bg-hub-green-50 text-hub-green-800 border border-hub-green-200' : 'bg-hub-red-50 text-hub-red-800 border border-hub-red-200'}">
 					{message.text}
+					{#if message.type === 'error' && (message.text.includes('verification') || message.text.includes('verify'))}
+						<div class="mt-2">
+							<a href="/hub/auth/resend-verification" class="text-hub-blue-600 hover:text-hub-blue-600/80 underline text-sm font-medium">
+								Resend verification email
+							</a>
+						</div>
+					{/if}
 				</div>
 			{/if}
 			
 			{#if error}
 				<div class="mt-4 p-3 rounded-md text-sm bg-hub-red-50 text-hub-red-800 border border-hub-red-200">
 					{error}
+					{#if unverifiedEmail}
+						<div class="mt-2">
+							<a href="/hub/auth/resend-verification?email={encodeURIComponent(unverifiedEmail)}" class="text-hub-blue-600 hover:text-hub-blue-600/80 underline text-sm font-medium">
+								Resend verification email
+							</a>
+						</div>
+					{/if}
 				</div>
 			{/if}
 

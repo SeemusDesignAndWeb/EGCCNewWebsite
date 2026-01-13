@@ -960,7 +960,8 @@ export async function sendAdminWelcomeEmail({ to, name, email, verificationToken
 				</div>
 
 				<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #4A97D2;">
-					<h2 style="color: #4A97D2; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Verify Your Email Address</h2>
+					<h2 style="color: #4A97D2; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Step 1: Verify Your Email Address</h2>
+					<p style="color: #333; font-size: 13px; margin: 0 0 10px 0; font-weight: 600;">⚠️ Important: You must verify your email before you can log in.</p>
 					<p style="color: #333; font-size: 13px; margin: 0 0 15px 0;">Please verify your email address to complete your account setup. This link will expire in 7 days.</p>
 					<a href="${verificationLink}" style="display: inline-block; background: #4A97D2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: 600; margin: 8px 0;">Verify Email Address</a>
 					<p style="color: #666; font-size: 12px; margin: 12px 0 0 0;">Or copy and paste this link into your browser:</p>
@@ -968,9 +969,10 @@ export async function sendAdminWelcomeEmail({ to, name, email, verificationToken
 				</div>
 
 				<div style="background: white; padding: 15px; border-radius: 6px; margin: 15px 0; border: 1px solid #e5e7eb;">
-					<h2 style="color: #333; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Getting Started</h2>
-					<p style="color: #333; font-size: 13px; margin: 0 0 12px 0;">Once your email is verified, you can access TheHUB at:</p>
-					<a href="${hubLoginLink}" style="display: inline-block; background: #4BB170; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: 600; margin: 8px 0;">Login to TheHUB</a>
+					<h2 style="color: #333; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">Step 2: Log In to TheHUB</h2>
+					<p style="color: #333; font-size: 13px; margin: 0 0 10px 0;">After verifying your email, you can log in using the credentials above.</p>
+					<p style="color: #666; font-size: 12px; margin: 8px 0 0 0; font-style: italic;">Note: You will not be able to log in until your email is verified.</p>
+					<a href="${hubLoginLink}" style="display: inline-block; background: #4BB170; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: 600; margin: 12px 0 0 0;">Login to TheHUB</a>
 					<p style="color: #666; font-size: 12px; margin: 12px 0 0 0; word-break: break-all;">${hubLoginLink}</p>
 				</div>
 
@@ -1008,13 +1010,17 @@ Email: ${email}
 ${password ? `Password: ${password}` : ''}
 ${password ? '\n⚠️ Please change your password after your first login for security.\n' : ''}
 
-Verify Your Email Address:
+STEP 1: Verify Your Email Address
+⚠️ IMPORTANT: You must verify your email before you can log in.
+
 Please verify your email address to complete your account setup. This link will expire in 7 days.
 
 ${verificationLink}
 
-Getting Started:
-Once your email is verified, you can access TheHUB at:
+STEP 2: Log In to TheHUB
+After verifying your email, you can log in using the credentials above.
+
+Note: You will not be able to log in until your email is verified.
 
 ${hubLoginLink}
 

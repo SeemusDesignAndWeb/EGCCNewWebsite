@@ -213,6 +213,11 @@ export async function authenticateAdmin(email, password) {
 		throw new Error('Password has expired. Please change your password.');
 	}
 
+	// Check email verification
+	if (!admin.emailVerified) {
+		throw new Error('EMAIL_NOT_VERIFIED');
+	}
+
 	// Reset failed attempts on successful login
 	if (admin.failedLoginAttempts > 0 || admin.accountLockedUntil) {
 		await update('admins', admin.id, {
@@ -543,6 +548,32 @@ export async function verifyAdminEmail(adminId, token) {
 	});
 	
 	return true;
+}
+
+/**
+ * Regenerate verification token for an admin
+ * @param {string} adminId - Admin user ID
+ * @returns {Promise<string>} New verification token
+ */
+export async function regenerateVerificationToken(adminId) {
+	const admin = await getAdminById(adminId);
+	if (!admin) {
+		throw new Error('Admin not found');
+	}
+	
+	if (admin.emailVerified) {
+		throw new Error('Email is already verified');
+	}
+	
+	const verificationToken = generateVerificationToken();
+	const now = new Date();
+	
+	await update('admins', adminId, {
+		emailVerificationToken: verificationToken,
+		emailVerificationTokenExpires: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+	});
+	
+	return verificationToken;
 }
 
 /**

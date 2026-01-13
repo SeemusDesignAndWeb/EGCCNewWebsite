@@ -1,33 +1,71 @@
 import { redirect } from '@sveltejs/kit';
 import { verifyAdminEmail, getAdminByEmail } from '$lib/crm/server/auth.js';
-import { notifications } from '$lib/crm/stores/notifications.js';
 
 export async function load({ url, cookies }) {
 	const token = url.searchParams.get('token');
 	const email = url.searchParams.get('email');
 
 	if (!token || !email) {
-		throw redirect(302, '/hub/auth/login?error=missing_params');
+		return {
+			status: 'error',
+			message: 'Invalid verification link. Missing required parameters.',
+			email: email || ''
+		};
 	}
 
 	try {
 		const admin = await getAdminByEmail(email);
 		if (!admin) {
-			throw redirect(302, '/hub/auth/login?error=invalid_token');
+			return {
+				status: 'error',
+				message: 'Invalid or expired verification link. The email address may not be associated with an account.',
+				email: email
+			};
+		}
+
+		// Check if already verified
+		if (admin.emailVerified) {
+			return {
+				status: 'already_verified',
+				message: 'Your email address has already been verified. You can log in now.',
+				email: email
+			};
 		}
 
 		const verified = await verifyAdminEmail(admin.id, token);
 		if (verified) {
-			// Redirect to login with success message
-			throw redirect(302, '/hub/auth/login?verified=true');
+			return {
+				status: 'success',
+				message: 'Email verified successfully! You can now log in to TheHUB.',
+				email: email
+			};
 		} else {
-			throw redirect(302, '/hub/auth/login?error=invalid_token');
+			// Check if token expired
+			if (admin.emailVerificationTokenExpires) {
+				const expiresAt = new Date(admin.emailVerificationTokenExpires);
+				if (expiresAt < new Date()) {
+					return {
+						status: 'error',
+						message: 'This verification link has expired. Please request a new verification email.',
+						email: email,
+						expired: true
+					};
+				}
+			}
+			
+			return {
+				status: 'error',
+				message: 'Invalid verification link. The link may have expired or been used already.',
+				email: email
+			};
 		}
 	} catch (error) {
-		if (error.status === 302) {
-			throw error; // Re-throw redirects
-		}
-		throw redirect(302, '/hub/auth/login?error=verification_failed');
+		console.error('Email verification error:', error);
+		return {
+			status: 'error',
+			message: 'An error occurred while verifying your email. Please try again or contact an administrator.',
+			email: email || ''
+		};
 	}
 }
 

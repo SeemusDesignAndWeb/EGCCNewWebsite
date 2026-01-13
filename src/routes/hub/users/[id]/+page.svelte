@@ -25,6 +25,27 @@
 			notifications.error(formResult.error);
 		}
 	}
+	
+	// Show creation success message
+	$: if ($page.data?.created) {
+		const email = $page.data?.createdEmail || '';
+		const emailFailed = $page.data?.emailFailed || false;
+		
+		if (emailFailed) {
+			notifications.warning(`Admin user created successfully, but the welcome email could not be sent to ${email}. The user will need to request a verification email manually.`);
+		} else {
+			notifications.success(`Admin user created successfully! A welcome email with verification link has been sent to ${email}. The user must verify their email before they can log in.`);
+		}
+		
+		// Clear the query params to avoid showing the message again on refresh
+		setTimeout(() => {
+			const url = new URL(window.location.href);
+			url.searchParams.delete('created');
+			url.searchParams.delete('email');
+			url.searchParams.delete('email_failed');
+			window.history.replaceState({}, '', url);
+		}, 100);
+	}
 
 	let editing = false;
 	let resettingPassword = false;

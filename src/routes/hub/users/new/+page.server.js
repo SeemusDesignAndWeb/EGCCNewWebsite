@@ -89,6 +89,7 @@ export const actions = {
 			}, event);
 
 			// Send welcome email with verification link
+			let emailSent = false;
 			if (fullAdmin && fullAdmin.emailVerificationToken) {
 				try {
 					await sendAdminWelcomeEmail({
@@ -98,6 +99,7 @@ export const actions = {
 						verificationToken: fullAdmin.emailVerificationToken,
 						password: password.toString() // Include password in welcome email
 					}, { url });
+					emailSent = true;
 				} catch (emailError) {
 					// Log error but don't fail user creation if email fails
 					console.error('Failed to send welcome email:', emailError);
@@ -105,7 +107,11 @@ export const actions = {
 				}
 			}
 
-			throw redirect(302, `/hub/users/${admin.id}`);
+			// Redirect with success message
+			const redirectUrl = emailSent 
+				? `/hub/users/${admin.id}?created=true&email=${encodeURIComponent(email.toString())}`
+				: `/hub/users/${admin.id}?created=true&email=${encodeURIComponent(email.toString())}&email_failed=true`;
+			throw redirect(302, redirectUrl);
 		} catch (error) {
 			if (error.status === 302) {
 				throw error; // Re-throw redirects
