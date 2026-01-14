@@ -433,6 +433,53 @@
 	</div>
 {/if}
 
+<style>
+	/* Ensure consistent text color in email preview unless explicitly set in editor */
+	:global(.newsletter-preview) {
+		color: #1f2937; /* gray-800 - consistent default color */
+	}
+	
+	:global(.newsletter-preview p) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview span) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview div) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview li) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview td) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview th) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview h1) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview h2) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview h3) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview h4) {
+		color: #1f2937;
+	}
+</style>
+
 <!-- Save as Template Modal -->
 {#if showSaveTemplateModal}
 	<div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">

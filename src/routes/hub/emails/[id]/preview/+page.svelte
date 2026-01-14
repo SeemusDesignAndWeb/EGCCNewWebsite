@@ -199,6 +199,37 @@
 		text-align: left;
 	}
 	
+	/* Ensure consistent text color unless explicitly set in editor */
+	/* Set default color on container - inline styles will override */
+	:global(.newsletter-preview) {
+		color: #1f2937; /* gray-800 - consistent default color */
+	}
+	
+	/* Apply consistent color to all text elements - inline styles will override */
+	:global(.newsletter-preview p) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview span) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview div) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview li) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview td) {
+		color: #1f2937;
+	}
+	
+	:global(.newsletter-preview th) {
+		color: #1f2937;
+	}
+	
 	/* Ensure consistent heading sizes matching editor and PDF */
 	:global(.newsletter-preview h1) {
 		font-size: 2em;
@@ -206,6 +237,7 @@
 		font-weight: 600;
 		margin-top: 0.67em;
 		margin-bottom: 0.67em;
+		color: #1f2937; /* Consistent heading color - inline styles will override */
 	}
 	
 	:global(.newsletter-preview h2) {
@@ -214,6 +246,7 @@
 		font-weight: 600;
 		margin-top: 0.83em;
 		margin-bottom: 0.83em;
+		color: #1f2937; /* Consistent heading color - inline styles will override */
 	}
 	
 	:global(.newsletter-preview h3) {
@@ -222,6 +255,7 @@
 		font-weight: 600;
 		margin-top: 1em;
 		margin-bottom: 1em;
+		color: #1f2937; /* Consistent heading color - inline styles will override */
 	}
 	
 	:global(.newsletter-preview h4) {
@@ -230,5 +264,6 @@
 		font-weight: 600;
 		margin-top: 1.33em;
 		margin-bottom: 1.33em;
+		color: #1f2937; /* Consistent heading color - inline styles will override */
 	}
 </style>
