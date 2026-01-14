@@ -1,17 +1,17 @@
 import { readCollection } from '$lib/crm/server/fileStore.js';
 
 export async function load({ locals }) {
-	const [contacts, lists, newsletters, events, rotas, forms] = await Promise.all([
+	const [contacts, lists, emails, events, rotas, forms] = await Promise.all([
 		readCollection('contacts'),
 		readCollection('lists'),
-		readCollection('newsletters'),
+		readCollection('emails'),
 		readCollection('events'),
 		readCollection('rotas'),
 		readCollection('forms')
 	]);
 
-	// Get latest 3 newsletters (sorted by updatedAt or createdAt, most recent first)
-	const latestNewsletters = [...newsletters]
+	// Get latest 3 emails (sorted by updatedAt or createdAt, most recent first)
+	const latestNewsletters = [...emails]
 		.sort((a, b) => {
 			const dateA = new Date(a.updatedAt || a.createdAt || 0);
 			const dateB = new Date(b.updatedAt || b.createdAt || 0);
@@ -49,7 +49,7 @@ export async function load({ locals }) {
 		stats: {
 			contacts: contacts.length,
 			lists: lists.length,
-			newsletters: newsletters.length,
+			newsletters: emails.length,
 			events: events.length,
 			rotas: rotas.length,
 			forms: forms.length

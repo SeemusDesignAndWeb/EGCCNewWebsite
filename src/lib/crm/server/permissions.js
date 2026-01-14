@@ -12,7 +12,7 @@ export const HUB_AREAS = {
 	ROTAS: 'rotas',
 	EVENTS: 'events',
 	MEETING_PLANNERS: 'meeting_planners',
-	NEWSLETTERS: 'newsletters',
+	NEWSLETTERS: 'emails',
 	FORMS: 'forms',
 	SAFEGUARDING_FORMS: 'safeguarding_forms',
 	MEMBERS: 'members',
@@ -26,7 +26,7 @@ const ROUTE_TO_AREA = {
 	'/hub/rotas': HUB_AREAS.ROTAS,
 	'/hub/events': HUB_AREAS.EVENTS,
 	'/hub/meeting-planners': HUB_AREAS.MEETING_PLANNERS,
-	'/hub/newsletters': HUB_AREAS.NEWSLETTERS,
+	'/hub/emails': HUB_AREAS.NEWSLETTERS,
 	'/hub/forms': HUB_AREAS.FORMS,
 	'/hub/members': HUB_AREAS.MEMBERS,
 	'/hub/users': HUB_AREAS.USERS
@@ -274,9 +274,9 @@ export function getAvailableHubAreas() {
 			description: 'Plan and manage meetings'
 		},
 		{ 
-			value: HUB_AREAS.NEWSLETTERS, 
-			label: 'Newsletters',
-			description: 'Create and send newsletters'
+			value: HUB_AREAS.NEWSLETTERS,
+			label: 'Emails',
+			description: 'Create and send emails'
 		},
 		{ 
 			value: HUB_AREAS.FORMS, 

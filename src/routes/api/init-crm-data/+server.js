@@ -38,7 +38,7 @@ export async function POST({ request }) {
 		// Expected CRM data files
 		const crmFiles = [
 			'admins', 'contacts', 'events', 'occurrences', 'rotas', 'lists',
-			'forms', 'newsletters', 'newsletter_templates', 'event_signups',
+			'forms', 'emails', 'email_templates', 'event_signups',
 			'event_tokens', 'occurrence_tokens', 'rota_tokens', 'sessions', 'audit_logs'
 		];
 

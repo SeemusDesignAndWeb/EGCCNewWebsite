@@ -4,7 +4,7 @@ export async function load() {
 	const [contacts, lists, newsletters, events, rotas, forms] = await Promise.all([
 		readCollection('contacts'),
 		readCollection('lists'),
-		readCollection('newsletters'),
+		readCollection('emails'),
 		readCollection('events'),
 		readCollection('rotas'),
 		readCollection('forms')

@@ -55,14 +55,14 @@
 			{ id: 'removing-contacts-from-lists', title: 'Removing Contacts from Lists' },
 			{ id: 'managing-lists', title: 'Managing Lists' }
 		]},
-		{ id: 'newsletters', title: 'Newsletters', subsections: [
-			{ id: 'creating-a-newsletter', title: 'Creating a Newsletter' },
-			{ id: 'editing-a-newsletter', title: 'Editing a Newsletter' },
-			{ id: 'previewing-a-newsletter', title: 'Previewing a Newsletter' },
+		{ id: 'newsletters', title: 'Emails', subsections: [
+			{ id: 'creating-a-newsletter', title: 'Creating an Email' },
+			{ id: 'editing-a-newsletter', title: 'Editing an Email' },
+			{ id: 'previewing-a-newsletter', title: 'Previewing an Email' },
 			{ id: 'exporting-a-newsletter-to-pdf', title: 'Exporting to PDF' },
-			{ id: 'sending-a-newsletter', title: 'Sending a Newsletter' },
-			{ id: 'deleting-a-newsletter', title: 'Deleting a Newsletter' },
-			{ id: 'newsletter-templates', title: 'Newsletter Templates' },
+			{ id: 'sending-a-newsletter', title: 'Sending an Email' },
+			{ id: 'deleting-a-newsletter', title: 'Deleting an Email' },
+			{ id: 'newsletter-templates', title: 'Email Templates' },
 			{ id: 'html-editor-features', title: 'HTML Editor Features' }
 		]},
 		{ id: 'events', title: 'Events', subsections: [

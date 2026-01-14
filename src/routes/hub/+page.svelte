@@ -18,7 +18,7 @@
 	// Check permissions for various routes
 	$: canAccessContacts = admin && hasRouteAccess(admin, '/hub/contacts');
 	$: canAccessLists = admin && hasRouteAccess(admin, '/hub/lists');
-	$: canAccessNewsletters = admin && hasRouteAccess(admin, '/hub/newsletters');
+	$: canAccessNewsletters = admin && hasRouteAccess(admin, '/hub/emails');
 	$: canAccessEvents = admin && hasRouteAccess(admin, '/hub/events');
 	$: canAccessRotas = admin && hasRouteAccess(admin, '/hub/rotas');
 	$: canAccessForms = admin && hasRouteAccess(admin, '/hub/forms');
@@ -121,12 +121,12 @@
 		</div>
 		{/if}
 
-		<!-- Newsletters -->
+		<!-- Emails -->
 		{#if canAccessNewsletters}
 			<div class="flex flex-col gap-2">
-		<a href="/hub/newsletters/new" class="bg-hub-green-50 border-2 border-hub-green-200 rounded-md p-2 hover:border-hub-green-400 hover:bg-hub-green-100 transition-all text-center group flex items-center justify-center gap-1">
+		<a href="/hub/emails/new" class="bg-hub-green-50 border-2 border-hub-green-200 rounded-md p-2 hover:border-hub-green-400 hover:bg-hub-green-100 transition-all text-center group flex items-center justify-center gap-1">
 			<span class="text-lg font-bold text-hub-green-600 group-hover:scale-110 transition-transform">+</span>
-			<span class="text-xs font-medium text-hub-green-700">Newsletter</span>
+			<span class="text-xs font-medium text-hub-green-700">Email</span>
 		</a>
 		<div class="bg-white overflow-hidden shadow rounded-lg border-l-4 border-hub-green-500">
 			<div class="p-5">
@@ -138,7 +138,7 @@
 					</div>
 					<div class="ml-5 w-0 flex-1">
 						<dl>
-							<dt class="text-sm font-medium text-gray-500 truncate">Newsletters</dt>
+							<dt class="text-sm font-medium text-gray-500 truncate">Emails</dt>
 							<dd class="text-lg font-medium text-gray-900">{stats.newsletters || 0}</dd>
 						</dl>
 					</div>
@@ -146,7 +146,7 @@
 			</div>
 			<div class="bg-gray-50 px-5 py-3">
 				<div class="text-sm">
-					<a href="/hub/newsletters" class="font-medium text-hub-green-600 hover:text-hub-green-800">View all</a>
+					<a href="/hub/emails" class="font-medium text-hub-green-600 hover:text-hub-green-800">View all</a>
 				</div>
 			</div>
 			</div>
@@ -252,21 +252,21 @@
 
 	<!-- Recent Items -->
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-		<!-- Latest Newsletters -->
+		<!-- Latest Emails -->
 		{#if canAccessNewsletters}
 			<div class="bg-white shadow rounded-lg p-6 border-t-4 border-hub-green-500">
 				<div class="flex justify-between items-center mb-4">
-					<h3 class="text-lg font-semibold text-gray-900">Latest Newsletters</h3>
-					<a href="/hub/newsletters" class="text-sm text-hub-green-600 hover:text-hub-green-800 font-medium">View all</a>
+					<h3 class="text-lg font-semibold text-gray-900">Latest Emails</h3>
+					<a href="/hub/emails" class="text-sm text-hub-green-600 hover:text-hub-green-800 font-medium">View all</a>
 				</div>
 				{#if latestNewsletters.length === 0}
-					<p class="text-sm text-gray-500">No newsletters yet</p>
+					<p class="text-sm text-gray-500">No emails yet</p>
 				{:else}
 					<ul class="space-y-3">
 						{#each latestNewsletters as newsletter}
 							<li class="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
 								<a 
-									href="/hub/newsletters/{newsletter.id}" 
+									href="/hub/emails/{newsletter.id}" 
 									class="block hover:text-hub-green-600 transition-colors"
 								>
 									<div class="flex justify-between items-start">

@@ -85,7 +85,7 @@
 									</div>
 								{/if}
 							</div>
-							<a href="/hub/newsletters" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/newsletters') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Newsletters</a>
+							<a href="/hub/emails" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/emails') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Emails</a>
 							<!-- Events Dropdown -->
 							<div class="relative" bind:this={eventsDropdownElement}>
 								<button
@@ -184,7 +184,7 @@
 									</div>
 								{/if}
 							</div>
-							<a href="/hub/newsletters" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/newsletters') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Newsletters</a>
+							<a href="/hub/emails" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/emails') ? 'bg-hub-blue-700 text-white' : 'text-white hover:bg-white hover:text-hub-blue-600'}">Emails</a>
 							<div class="px-4 py-2">
 								<button
 									on:click={() => eventsDropdownOpen = !eventsDropdownOpen}

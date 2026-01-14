@@ -116,7 +116,7 @@ export async function createAdmin({ email, password, name, permissions = [] }) {
 	
 	// Super admin gets all permissions, otherwise use provided permissions
 	const finalPermissions = isSuperAdminEmail 
-		? ['contacts', 'lists', 'rotas', 'events', 'meeting_planners', 'newsletters', 'forms', 'safeguarding_forms', 'users']
+		? ['contacts', 'lists', 'rotas', 'events', 'meeting_planners', 'emails', 'forms', 'safeguarding_forms', 'users']
 		: (permissions || []);
 	
 	return create('admins', {

@@ -380,9 +380,9 @@ export function personalizeContent(content, contact, upcomingRotas = [], upcomin
  * @returns {Promise<object>} Resend response
  */
 export async function sendNewsletterEmail({ newsletterId, to, name, contact }, event) {
-	const newsletter = await findById('newsletters', newsletterId);
-	if (!newsletter) {
-		throw new Error('Newsletter not found');
+	const email = await findById('emails', newsletterId);
+	if (!email) {
+		throw new Error('Email not found');
 	}
 
 	const baseUrl = getBaseUrl(event);
@@ -396,14 +396,14 @@ export async function sendNewsletterEmail({ newsletterId, to, name, contact }, e
 
 	// Personalize content
 	const contactData = contact || { email: to, firstName: name, lastName: '', phone: '' };
-	const personalizedSubject = personalizeContent(newsletter.subject, contactData, upcomingRotas, upcomingEvents, event, false);
-	let personalizedHtml = personalizeContent(newsletter.htmlContent, contactData, upcomingRotas, upcomingEvents, event, false);
+	const personalizedSubject = personalizeContent(email.subject, contactData, upcomingRotas, upcomingEvents, event, false);
+	let personalizedHtml = personalizeContent(email.htmlContent, contactData, upcomingRotas, upcomingEvents, event, false);
 	
 	// Clean up empty paragraphs and Quill artifacts before sending
 	personalizedHtml = cleanNewsletterHtml(personalizedHtml);
 	
 	let personalizedText = personalizeContent(
-		newsletter.textContent || newsletter.htmlContent.replace(/<[^>]*>/g, ''), 
+		email.textContent || email.htmlContent.replace(/<[^>]*>/g, ''), 
 		contactData, 
 		upcomingRotas,
 		upcomingEvents,
@@ -457,7 +457,7 @@ export async function sendNewsletterEmail({ newsletterId, to, name, contact }, e
 		});
 
 		// Log the send
-		const logs = newsletter.logs || [];
+		const logs = email.logs || [];
 		logs.push({
 			timestamp: new Date().toISOString(),
 			email: to,
@@ -465,12 +465,12 @@ export async function sendNewsletterEmail({ newsletterId, to, name, contact }, e
 			messageId: result.data?.id || null
 		});
 
-		await update('newsletters', newsletterId, { logs });
+		await update('emails', newsletterId, { logs });
 
 		return result;
 	} catch (error) {
 		// Log the error
-		const logs = newsletter.logs || [];
+		const logs = email.logs || [];
 		logs.push({
 			timestamp: new Date().toISOString(),
 			email: to,
@@ -478,7 +478,7 @@ export async function sendNewsletterEmail({ newsletterId, to, name, contact }, e
 			error: error.message
 		});
 
-		await update('newsletters', newsletterId, { logs });
+		await update('emails', newsletterId, { logs });
 
 		throw error;
 	}

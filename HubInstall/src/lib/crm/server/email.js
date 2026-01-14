@@ -380,7 +380,7 @@ export function personalizeContent(content, contact, upcomingRotas = [], upcomin
  * @returns {Promise<object>} Resend response
  */
 export async function sendNewsletterEmail({ newsletterId, to, name, contact }, event) {
-	const newsletter = await findById('newsletters', newsletterId);
+	const newsletter = await findById('emails', newsletterId);
 	if (!newsletter) {
 		throw new Error('Newsletter not found');
 	}
@@ -465,7 +465,7 @@ export async function sendNewsletterEmail({ newsletterId, to, name, contact }, e
 			messageId: result.data?.id || null
 		});
 
-		await update('newsletters', newsletterId, { logs });
+		await update('emails', newsletterId, { logs });
 
 		return result;
 	} catch (error) {
@@ -478,7 +478,7 @@ export async function sendNewsletterEmail({ newsletterId, to, name, contact }, e
 			error: error.message
 		});
 
-		await update('newsletters', newsletterId, { logs });
+		await update('emails', newsletterId, { logs });
 
 		throw error;
 	}
