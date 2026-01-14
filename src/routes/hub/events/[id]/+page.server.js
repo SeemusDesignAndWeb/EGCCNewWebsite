@@ -6,6 +6,7 @@ import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
 import { ensureEventToken, ensureOccurrenceToken } from '$lib/crm/server/tokens.js';
 import { env } from '$env/dynamic/private';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { filterUpcomingOccurrences } from '$lib/crm/utils/occurrenceFilters.js';
 
 export async function load({ params, cookies, url }) {
 	const event = await findById('events', params.id);
@@ -13,7 +14,8 @@ export async function load({ params, cookies, url }) {
 		throw redirect(302, '/hub/events');
 	}
 
-	const occurrences = await findMany('occurrences', o => o.eventId === params.id);
+	const eventOccurrences = await findMany('occurrences', o => o.eventId === params.id);
+	const occurrences = filterUpcomingOccurrences(eventOccurrences);
 	const rotas = await findMany('rotas', r => r.eventId === params.id);
 	const eventSignups = await findMany('event_signups', s => s.eventId === params.id);
 	const meetingPlanners = await findMany('meeting_planners', mp => mp.eventId === params.id);

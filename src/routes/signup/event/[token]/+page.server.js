@@ -3,6 +3,7 @@ import { getEventTokenByToken } from '$lib/crm/server/tokens.js';
 import { findById, update, findMany, readCollection } from '$lib/crm/server/fileStore.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { validateRota } from '$lib/crm/server/validators.js';
+import { filterUpcomingOccurrences } from '$lib/crm/utils/occurrenceFilters.js';
 
 export async function load({ params, cookies }) {
 	const token = await getEventTokenByToken(params.token);
@@ -15,8 +16,9 @@ export async function load({ params, cookies }) {
 		throw error(404, 'Event not found');
 	}
 
-	// Get all occurrences for this event
-	const occurrences = await findMany('occurrences', o => o.eventId === event.id);
+	// Get upcoming occurrences for this event
+	const eventOccurrences = await findMany('occurrences', o => o.eventId === event.id);
+	const occurrences = filterUpcomingOccurrences(eventOccurrences);
 	
 	// Get all rotas for this event - only show public rotas on public signup pages
 	const allRotas = await findMany('rotas', r => r.eventId === event.id);
@@ -117,8 +119,9 @@ export const actions = {
 				return fail(400, { error: 'Please select at least one rota to sign up for' });
 			}
 
-			// Get occurrences to check for clashes
-			const occurrences = await findMany('occurrences', o => o.eventId === event.id);
+			// Get upcoming occurrences to check for clashes
+			const eventOccurrences = await findMany('occurrences', o => o.eventId === event.id);
+			const occurrences = filterUpcomingOccurrences(eventOccurrences);
 			const rotas = await findMany('rotas', r => r.eventId === event.id);
 
 			const errors = [];
@@ -140,6 +143,15 @@ export const actions = {
 			// Check if already signed up to any rota for the selected occurrences
 			for (const { rotaId, occurrenceId } of selectedRotas) {
 				const targetOccurrenceId = occurrenceId || null;
+
+				// Block signup to past occurrences
+				if (targetOccurrenceId) {
+					const occ = occurrences.find(o => o.id === targetOccurrenceId);
+					if (!occ) {
+						errors.push('The selected occurrence is no longer available for signup');
+						continue;
+					}
+				}
 				
 				// Check ALL rotas for this occurrence to see if email is already signed up
 				if (targetOccurrenceId) {

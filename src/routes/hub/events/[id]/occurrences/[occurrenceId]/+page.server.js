@@ -2,6 +2,7 @@ import { redirect, fail } from '@sveltejs/kit';
 import { findById, update, remove, findMany, readCollection } from '$lib/crm/server/fileStore.js';
 import { validateOccurrence } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
+import { isUpcomingOccurrence } from '$lib/crm/utils/occurrenceFilters.js';
 
 export async function load({ params, cookies }) {
 	const event = await findById('events', params.id);
@@ -11,6 +12,11 @@ export async function load({ params, cookies }) {
 
 	const occurrence = await findById('occurrences', params.occurrenceId);
 	if (!occurrence || occurrence.eventId !== params.id) {
+		throw redirect(302, `/hub/events/${params.id}`);
+	}
+
+	// Hide past occurrences by redirecting to the event page
+	if (!isUpcomingOccurrence(occurrence)) {
 		throw redirect(302, `/hub/events/${params.id}`);
 	}
 

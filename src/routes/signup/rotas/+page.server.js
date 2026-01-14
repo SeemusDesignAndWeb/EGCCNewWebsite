@@ -3,6 +3,7 @@ import { readCollection, findMany, findById, update } from '$lib/crm/server/file
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
 import { validateRota } from '$lib/crm/server/validators.js';
+import { filterUpcomingOccurrences } from '$lib/crm/utils/occurrenceFilters.js';
 
 export async function load({ cookies }) {
 	// Load all public rotas
@@ -12,8 +13,9 @@ export async function load({ cookies }) {
 	// Load all events
 	const events = await readCollection('events');
 	
-	// Load all occurrences
-	const occurrences = await readCollection('occurrences');
+	// Load upcoming occurrences only (date-based cutoff)
+	const allOccurrences = await readCollection('occurrences');
+	const occurrences = filterUpcomingOccurrences(allOccurrences);
 	
 	// Load contacts to enrich assignees
 	const contacts = await readCollection('contacts');
@@ -152,8 +154,9 @@ export const actions = {
 				return fail(400, { error: 'Please select at least one rota and occurrence to sign up for' });
 			}
 
-			// Get all occurrences and rotas for validation
+			// Get upcoming occurrences and rotas for validation
 			const allOccurrences = await readCollection('occurrences');
+			const upcomingOccurrences = filterUpcomingOccurrences(allOccurrences);
 			const allRotas = await readCollection('rotas');
 
 			const errors = [];
@@ -181,6 +184,15 @@ export const actions = {
 				}
 
 				const targetOccurrenceId = occurrenceId || rota.occurrenceId || null;
+
+				// Block signup to past occurrences
+				if (targetOccurrenceId) {
+					const occ = upcomingOccurrences.find(o => o.id === targetOccurrenceId);
+					if (!occ) {
+						errors.push('The selected occurrence is no longer available for signup');
+						continue;
+					}
+				}
 				
 				// Check ALL rotas for this occurrence to see if email is already signed up
 				if (targetOccurrenceId) {
@@ -190,36 +202,36 @@ export const actions = {
 						return !r.occurrenceId || r.occurrenceId === targetOccurrenceId;
 					});
 
-					for (const r of allRotasForOcc) {
-						const assignees = Array.isArray(r.assignees) ? r.assignees : [];
-						const assigneesForOcc = assignees.filter(a => {
-							if (typeof a === 'string') {
-								return r.occurrenceId === targetOccurrenceId;
-							}
-							if (a && typeof a === 'object') {
-								const aOccId = a.occurrenceId || r.occurrenceId;
-								return aOccId === targetOccurrenceId;
-							}
-							return false;
-						});
-
-						const emailExists = assigneesForOcc.some(a => {
-							if (typeof a === 'string') {
+						for (const r of allRotasForOcc) {
+							const assignees = Array.isArray(r.assignees) ? r.assignees : [];
+							const assigneesForOcc = assignees.filter(a => {
+								if (typeof a === 'string') {
+									return r.occurrenceId === targetOccurrenceId;
+								}
+								if (a && typeof a === 'object') {
+									const aOccId = a.occurrenceId || r.occurrenceId;
+									return aOccId === targetOccurrenceId;
+								}
 								return false;
-							}
-							if (a && typeof a === 'object') {
-								return a.email && a.email.toLowerCase() === email.toLowerCase();
-							}
-							return false;
-						});
+							});
 
-						if (emailExists) {
-							const occ = allOccurrences.find(o => o.id === targetOccurrenceId);
-							const occTime = occ ? formatDateTimeUK(occ.startsAt) : 'this occurrence';
-							errors.push(`You are already signed up for a rota on ${occTime}`);
-							break;
+							const emailExists = assigneesForOcc.some(a => {
+								if (typeof a === 'string') {
+									return false;
+								}
+								if (a && typeof a === 'object') {
+									return a.email && a.email.toLowerCase() === email.toLowerCase();
+								}
+								return false;
+							});
+
+							if (emailExists) {
+								const occ = upcomingOccurrences.find(o => o.id === targetOccurrenceId);
+								const occTime = occ ? formatDateTimeUK(occ.startsAt) : 'this occurrence';
+								errors.push(`You are already signed up for a rota on ${occTime}`);
+								break;
+							}
 						}
-					}
 				}
 			}
 

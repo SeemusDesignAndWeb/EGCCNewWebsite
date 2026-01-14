@@ -4,7 +4,6 @@
 	import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
 	import { notifications } from '$lib/crm/stores/notifications.js';
 	import NotificationPopup from '$lib/crm/components/NotificationPopup.svelte';
-	import Navbar from '$lib/components/Navbar.svelte';
 
 	$: data = $page.data || {};
 	$: eventsWithRotas = data.eventsWithRotas || [];
@@ -128,9 +127,6 @@
 </script>
 
 <div class="min-h-screen bg-gray-50">
-	<!-- Header with EGCC branding - matching main website -->
-	<Navbar bannerVisible={false} />
-
 	<div class="max-w-7xl mx-auto py-8 px-4 sm:py-12 sm:px-6 lg:px-8 mt-16">
 		{#if totalRotas === 0}
 			<div class="bg-white shadow rounded-lg p-6">
