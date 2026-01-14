@@ -40,7 +40,7 @@
 		</p>
 		<ul class="text-sm text-hub-blue-800 list-disc list-inside space-y-1 mb-3">
 			<li>Upcoming events (public events in the next 7 days)</li>
-			<li>Personal rotas (rotas assigned to the contact in the next 7 days)</li>
+			<li>Personal rotas (rotas assigned to the contact in the next 14 days)</li>
 			<li>Professional styling and layout</li>
 			<li>All personalization placeholders ({{firstName}}, {{name}}, etc.)</li>
 		</ul>

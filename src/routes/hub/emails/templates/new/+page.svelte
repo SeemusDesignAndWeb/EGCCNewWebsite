@@ -57,7 +57,7 @@
 					<li><code>{'{{name}}'}</code> - Full name (first + last)</li>
 					<li><code>{'{{email}}'}</code> - Contact's email address</li>
 					<li><code>{'{{phone}}'}</code> - Contact's phone number</li>
-					<li><code>{'{{rotaLinks}}'}</code> - Upcoming rotas section (next 7 days) with links</li>
+					<li><code>{'{{rotaLinks}}'}</code> - Upcoming rotas section (next 14 days) with links</li>
 					<li><code>{'{{upcomingEvents}}'}</code> - Upcoming public events section (next 7 days)</li>
 				</ul>
 			</div>

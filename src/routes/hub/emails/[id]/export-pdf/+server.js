@@ -40,8 +40,8 @@ export async function GET({ params, locals, url }) {
 		let personalizedSubject = newsletter.subject || '';
 		let personalizedHtmlContent = newsletter.htmlContent || newsletter.textContent || '<p>No content available</p>';
 		try {
-			personalizedSubject = personalizeContent(newsletter.subject || '', null, [], upcomingEvents, eventObj, false);
-			personalizedHtmlContent = personalizeContent(newsletter.htmlContent || newsletter.textContent || '<p>No content available</p>', null, [], upcomingEvents, eventObj, false);
+			personalizedSubject = await personalizeContent(newsletter.subject || '', null, [], upcomingEvents, eventObj, false, false);
+			personalizedHtmlContent = await personalizeContent(newsletter.htmlContent || newsletter.textContent || '<p>No content available</p>', null, [], upcomingEvents, eventObj, false, false);
 		} catch (personalizeError) {
 			console.error('Error personalizing content for PDF export:', personalizeError);
 			// Use original content if personalization fails

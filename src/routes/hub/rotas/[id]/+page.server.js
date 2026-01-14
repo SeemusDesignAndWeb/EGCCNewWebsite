@@ -6,6 +6,7 @@ import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
 import { ensureRotaToken } from '$lib/crm/server/tokens.js';
 import { env } from '$env/dynamic/private';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { filterUpcomingOccurrences } from '$lib/crm/utils/occurrenceFilters.js';
 
 export async function load({ params, cookies, url }) {
 	const rota = await findById('rotas', params.id);
@@ -17,8 +18,20 @@ export async function load({ params, cookies, url }) {
 	const occurrence = rota.occurrenceId ? await findById('occurrences', rota.occurrenceId) : null;
 	
 	// Load all occurrences for this event to show capacity per occurrence
+	// Filter to only show upcoming occurrences (today or future)
+	// But always include the rota's specific occurrence if it has one (even if in the past)
 	const allOccurrences = await readCollection('occurrences');
-	const eventOccurrences = allOccurrences.filter(o => o.eventId === rota.eventId);
+	const allEventOccurrences = allOccurrences.filter(o => o.eventId === rota.eventId);
+	let eventOccurrences = filterUpcomingOccurrences(allEventOccurrences);
+	
+	// If rota is for a specific occurrence, make sure it's included even if it's in the past
+	if (rota.occurrenceId) {
+		const specificOccurrence = allEventOccurrences.find(o => o.id === rota.occurrenceId);
+		if (specificOccurrence && !eventOccurrences.find(o => o.id === rota.occurrenceId)) {
+			// Add it to the beginning of the list
+			eventOccurrences = [specificOccurrence, ...eventOccurrences];
+		}
+	}
 
 	// Load contact details for assignees
 	// New structure: assignees are objects with { contactId, occurrenceId }

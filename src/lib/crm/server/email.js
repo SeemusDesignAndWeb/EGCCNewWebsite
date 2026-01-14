@@ -123,14 +123,55 @@ export async function getUpcomingEvents(event) {
 }
 
 /**
- * Get upcoming rotas for a contact (within 7 days)
+ * Check if a contact has any rotas assigned (regardless of date)
+ * @param {string} contactId - Contact ID
+ * @returns {Promise<boolean>} True if contact has any rotas assigned
+ */
+async function hasAnyRotas(contactId) {
+	if (!contactId) return false;
+	
+	try {
+		const rotas = await readCollection('rotas');
+		// Filter rotas where this contact is assigned (handle both old string format and new object format)
+		const contactRotas = rotas.filter(r => {
+			if (!r.assignees || !Array.isArray(r.assignees)) return false;
+			return r.assignees.some(assignee => {
+				// Old format: assignee is just a string (contactId)
+				if (typeof assignee === 'string') {
+					return assignee === contactId;
+				}
+				// New format: assignee is an object with contactId
+				if (assignee && typeof assignee === 'object') {
+					// contactId can be a string or an object (for public signups)
+					if (typeof assignee.contactId === 'string') {
+						return assignee.contactId === contactId;
+					}
+					// Also check assignee.id for backward compatibility
+					if (assignee.id === contactId) {
+						return true;
+					}
+				}
+				return false;
+			});
+		});
+		
+		return contactRotas.length > 0;
+	} catch (error) {
+		console.error('Error checking if contact has rotas:', error);
+		// Return false on error to avoid breaking email sending
+		return false;
+	}
+}
+
+/**
+ * Get upcoming rotas for a contact (within 14 days)
  * @param {string} contactId - Contact ID
  * @param {object} event - SvelteKit event object (for base URL)
  * @returns {Promise<Array>} Array of rota objects with event and occurrence data
  */
 async function getUpcomingRotas(contactId, event) {
 	const now = new Date();
-	const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+	const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
 	const rotas = await readCollection('rotas');
 	// Filter rotas where this contact is assigned (handle both old string format and new object format)
@@ -184,10 +225,10 @@ async function getUpcomingRotas(contactId, event) {
 			rotaOccurrences = occurrences.filter(o => o.eventId === rota.eventId);
 		}
 
-		// Filter to upcoming occurrences (within 7 days)
+		// Filter to upcoming occurrences (within 14 days)
 		for (const occurrence of rotaOccurrences) {
 			const startDate = new Date(occurrence.startsAt);
-			if (startDate >= now && startDate <= sevenDaysFromNow) {
+			if (startDate >= now && startDate <= fourteenDaysFromNow) {
 				// Find token for this rota/occurrence
 				const tokenData = tokens.find(t => 
 					t.rotaId === rota.id && 
@@ -219,13 +260,24 @@ async function getUpcomingRotas(contactId, event) {
  * @param {Array} upcomingEvents - Upcoming events array
  * @param {object} event - SvelteKit event object (for base URL)
  * @param {boolean} isText - Whether this is plain text (not HTML)
- * @returns {string} Personalised content
+ * @param {boolean} contactHasRotas - Whether the contact has any rotas assigned (optional, will be checked if not provided)
+ * @returns {Promise<string>} Personalised content
  */
-export function personalizeContent(content, contact, upcomingRotas = [], upcomingEvents = [], event, isText = false) {
+export async function personalizeContent(content, contact, upcomingRotas = [], upcomingEvents = [], event, isText = false, contactHasRotas = null) {
 	if (!content) return '';
 
 	const baseUrl = getBaseUrl(event);
 	const contactData = contact || { email: '', firstName: '', lastName: '', phone: '' };
+	
+	// Check if contact has any rotas if not provided
+	let hasRotas = contactHasRotas;
+	if (hasRotas === null && contact?.id) {
+		hasRotas = await hasAnyRotas(contact.id);
+	}
+	// Default to false if still null (no contact or no contact ID)
+	if (hasRotas === null) {
+		hasRotas = false;
+	}
 	
 	// Replace contact placeholders with default values
 	let personalized = content
@@ -235,43 +287,16 @@ export function personalizeContent(content, contact, upcomingRotas = [], upcomin
 		.replace(/\{\{email\}\}/g, contactData.email || 'subscriber@egcc.co.uk')
 		.replace(/\{\{phone\}\}/g, contactData.phone || '');
 
+	const signupPageUrl = `${baseUrl}/signup/rotas`;
+
 	// Replace rota links placeholder with actual rota links
 	if (isText) {
 		// Plain text version
 		personalized = personalized.replace(/\{\{rotaLinks\}\}/g, () => {
-			if (upcomingRotas.length === 0) {
-				return 'You have no upcoming rotas in the next 7 days.';
-			}
-
 			let text = '';
-			for (const item of upcomingRotas) {
-				const { rota, event: eventData, occurrence, signupUrl } = item;
-				const dateStr = new Date(occurrence.startsAt).toLocaleDateString('en-GB', {
-					weekday: 'long',
-					year: 'numeric',
-					month: 'long',
-					day: 'numeric',
-					hour: '2-digit',
-					minute: '2-digit'
-				});
-
-				text += `\n- ${eventData.title} - ${rota.role}\n  ${dateStr}`;
-				if (signupUrl) {
-					text += `\n  Sign up: ${signupUrl}`;
-				}
-				text += '\n';
-			}
-			return text;
-		});
-		} else {
-			// HTML version
-			personalized = personalized.replace(/\{\{rotaLinks\}\}/g, () => {
-				if (upcomingRotas.length === 0) {
-					return '<p style="color: #333; font-size: 14px;">You have no upcoming rotas in the next 7 days.</p>';
-				}
-
-				let html = '';
-				
+			if (upcomingRotas.length === 0) {
+				text = 'You have no upcoming rotas in the next 14 days.';
+			} else {
 				for (const item of upcomingRotas) {
 					const { rota, event: eventData, occurrence, signupUrl } = item;
 					const dateStr = new Date(occurrence.startsAt).toLocaleDateString('en-GB', {
@@ -283,19 +308,66 @@ export function personalizeContent(content, contact, upcomingRotas = [], upcomin
 						minute: '2-digit'
 					});
 
-					// Format: Event Title (bold) - Role (bold) - Date/Time - Location (all on same line, same size)
-					let line = `<strong>${eventData.title}</strong> - <strong>${rota.role}</strong> - ${dateStr}`;
-					if (occurrence.location) {
-						line += ` - ${occurrence.location}`;
-					}
-					
-					html += '<div style="margin-bottom: 15px;">';
-					html += `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px;">${line}</p>`;
+					text += `\n- ${eventData.title} - ${rota.role}\n  ${dateStr}`;
 					if (signupUrl) {
-						html += `<a href="${signupUrl}" style="display: inline-block; background: #4A97D2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 14px; margin-top: 5px;">View Rota Details</a>`;
+						text += `\n  Sign up: ${signupUrl}`;
 					}
-					html += '</div>';
+					text += '\n';
 				}
+			}
+			
+			// Add signup link based on whether contact has rotas
+			text += '\n';
+			if (hasRotas) {
+				text += `Sign up for other serving opportunities: ${signupPageUrl}`;
+			} else {
+				text += `See how you can be involved, sign up for a rota today! ${signupPageUrl}`;
+			}
+			
+			return text;
+		});
+		} else {
+			// HTML version
+			personalized = personalized.replace(/\{\{rotaLinks\}\}/g, () => {
+				let html = '';
+				if (upcomingRotas.length === 0) {
+					html = '<p style="color: #333; font-size: 14px;">You have no upcoming rotas in the next 14 days.</p>';
+				} else {
+					for (const item of upcomingRotas) {
+						const { rota, event: eventData, occurrence, signupUrl } = item;
+						const dateStr = new Date(occurrence.startsAt).toLocaleDateString('en-GB', {
+							weekday: 'long',
+							year: 'numeric',
+							month: 'long',
+							day: 'numeric',
+							hour: '2-digit',
+							minute: '2-digit'
+						});
+
+						// Format: Event Title (bold) - Role (bold) - Date/Time - Location (all on same line, same size)
+						let line = `<strong>${eventData.title}</strong> - <strong>${rota.role}</strong> - ${dateStr}`;
+						if (occurrence.location) {
+							line += ` - ${occurrence.location}`;
+						}
+						
+						html += '<div style="margin-bottom: 15px;">';
+						html += `<p style="margin: 0 0 10px 0; color: #333; font-size: 14px;">${line}</p>`;
+						if (signupUrl) {
+							html += `<a href="${signupUrl}" style="display: inline-block; background: #4A97D2; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 14px; margin-top: 5px;">View Rota Details</a>`;
+						}
+						html += '</div>';
+					}
+				}
+			
+				// Add signup link based on whether contact has rotas
+				html += '<div style="margin-top: 20px;">';
+				if (hasRotas) {
+					html += `<p style="color: #333; font-size: 14px; margin: 0 0 10px 0;">Sign up for other serving opportunities</p>`;
+				} else {
+					html += `<p style="color: #333; font-size: 14px; margin: 0 0 10px 0;">See how you can be involved, sign up for a rota today!</p>`;
+				}
+				html += `<a href="${signupPageUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 14px;">Sign Up for Rotas</a>`;
+				html += '</div>';
 			
 				return html;
 			});
@@ -393,22 +465,26 @@ export async function sendNewsletterEmail({ newsletterId, to, name, contact }, e
 	
 	// Get upcoming rotas for this contact
 	const upcomingRotas = contact?.id ? await getUpcomingRotas(contact.id, event) : [];
+	
+	// Check if contact has any rotas assigned
+	const contactHasRotas = contact?.id ? await hasAnyRotas(contact.id) : false;
 
 	// Personalize content
 	const contactData = contact || { email: to, firstName: name, lastName: '', phone: '' };
-	const personalizedSubject = personalizeContent(email.subject, contactData, upcomingRotas, upcomingEvents, event, false);
-	let personalizedHtml = personalizeContent(email.htmlContent, contactData, upcomingRotas, upcomingEvents, event, false);
+	const personalizedSubject = await personalizeContent(email.subject, contactData, upcomingRotas, upcomingEvents, event, false, contactHasRotas);
+	let personalizedHtml = await personalizeContent(email.htmlContent, contactData, upcomingRotas, upcomingEvents, event, false, contactHasRotas);
 	
 	// Clean up empty paragraphs and Quill artifacts before sending
 	personalizedHtml = cleanNewsletterHtml(personalizedHtml);
 	
-	let personalizedText = personalizeContent(
+	let personalizedText = await personalizeContent(
 		email.textContent || email.htmlContent.replace(/<[^>]*>/g, ''), 
 		contactData, 
 		upcomingRotas,
 		upcomingEvents,
 		event,
-		true
+		true,
+		contactHasRotas
 	);
 
 	// Add unsubscribe link to HTML and text versions
@@ -526,7 +602,7 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 		if (otherUpcomingRotas.length > 0) {
 		upcomingRotasHtml = `
 			<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #2d7a32;">
-				<h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; font-weight: 600;">Your Other Upcoming Rotas (Next 7 Days)</h3>
+				<h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; font-weight: 600;">Your Other Upcoming Rotas (Next 14 Days)</h3>
 		`;
 		for (const item of otherUpcomingRotas) {
 			const dateStr = new Date(item.occurrence.startsAt).toLocaleDateString('en-GB', {
@@ -601,7 +677,7 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 
 	let upcomingRotasText = '';
 	if (otherUpcomingRotas.length > 0) {
-		upcomingRotasText = '\n\nYour Other Upcoming Rotas (Next 7 Days):\n';
+		upcomingRotasText = '\n\nYour Other Upcoming Rotas (Next 14 Days):\n';
 		for (const item of otherUpcomingRotas) {
 			const dateStr = new Date(item.occurrence.startsAt).toLocaleDateString('en-GB', {
 				weekday: 'long',
@@ -730,7 +806,7 @@ export async function sendCombinedRotaInvites(contactInvites, eventData, eventPa
 			if (otherUpcomingRotas.length > 0) {
 				upcomingRotasHtml = `
 					<div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #2d7a32;">
-						<h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; font-weight: 600;">Your Other Upcoming Rotas (Next 7 Days)</h3>
+						<h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; font-weight: 600;">Your Other Upcoming Rotas (Next 14 Days)</h3>
 				`;
 				for (const item of otherUpcomingRotas) {
 					const dateStr = new Date(item.occurrence.startsAt).toLocaleDateString('en-GB', {
@@ -812,7 +888,7 @@ export async function sendCombinedRotaInvites(contactInvites, eventData, eventPa
 
 			let upcomingRotasText = '';
 			if (otherUpcomingRotas.length > 0) {
-				upcomingRotasText = '\n\nYour Other Upcoming Rotas (Next 7 Days):\n';
+				upcomingRotasText = '\n\nYour Other Upcoming Rotas (Next 14 Days):\n';
 				for (const item of otherUpcomingRotas) {
 					const dateStr = new Date(item.occurrence.startsAt).toLocaleDateString('en-GB', {
 						weekday: 'long',

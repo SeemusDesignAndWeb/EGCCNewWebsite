@@ -123,7 +123,7 @@
 							<option value="">-- Select a contact list --</option>
 							{#each lists as list}
 								<option value={list.id}>
-									{list.name} ({list.contactIds?.length || 0} {list.contactIds?.length === 1 ? 'contact' : 'contacts'})
+									{list.name} ({list.contactCount || 0} {list.contactCount === 1 ? 'contact' : 'contacts'})
 								</option>
 							{/each}
 						</select>
