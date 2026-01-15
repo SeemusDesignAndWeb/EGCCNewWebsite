@@ -42,8 +42,16 @@ export async function GET({ params, locals, url }) {
 		let htmlContentForPersonalization = newsletter.htmlContent || newsletter.textContent || '<p>No content available</p>';
 		
 		// Remove rota links placeholder and any preceding line/paragraph that contains "rota"
-		subjectContent = removeRotaLinksAndPrecedingLine(subjectContent);
-		htmlContentForPersonalization = removeRotaLinksAndPrecedingLine(htmlContentForPersonalization);
+		// Wrap in try-catch to ensure we don't break the content
+		try {
+			subjectContent = removeRotaLinksAndPrecedingLine(subjectContent);
+			htmlContentForPersonalization = removeRotaLinksAndPrecedingLine(htmlContentForPersonalization);
+		} catch (removeError) {
+			console.error('Error removing rota links from PDF export:', removeError);
+			// If removal fails, just remove the placeholder directly
+			subjectContent = subjectContent.replace(/\{\{rotaLinks\}\}/g, '');
+			htmlContentForPersonalization = htmlContentForPersonalization.replace(/\{\{rotaLinks\}\}/g, '');
+		}
 		
 		let personalizedSubject = subjectContent;
 		let personalizedHtmlContent = htmlContentForPersonalization;
@@ -52,7 +60,8 @@ export async function GET({ params, locals, url }) {
 			personalizedHtmlContent = await personalizeContent(htmlContentForPersonalization, null, [], upcomingEvents, eventObj, false, false);
 		} catch (personalizeError) {
 			console.error('Error personalizing content for PDF export:', personalizeError);
-			// Use original content if personalization fails
+			console.error('Error details:', personalizeError.stack);
+			// Use content with rotaLinks removed if personalization fails
 		}
 		
 		// Generate HTML for PDF with personalized content
@@ -302,46 +311,36 @@ function generateNewsletterHTML(newsletter) {
  * @returns {string} Content with rotaLinks and preceding rota-related line removed
  */
 function removeRotaLinksAndPrecedingLine(content) {
-	if (!content) return content;
+	if (!content || typeof content !== 'string') return content;
 	
 	let result = content;
 	
-	// Pattern 1: HTML block element containing "rota" followed by optional spacing/line breaks and {{rotaLinks}}
-	// Matches cases like:
-	//   <p><strong>Your Rotas</strong></p><p><br></p><p>{{rotaLinks}}</p>
-	//   <h2>Your Rotas</h2><p>{{rotaLinks}}</p>
-	//   <p>Your Rotas</p>{{rotaLinks}}
-	// This pattern handles:
-	// - A block element (p, h1-h6, div, li) containing "rota"
-	// - Optional whitespace, line breaks, or <p><br></p> elements
-	// - The {{rotaLinks}} placeholder (which may be in its own <p> tag)
-	const rotaBlockPattern = /(<(?:p|h[1-6]|div|li)[^>]*>[\s\S]*?<\/(?:p|h[1-6]|div|li)>)\s*(?:<p><br\s*\/?><\/p>|<br\s*\/?>|\s)*<(?:p|div)[^>]*>\s*\{\{rotaLinks\}\}\s*<\/(?:p|div)>/gi;
-	result = result.replace(rotaBlockPattern, (match, element) => {
-		// Check if the element's text content contains "rota"
+	// First, find all instances of {{rotaLinks}} and work backwards from each
+	// This approach is safer and preserves HTML structure
+	
+	// Pattern 1: Complete structure: <p>Your Rotas</p><p><br></p><p>{{rotaLinks}}</p>
+	// Match a block element with "rota", optional spacing paragraphs, then {{rotaLinks}} in a paragraph
+	result = result.replace(/(<(?:p|h[1-6]|div|li)[^>]*>[\s\S]*?<\/(?:p|h[1-6]|div|li)>)\s*(?:<p[^>]*><br\s*\/?><\/p>|<p[^>]*>\s*<\/p>)\s*<p[^>]*>\s*\{\{rotaLinks\}\}\s*<\/p>/gi, (match, element) => {
 		const textContent = element.replace(/<[^>]+>/g, '').trim();
-		if (/rota/i.test(textContent)) {
-			// Remove the entire match (element + spacing + placeholder)
-			return '';
-		}
-		// If no "rota" found, just remove the placeholder part
-		return element;
+		return /rota/i.test(textContent) ? '' : element;
 	});
 	
-	// Pattern 2: Block element containing "rota" followed by {{rotaLinks}} without wrapping paragraph
-	// Matches: <p>Your Rotas</p>{{rotaLinks}} or <h2>Your Rotas</h2>{{rotaLinks}}
+	// Pattern 2: <p>Your Rotas</p><p>{{rotaLinks}}</p> (no spacing paragraph)
+	result = result.replace(/(<(?:p|h[1-6]|div|li)[^>]*>[\s\S]*?<\/(?:p|h[1-6]|div|li)>)\s*<p[^>]*>\s*\{\{rotaLinks\}\}\s*<\/p>/gi, (match, element) => {
+		const textContent = element.replace(/<[^>]+>/g, '').trim();
+		return /rota/i.test(textContent) ? '' : element;
+	});
+	
+	// Pattern 3: <p>Your Rotas</p>{{rotaLinks}} (placeholder not in paragraph)
 	result = result.replace(/(<(?:p|h[1-6]|div|li)[^>]*>[\s\S]*?<\/(?:p|h[1-6]|div|li)>)\s*\{\{rotaLinks\}\}/gi, (match, element) => {
 		const textContent = element.replace(/<[^>]+>/g, '').trim();
-		if (/rota/i.test(textContent)) {
-			return '';
-		}
-		return element;
+		return /rota/i.test(textContent) ? '' : element;
 	});
 	
-	// Pattern 3: Text line containing "rota" immediately before {{rotaLinks}} (plain text or within HTML)
-	// Matches: Your Rotas\n{{rotaLinks}} or Your Rotas {{rotaLinks}} or <p>Your Rotas{{rotaLinks}}</p>
-	result = result.replace(/([^\n<]*rota[^\n<]*[\n\s]*)\{\{rotaLinks\}\}/gi, '');
+	// Pattern 4: {{rotaLinks}} within same element: <p>Your Rotas{{rotaLinks}}</p>
+	result = result.replace(/(<(?:p|div)[^>]*>[\s\S]*?rota[\s\S]*?)\{\{rotaLinks\}\}([\s\S]*?<\/(?:p|div)>)/gi, '$1$2');
 	
-	// Pattern 4: Remove any remaining {{rotaLinks}} placeholders (including those in <p>{{rotaLinks}}</p>)
+	// Pattern 5: Remove any remaining {{rotaLinks}} placeholders
 	result = result.replace(/<p[^>]*>\s*\{\{rotaLinks\}\}\s*<\/p>/gi, '');
 	result = result.replace(/\{\{rotaLinks\}\}/g, '');
 	
