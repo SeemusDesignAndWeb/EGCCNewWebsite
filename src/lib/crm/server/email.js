@@ -83,13 +83,19 @@ async function getUnsubscribeLink(contactIdOrEmail, event) {
 }
 
 /**
- * Get upcoming public events (within 7 days)
+ * Get upcoming public events (up to the following Sunday)
  * @param {object} event - SvelteKit event object (for base URL)
  * @returns {Promise<Array>} Array of event occurrences
  */
 export async function getUpcomingEvents(event) {
 	const now = new Date();
-	const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+	
+	// Calculate the following Sunday (end of day at 23:59:59)
+	const followingSunday = new Date(now);
+	const currentDay = followingSunday.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+	const daysUntilSunday = currentDay === 0 ? 7 : 7 - currentDay; // If today is Sunday, get next Sunday
+	followingSunday.setDate(followingSunday.getDate() + daysUntilSunday);
+	followingSunday.setHours(23, 59, 59, 999); // End of Sunday
 
 	const events = await readCollection('events');
 	const occurrences = await readCollection('occurrences');
@@ -105,7 +111,7 @@ export async function getUpcomingEvents(event) {
 		if (!memberEventIds.has(occurrence.eventId)) continue;
 
 		const startDate = new Date(occurrence.startsAt);
-		if (startDate >= now && startDate <= sevenDaysFromNow) {
+		if (startDate >= now && startDate <= followingSunday) {
 			const eventData = memberEvents.find(e => e.id === occurrence.eventId);
 			if (eventData) {
 				upcoming.push({
@@ -406,7 +412,7 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 		// Plain text version
 		personalized = personalized.replace(/\{\{upcomingEvents\}\}/g, () => {
 			if (upcomingEvents.length === 0) {
-				return 'There are no upcoming events in the next 7 days.';
+				return 'There are no upcoming events up to the following Sunday.';
 			}
 
 			let text = '';
@@ -434,7 +440,7 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 		// HTML version
 		personalized = personalized.replace(/\{\{upcomingEvents\}\}/g, () => {
 			if (upcomingEvents.length === 0) {
-				return '<p style="color: #333; font-size: 14px;">There are no upcoming events in the next 7 days.</p>';
+				return '<p style="color: #333; font-size: 14px;">There are no upcoming events up to the following Sunday.</p>';
 			}
 
 			let html = '';

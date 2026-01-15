@@ -629,7 +629,7 @@ margin: 30px 0;
 <li>The newsletter will be sent to all contacts in the selected list</li>
 <li>Each email is personalised with the contact's information</li>
 <li>Upcoming rotas (within 7 days) are automatically included for contacts who are assigned to rotas</li>
-<li>Upcoming events (within 7 days) are automatically included</li>
+<li>Upcoming events (up to the following Sunday) are automatically included</li>
 <li>Sending status and counts are tracked</li>
 <li>The newsletter status changes from "draft" to "sent" after sending</li>
 <li>You'll see a success notification showing how many emails were sent</li>
@@ -641,7 +641,7 @@ margin: 30px 0;
 <ul>
 <li>Contact's name in the greeting (using placeholders like <code>{{firstName}}</code>, <code>{{name}}</code>, etc.)</li>
 <li>Upcoming rotas section (if the contact has rotas in the next 7 days) - shows event title, role, date/time, and a link to view details</li>
-<li>Upcoming events section (public events within the next 7 days) - shows event title, date/time, location, and description</li>
+<li>Upcoming events section (public events up to the following Sunday) - shows event title, date/time, location, and description</li>
 <li>Links to rota signup pages for assigned rotas</li>
 </ul>
 
@@ -736,14 +736,14 @@ margin: 30px 0;
 <li><code>{{name}}</code> - Full name (or email if name not available)</li>
 <li><code>{{email}}</code> - Contact's email address</li>
 <li><code>{{phone}}</code> - Contact's phone number</li>
-<li><code>{{rotaLinks}}</code> - Upcoming rotas section (next 7 days) with clickable links</li>
+<li><code>{{rotaLinks}}</code> - Upcoming rotas section (next 14 days) with clickable links</li>
 <li><code>{{upcomingEvents}}</code> - Upcoming events section</li>
 </ul>
 
 <p><strong>Special Placeholders:</strong></p>
 <ul>
-<li><code>{{rotaLinks}}</code> automatically generates a formatted section showing all rotas the contact is assigned to in the next 7 days, with clickable links to view rota details. Each rota shows the event title, role, date/time, and a "View Rota Details" button. <strong>Note:</strong> No title is included - add your own heading in the newsletter content.</li>
-<li><code>{{upcomingEvents}}</code> shows upcoming public and internal events within the next 7 days. Each event shows the title, date/time, location (if available), and description. <strong>Note:</strong> No title is included - add your own heading in the newsletter content. Internal events are included so members can see member-only events in newsletters.</li>
+<li><code>{{rotaLinks}}</code> automatically generates a formatted section showing all rotas the contact is assigned to in the next 14 days, with clickable links to view rota details. Each rota shows the event title, role, date/time, and a "View Rota Details" button. <strong>Important:</strong> Only rotas for specific occurrences where the contact is directly assigned are shown - if a contact is assigned to only some occurrences of a rota, only those occurrences will appear. <strong>Note:</strong> No title is included - add your own heading in the newsletter content.</li>
+<li><code>{{upcomingEvents}}</code> shows upcoming public and internal events up to the following Sunday. Each event shows the title, date/time, location (if available), and description. <strong>Note:</strong> No title is included - add your own heading in the newsletter content. Internal events are included so members can see member-only events in newsletters.</li>
 </ul>
 
 <p><strong>Placeholder Formatting:</strong></p>

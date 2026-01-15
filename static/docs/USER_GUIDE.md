@@ -461,7 +461,7 @@ You can export any newsletter as a PDF document for archiving or sharing:
 - The newsletter will be sent to all contacts in the selected list
 - Each email is personalised with the contact's information
 - Upcoming rotas (within 7 days) are automatically included for contacts who are assigned to rotas
-- Upcoming events (within 7 days) are automatically included
+- Upcoming events (up to the following Sunday) are automatically included
 - Sending status and counts are tracked
 - The newsletter status changes from "draft" to "sent" after sending
 - You'll see a success notification showing how many emails were sent
@@ -471,7 +471,7 @@ You can export any newsletter as a PDF document for archiving or sharing:
 Newsletters automatically include:
 - Contact's name in the greeting (using placeholders like `{{firstName}}`, `{{name}}`, etc.)
 - Upcoming rotas section (if the contact has rotas in the next 7 days) - shows event title, role, date/time, and a link to view details
-- Upcoming events section (public events within the next 7 days) - shows event title, date/time, location, and description
+- Upcoming events section (public events up to the following Sunday) - shows event title, date/time, location, and description
 - Links to rota signup pages for assigned rotas
 
 ### Deleting a Newsletter
@@ -546,12 +546,12 @@ When creating newsletters, you can use the "Insert Placeholder" button to add pe
 - `{{name}}` - Full name (or email if name not available)
 - `{{email}}` - Contact's email address
 - `{{phone}}` - Contact's phone number
-- `{{rotaLinks}}` - Upcoming rotas section (next 7 days) with clickable links
+- `{{rotaLinks}}` - Upcoming rotas section (next 14 days) with clickable links
 - `{{upcomingEvents}}` - Upcoming events section
 
 **Special Placeholders:**
-- `{{rotaLinks}}` automatically generates a formatted section showing all rotas the contact is assigned to in the next 7 days, with clickable links to view rota details. Each rota shows the event title, role, date/time, and a "View Rota Details" button. **Note:** No title is included - add your own heading in the newsletter content.
-- `{{upcomingEvents}}` shows upcoming public and internal events within the next 7 days. Each event shows the title, date/time, location (if available), and description. **Note:** No title is included - add your own heading in the newsletter content. Internal events are included so members can see member-only events in newsletters.
+- `{{rotaLinks}}` automatically generates a formatted section showing all rotas the contact is assigned to in the next 14 days, with clickable links to view rota details. Each rota shows the event title, role, date/time, and a "View Rota Details" button. **Important:** Only rotas for specific occurrences where the contact is directly assigned are shown - if a contact is assigned to only some occurrences of a rota, only those occurrences will appear. **Note:** No title is included - add your own heading in the newsletter content.
+- `{{upcomingEvents}}` shows upcoming public and internal events up to the following Sunday. Each event shows the title, date/time, location (if available), and description. **Note:** No title is included - add your own heading in the newsletter content. Internal events are included so members can see member-only events in newsletters.
 
 **Placeholder Formatting:**
 - Both `{{rotaLinks}}` and `{{upcomingEvents}}` are inserted without extra padding or container styling, allowing them to integrate seamlessly with your newsletter content
