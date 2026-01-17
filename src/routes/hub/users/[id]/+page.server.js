@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { findById, update, remove } from '$lib/crm/server/fileStore.js';
 import { getAdminById, getAdminByEmail, updateAdminPassword, verifyAdminEmail, getCsrfToken, verifyCsrfToken, getAdminFromCookies } from '$lib/crm/server/auth.js';
-import { isSuperAdmin, getAdminPermissions, getAvailableHubAreas } from '$lib/crm/server/permissions.js';
+import { isSuperAdmin, getAdminPermissions, getAvailableHubAreas, HUB_AREAS } from '$lib/crm/server/permissions.js';
 import { logDataChange, logSensitiveOperation } from '$lib/crm/server/audit.js';
 
 export async function load({ params, cookies, request }) {
@@ -44,8 +44,17 @@ export async function load({ params, cookies, request }) {
 		accountLockedUntil: admin.accountLockedUntil
 	};
 
+	// Sanitize current admin data (only need basic info for permission checks)
+	const sanitizedCurrentAdmin = currentAdmin ? {
+		id: currentAdmin.id,
+		email: currentAdmin.email,
+		name: currentAdmin.name,
+		permissions: currentAdmin.permissions || getAdminPermissions(currentAdmin) || [],
+		adminLevel: currentAdmin.adminLevel // For backward compatibility
+	} : null;
+
 	const csrfToken = getCsrfToken(cookies) || '';
-	const availableAreas = getAvailableHubAreas();
+	const availableAreas = getAvailableHubAreas(currentAdmin);
 	
 	// Check for creation success message
 	const url = new URL(request.url);
@@ -54,7 +63,8 @@ export async function load({ params, cookies, request }) {
 	const emailFailed = url.searchParams.get('email_failed') === 'true';
 	
 	return { 
-		admin: sanitized, 
+		admin: sanitized, // The admin being viewed/edited
+		currentAdmin: sanitizedCurrentAdmin, // The currently logged-in admin (sanitized)
 		csrfToken, 
 		availableAreas,
 		created,
@@ -103,16 +113,30 @@ export const actions = {
 				name: name.toString()
 			};
 
-			// Only update permissions if not super admin email
-			// Super admin email automatically gets all permissions via isSuperAdmin check
-			if (!isSuperAdminEmail) {
-				// Validate permissions array
-				const validPermissions = permissions.filter(p => {
-					const validAreas = getAvailableHubAreas().map(a => a.value);
-					return validAreas.includes(p.toString());
-				});
-				updateData.permissions = validPermissions;
+			// Validate permissions array
+			const validAreas = getAvailableHubAreas(currentAdmin).map(a => a.value);
+			let validPermissions = permissions.filter(p => validAreas.includes(p.toString()));
+			
+			// Check if SUPER_ADMIN permission is being set
+			const hasSuperAdminPermission = validPermissions.includes(HUB_AREAS.SUPER_ADMIN);
+			
+			// Only super admins can grant SUPER_ADMIN permission
+			if (hasSuperAdminPermission && !isSuperAdmin(currentAdmin)) {
+				return { error: 'Only super admins can grant super admin permission' };
 			}
+			
+			// If SUPER_ADMIN permission is set, grant all other permissions automatically
+			if (hasSuperAdminPermission || isSuperAdminEmail) {
+				// Get all regular permissions (excluding SUPER_ADMIN)
+				const allRegularPermissions = Object.values(HUB_AREAS).filter(p => p !== HUB_AREAS.SUPER_ADMIN);
+				validPermissions = [...allRegularPermissions];
+				// Add SUPER_ADMIN permission if it was explicitly set (not just the hardcoded email)
+				if (hasSuperAdminPermission) {
+					validPermissions.push(HUB_AREAS.SUPER_ADMIN);
+				}
+			}
+			
+			updateData.permissions = validPermissions;
 
 			await update('admins', params.id, updateData);
 

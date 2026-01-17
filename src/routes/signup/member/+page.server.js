@@ -3,6 +3,7 @@ import { getCsrfToken, verifyCsrfToken, generateCsrfToken, setCsrfToken } from '
 import { validateContact } from '$lib/crm/server/validators.js';
 import { create, findMany, readCollection } from '$lib/crm/server/fileStore.js';
 import { sendMemberSignupConfirmationEmail, sendMemberSignupAdminNotification } from '$lib/crm/server/email.js';
+import { isSuperAdmin } from '$lib/crm/server/permissions.js';
 import { env } from '$env/dynamic/private';
 
 export async function load({ cookies }) {
@@ -104,15 +105,18 @@ export const actions = {
 				// Don't fail the request if email fails
 			}
 
-			// Send notification email to administrators
+			// Send notification email to super administrators only
 			try {
 				const admins = await readCollection('admins');
-				const adminEmails = admins.map(admin => admin.email).filter(Boolean);
+				const superAdminEmails = admins
+					.filter(admin => isSuperAdmin(admin))
+					.map(admin => admin.email)
+					.filter(Boolean);
 				
-				if (adminEmails.length > 0) {
+				if (superAdminEmails.length > 0) {
 					await sendMemberSignupAdminNotification(
 						{
-							to: adminEmails,
+							to: superAdminEmails,
 							contact: contact
 						},
 						event

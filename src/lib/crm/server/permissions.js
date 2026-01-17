@@ -16,7 +16,8 @@ export const HUB_AREAS = {
 	FORMS: 'forms',
 	SAFEGUARDING_FORMS: 'safeguarding_forms',
 	MEMBERS: 'members',
-	USERS: 'users' // Admin management - only super admin
+	USERS: 'users', // Admin management - only super admin
+	SUPER_ADMIN: 'super_admin' // Super admin permission - grants all permissions
 };
 
 // Route to hub area mapping
@@ -49,8 +50,13 @@ export const ADMIN_LEVELS = {
 export function isSuperAdmin(admin) {
 	if (!admin) return false;
 	
-	// Check if email is john.watson@egcc.co.uk for super admin
+	// Check if email is john.watson@egcc.co.uk for super admin (hardcoded for backward compatibility)
 	if (admin.email && admin.email.toLowerCase() === 'john.watson@egcc.co.uk') {
+		return true;
+	}
+	
+	// Check if admin has super_admin permission
+	if (admin.permissions && Array.isArray(admin.permissions) && admin.permissions.includes(HUB_AREAS.SUPER_ADMIN)) {
 		return true;
 	}
 	
@@ -71,14 +77,17 @@ export function isSuperAdmin(admin) {
 export function getAdminPermissions(admin) {
 	if (!admin) return [];
 	
-	// Super admin has all permissions
+	// Super admin has all permissions (check this first)
 	if (isSuperAdmin(admin)) {
-		return Object.values(HUB_AREAS);
+		// Return all permissions except SUPER_ADMIN itself (it's a meta-permission)
+		return Object.values(HUB_AREAS).filter(p => p !== HUB_AREAS.SUPER_ADMIN);
 	}
 	
-	// If admin has permissions array, use it
+	// If admin has permissions array, use it (but filter out SUPER_ADMIN if they're not actually super admin)
 	if (admin.permissions && Array.isArray(admin.permissions)) {
-		return admin.permissions;
+		// If they have SUPER_ADMIN permission but aren't recognized as super admin, something is wrong
+		// But we'll still return their permissions as-is
+		return admin.permissions.filter(p => p !== HUB_AREAS.SUPER_ADMIN);
 	}
 	
 	// Legacy: Convert adminLevel to permissions array for backward compatibility
@@ -244,10 +253,11 @@ export function canAccessNewsletters(admin) {
 
 /**
  * Get all available hub areas for permission selection
+ * @param {object} currentAdmin - Current admin viewing the form (optional, for filtering super admin permission)
  * @returns {Array} Array of hub area objects
  */
-export function getAvailableHubAreas() {
-	return [
+export function getAvailableHubAreas(currentAdmin = null) {
+	const areas = [
 		{ 
 			value: HUB_AREAS.CONTACTS, 
 			label: 'Contacts',
@@ -294,6 +304,17 @@ export function getAvailableHubAreas() {
 			description: 'Manage church members and membership information'
 		}
 	];
+	
+	// Only include SUPER_ADMIN permission if current admin is a super admin
+	if (currentAdmin && isSuperAdmin(currentAdmin)) {
+		areas.push({
+			value: HUB_AREAS.SUPER_ADMIN,
+			label: 'Super Admin',
+			description: 'Full access to all areas and can create other admins. Only super admins can grant this permission.'
+		});
+	}
+	
+	return areas;
 }
 
 /**
