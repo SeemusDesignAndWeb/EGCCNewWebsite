@@ -55,8 +55,8 @@
 	<div class="max-w-4xl mx-auto py-8 px-4 sm:py-12 sm:px-6 lg:px-8 pt-20 sm:pt-24">
 		<div class="bg-white shadow rounded-lg p-6 sm:p-8">
 			<div class="mb-8">
-				<h1 class="text-3xl font-bold text-brand-blue mb-2">Member Sign Up</h1>
-				<p class="text-gray-600">Join our church community! Please fill out the form below to become a member.</p>
+				<h1 class="text-3xl font-bold text-brand-blue mb-2">Contact Sign Up</h1>
+				<p class="text-gray-600">Join our church community! Please fill out the form below to get connected.</p>
 			</div>
 
 			<form method="POST" action="?/signup" use:enhance={handleEnhance}>
@@ -216,7 +216,7 @@
 							By submitting your details, you agree to the use of your information for appropriate church purposes, including:
 						</p>
 						<ul class="list-disc list-inside space-y-1 ml-2">
-							<li>Church administration and member management</li>
+							<li>Church administration and contact management</li>
 							<li>Communication about church activities and events</li>
 							<li>Coordination of rotas and volunteer opportunities</li>
 							<li>Other areas of church involvement you may participate in</li>
@@ -225,7 +225,7 @@
 							You will receive emails relating to church involvement in rotas and other church areas you are involved.
 						</p>
 						<p>
-							Your personal details are not available to all the church membership but only for those who are involved in ministries where contact with you is needed for the purpose of those ministries. Should you have any questions please speak to the leadership team.
+							Your personal details are not available to all the church contacts but only for those who are involved in ministries where contact with you is needed for the purpose of those ministries. Should you have any questions please speak to the leadership team.
 						</p>
 					</div>
 					<div class="border-t border-blue-200 pt-4">
