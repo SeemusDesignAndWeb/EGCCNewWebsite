@@ -40,18 +40,12 @@
 					<div class="bg-white shadow rounded-lg overflow-hidden">
 						<div class="p-4 sm:p-6">
 							<!-- Sunday Date -->
-							<h2 class="text-sm sm:text-base font-semibold text-gray-700 mb-4">
+							<h2 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">
 								{formatDateLongUK(sunday.dateObj)}
 							</h2>
 							<!-- Events for this Sunday -->
 							{#if sunday.occurrences.length > 0}
 								<div class="mb-4 sm:mb-6">
-									<h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
-										<svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-										</svg>
-										Events
-									</h3>
 									<div class="space-y-3 sm:space-y-4">
 										{#each sunday.occurrences as occ}
 											{@const eventInternalRotas = getInternalRotas(sunday.rotas).filter(r => r.eventId === occ.eventId)}
@@ -151,12 +145,6 @@
 							<!-- Public Rotas for this Sunday -->
 							{#if getPublicRotas(sunday.rotas).length > 0}
 								<div class="mt-4 sm:mt-6">
-									<h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
-										<svg class="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-										</svg>
-										Rotas
-									</h3>
 									<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
 										{#each getPublicRotas(sunday.rotas) as rota}
 											<div class="border border-gray-200 rounded-lg p-3 sm:p-4 bg-gray-50">
