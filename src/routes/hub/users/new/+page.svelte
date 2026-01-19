@@ -4,7 +4,7 @@
 	import FormField from '$lib/crm/components/FormField.svelte';
 	import { notifications } from '$lib/crm/stores/notifications.js';
 	import { isSuperAdmin, HUB_AREAS } from '$lib/crm/server/permissions.js';
-
+	
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
 	$: availableAreas = $page.data?.availableAreas || [];
@@ -12,17 +12,28 @@
 	$: isCurrentUserSuperAdmin = currentAdmin && isSuperAdmin(currentAdmin);
 	$: superAdminEmail = $page.data?.superAdminEmail || 'john.watson@egcc.co.uk';
 	
+	// Get URL parameters for pre-filling form
+	$: urlParams = $page.url.searchParams;
+	$: prefillName = urlParams.get('name') || '';
+	$: prefillEmail = urlParams.get('email') || '';
+	
 	// Show notifications from form results
 	$: if (formResult?.error) {
 		notifications.error(formResult.error);
 	}
 
 	let formData = {
-		email: '',
+		email: prefillEmail,
 		password: '',
-		name: '',
+		name: prefillName,
 		permissions: []
 	};
+	
+	// Update formData when URL params change
+	$: if (prefillName || prefillEmail) {
+		formData.name = prefillName || formData.name;
+		formData.email = prefillEmail || formData.email;
+	}
 	
 	function togglePermission(area) {
 		// If toggling SUPER_ADMIN permission, handle specially
