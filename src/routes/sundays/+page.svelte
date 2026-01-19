@@ -56,9 +56,9 @@
 										{#each sunday.occurrences as occ}
 											{@const eventInternalRotas = getInternalRotas(sunday.rotas).filter(r => r.eventId === occ.eventId)}
 											<div class="border-l-4 border-l-blue-500 bg-blue-50 rounded-r-lg p-3 sm:p-4">
-												<div class="flex flex-col md:flex-row md:gap-6">
+												<div class="flex flex-col md:flex-row md:items-start md:gap-6">
 													<!-- Event Info -->
-													<div class="flex-1 mb-3 md:mb-0">
+													<div class="mb-3 md:mb-0 md:flex-shrink-0">
 														<h4 class="text-base sm:text-lg font-semibold text-gray-900 mb-2">
 															{occ.event.title}
 														</h4>
@@ -84,22 +84,61 @@
 														</div>
 													</div>
 													
-													<!-- Internal Rotas for this event -->
+													<!-- Internal Rotas for this event - 2x2 grid -->
 													{#if eventInternalRotas.length > 0}
-														<div class="md:w-64 md:flex-shrink-0 space-y-1.5 text-sm text-gray-900 border-t md:border-t-0 md:border-l border-gray-300 pt-3 md:pt-0 md:pl-4">
-															{#each eventInternalRotas as rota}
-																{@const hasAssignees = rota.allAssignees && rota.allAssignees.length > 0}
-																<div>
-																	<span class="font-medium">{rota.role}:</span>
-																	{#if hasAssignees}
-																		<span class="ml-1">
-																			{rota.allAssignees.map(a => a.name).join(', ')}
-																		</span>
-																	{:else}
-																		<span class="ml-1 text-gray-500 italic">TBC</span>
-																	{/if}
-																</div>
-															{/each}
+														{@const meetingLeader = eventInternalRotas.find(r => r.role.toLowerCase().includes('meeting leader') || r.role.toLowerCase().includes('leader'))}
+														{@const speaker = eventInternalRotas.find(r => r.role.toLowerCase().includes('speaker'))}
+														{@const callToWorship = eventInternalRotas.find(r => r.role.toLowerCase().includes('call to worship') || r.role.toLowerCase().includes('call to'))}
+														{@const worshipTeam = eventInternalRotas.find(r => r.role.toLowerCase().includes('worship team') || r.role.toLowerCase().includes('worship'))}
+														<div class="md:w-80 md:flex-shrink-0 border-t md:border-t-0 md:border-l border-gray-300 pt-3 md:pt-0 md:pl-4">
+															<div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-gray-900">
+																<!-- Top row: Meeting Leader, Speaker -->
+																{#if meetingLeader}
+																	{@const hasAssignees = meetingLeader.allAssignees && meetingLeader.allAssignees.length > 0}
+																	<div>
+																		<span class="font-medium">{meetingLeader.role}:</span>
+																		{#if hasAssignees}
+																			<span class="ml-1">{meetingLeader.allAssignees.map(a => a.name).join(', ')}</span>
+																		{:else}
+																			<span class="ml-1 text-gray-500 italic">TBC</span>
+																		{/if}
+																	</div>
+																{/if}
+																{#if speaker}
+																	{@const hasAssignees = speaker.allAssignees && speaker.allAssignees.length > 0}
+																	<div>
+																		<span class="font-medium">{speaker.role}:</span>
+																		{#if hasAssignees}
+																			<span class="ml-1">{speaker.allAssignees.map(a => a.name).join(', ')}</span>
+																		{:else}
+																			<span class="ml-1 text-gray-500 italic">TBC</span>
+																		{/if}
+																	</div>
+																{/if}
+																<!-- Bottom row: Call to Worship, Worship Team -->
+																{#if callToWorship}
+																	{@const hasAssignees = callToWorship.allAssignees && callToWorship.allAssignees.length > 0}
+																	<div>
+																		<span class="font-medium">{callToWorship.role}:</span>
+																		{#if hasAssignees}
+																			<span class="ml-1">{callToWorship.allAssignees.map(a => a.name).join(', ')}</span>
+																		{:else}
+																			<span class="ml-1 text-gray-500 italic">TBC</span>
+																		{/if}
+																	</div>
+																{/if}
+																{#if worshipTeam}
+																	{@const hasAssignees = worshipTeam.allAssignees && worshipTeam.allAssignees.length > 0}
+																	<div>
+																		<span class="font-medium">{worshipTeam.role}:</span>
+																		{#if hasAssignees}
+																			<span class="ml-1">{worshipTeam.allAssignees.map(a => a.name).join(', ')}</span>
+																		{:else}
+																			<span class="ml-1 text-gray-500 italic">TBC</span>
+																		{/if}
+																	</div>
+																{/if}
+															</div>
 														</div>
 													{/if}
 												</div>
