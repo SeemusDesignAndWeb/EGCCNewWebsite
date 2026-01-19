@@ -39,10 +39,24 @@
 				{#each sundays as sunday}
 					<div class="bg-white shadow rounded-lg overflow-hidden">
 						<div class="p-4 sm:p-6">
-							<!-- Sunday Date -->
-							<h2 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-								{formatDateLongUK(sunday.dateObj)}
-							</h2>
+							<!-- Sunday Date with Event Info -->
+							<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+								{#if sunday.occurrences.length > 0}
+									{@const firstOcc = sunday.occurrences[0]}
+									<div class="text-base sm:text-lg font-semibold text-gray-900">
+										<span>{firstOcc.event.title}</span>
+										<span class="ml-2 font-normal text-gray-700">
+											{formatTimeUK(firstOcc.startsAt)}
+											{#if firstOcc.endsAt}
+												<span> - {formatTimeUK(firstOcc.endsAt)}</span>
+											{/if}
+										</span>
+									</div>
+								{/if}
+								<h2 class="text-base sm:text-lg font-semibold text-gray-900">
+									{formatDateLongUK(sunday.dateObj)}
+								</h2>
+							</div>
 							<!-- Events for this Sunday -->
 							{#if sunday.occurrences.length > 0}
 								<div class="mb-4 sm:mb-6">
