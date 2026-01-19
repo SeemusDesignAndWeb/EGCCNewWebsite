@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { formatDateUK } from '$lib/crm/utils/dateFormat.js';
+	import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
 	import Pager from '$lib/crm/components/Pager.svelte';
 
 	$: data = $page.data || {};
@@ -189,7 +189,7 @@
 							{#each auditLogs as log}
 								<tr class="hover:bg-gray-50">
 									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-										{formatDateUK(log.timestamp || log.createdAt)}
+										{formatDateTimeUK(log.timestamp || log.createdAt)}
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap">
 										<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white {getActionColor(log.action)}">
