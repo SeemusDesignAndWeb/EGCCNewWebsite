@@ -332,6 +332,23 @@ export const actions = {
 				const occurrenceIdStr = data.get('occurrenceId');
 				const targetOccurrenceId = occurrenceIdStr || rota.occurrenceId || null;
 				
+				// If this rota is linked to a meeting planner for a specific occurrence,
+				// default to that occurrence so the assignment shows up in both places
+				const meetingPlanners = await readCollection('meeting_planners');
+				const linkedMeetingPlanner = meetingPlanners.find(mp => 
+					mp.meetingLeaderRotaId === params.id ||
+					mp.worshipLeaderRotaId === params.id ||
+					mp.speakerRotaId === params.id ||
+					mp.callToWorshipRotaId === params.id
+				);
+				
+				// When linked to a single-occurrence meeting planner and no occurrence was supplied,
+				// use that occurrence so the rota and meeting planner stay in sync
+				if (linkedMeetingPlanner && linkedMeetingPlanner.occurrenceId && !targetOccurrenceId) {
+					console.log('[ADD ASSIGNEES DEBUG] Defaulting occurrence to meeting planner occurrence', linkedMeetingPlanner.occurrenceId);
+					targetOccurrenceId = linkedMeetingPlanner.occurrenceId;
+				}
+				
 				console.log('[ADD ASSIGNEES DEBUG] ===========================================');
 				console.log('[ADD ASSIGNEES DEBUG] Rota ID:', params.id);
 				console.log('[ADD ASSIGNEES DEBUG] Rota occurrenceId:', rota.occurrenceId);

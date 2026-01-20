@@ -262,6 +262,20 @@ export const actions = {
 					// Determine the actual occurrenceId to use
 					const targetOccurrenceId = occurrenceId || rota.occurrenceId || null;
 					console.log(`[Rota Signup] Target occurrenceId: ${targetOccurrenceId}, Current assignees count: ${rota.assignees?.length || 0}`);
+					
+					// If this rota is linked to a meeting planner for a specific occurrence,
+					// default to that occurrence when none is supplied so both views stay in sync
+					const meetingPlanners = await readCollection('meeting_planners');
+					const linkedMeetingPlanner = meetingPlanners.find(mp => 
+						mp.meetingLeaderRotaId === rotaId ||
+						mp.worshipLeaderRotaId === rotaId ||
+						mp.speakerRotaId === rotaId ||
+						mp.callToWorshipRotaId === rotaId
+					);
+					
+					if (linkedMeetingPlanner && linkedMeetingPlanner.occurrenceId && !targetOccurrenceId) {
+						targetOccurrenceId = linkedMeetingPlanner.occurrenceId;
+					}
 
 					// Check capacity per occurrence
 					const existingAssignees = Array.isArray(rota.assignees) ? [...rota.assignees] : [];
