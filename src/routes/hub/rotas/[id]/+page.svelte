@@ -395,26 +395,36 @@
 				notifications.error('Could not find assignee to remove. Check console for details.');
 				return;
 			}
-			
-			const form = document.createElement('form');
-			form.method = 'POST';
-			form.action = '?/removeAssignee';
-			
-			const csrfInput = document.createElement('input');
-			csrfInput.type = 'hidden';
-			csrfInput.name = '_csrf';
-			csrfInput.value = csrfToken;
-			form.appendChild(csrfInput);
-			
-			// Pass the index for removal
-			const indexInput = document.createElement('input');
-			indexInput.type = 'hidden';
-			indexInput.name = 'index';
-			indexInput.value = originalIndex;
-			form.appendChild(indexInput);
-			
-			document.body.appendChild(form);
-			form.submit();
+		// Use fetch to call the action without navigating away (prevents scroll jump)
+		const formData = new FormData();
+		formData.append('_csrf', csrfToken);
+		formData.append('index', originalIndex);
+
+		try {
+			const response = await fetch('?/removeAssignee', {
+				method: 'POST',
+				headers: { accept: 'application/json' },
+				body: formData
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				throw new Error(errorData?.error || 'Failed to remove assignee');
+			}
+
+			const result = await response.json();
+			notifications.success(result?.message || 'Assignee removed successfully');
+
+			if (browser) {
+				// Refresh data but keep the user’s scroll position
+				setTimeout(() => {
+					invalidateAll();
+				}, 100);
+			}
+		} catch (error) {
+			console.error('[REMOVE ASSIGNEE] Error during removal:', error);
+			notifications.error(error?.message || 'Failed to remove assignee');
+		}
 		}
 	}
 </script>
