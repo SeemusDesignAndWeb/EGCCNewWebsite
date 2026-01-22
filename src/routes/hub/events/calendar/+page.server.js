@@ -34,44 +34,59 @@ export const actions = {
 		}
 
 		try {
-			const dateStr = data.get('date');
-			const note = data.get('note') || '';
+			// Handle both single date and multiple dates (repeat)
+			const singleDate = data.get('date');
+			const datesArray = data.getAll('dates[]');
+			const dates = datesArray.length > 0 ? datesArray : (singleDate ? [singleDate] : []);
 
-			if (!dateStr) {
-				return { error: 'Date is required' };
+			if (dates.length === 0) {
+				return { error: 'At least one date is required' };
 			}
 
-			const weekKey = getWeekKey(dateStr);
+			const note = data.get('note') || '';
 			const sanitizedNote = await sanitizeHtml(note);
 
 			const weekNotes = await readCollection('week_notes');
-			const existingNote = weekNotes.find(n => n.weekKey === weekKey);
+			const adminId = locals?.admin?.id || null;
+			const event = { getClientAddress: () => 'unknown', request };
+			const savedWeekKeys = [];
 
-			if (existingNote) {
-				await update('week_notes', existingNote.id, {
-					note: sanitizedNote,
-					updatedAt: new Date().toISOString()
-				});
+			// Process each date
+			for (const dateStr of dates) {
+				if (!dateStr) continue;
 
-				const adminId = locals?.admin?.id || null;
-				const event = { getClientAddress: () => 'unknown', request };
-				await logDataChange(adminId, 'update', 'week_note', existingNote.id, {
-					weekKey: weekKey
-				}, event);
-			} else {
-				const newNote = await create('week_notes', {
-					weekKey: weekKey,
-					note: sanitizedNote
-				});
+				const weekKey = getWeekKey(dateStr);
+				const existingNote = weekNotes.find(n => n.weekKey === weekKey);
 
-				const adminId = locals?.admin?.id || null;
-				const event = { getClientAddress: () => 'unknown', request };
-				await logDataChange(adminId, 'create', 'week_note', newNote.id, {
-					weekKey: weekKey
-				}, event);
+				if (existingNote) {
+					await update('week_notes', existingNote.id, {
+						note: sanitizedNote,
+						updatedAt: new Date().toISOString()
+					});
+
+					await logDataChange(adminId, 'update', 'week_note', existingNote.id, {
+						weekKey: weekKey
+					}, event);
+				} else {
+					const newNote = await create('week_notes', {
+						weekKey: weekKey,
+						note: sanitizedNote
+					});
+
+					await logDataChange(adminId, 'create', 'week_note', newNote.id, {
+						weekKey: weekKey
+					}, event);
+				}
+
+				savedWeekKeys.push(weekKey);
 			}
 
-			return { success: true, type: 'weekNote', weekKey };
+			return { 
+				success: true, 
+				type: 'weekNote', 
+				weekKey: savedWeekKeys[0],
+				count: savedWeekKeys.length
+			};
 		} catch (error) {
 			console.error('[Save Week Note] Error:', error);
 			return { error: error.message || 'Failed to save week note' };

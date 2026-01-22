@@ -41,6 +41,10 @@
 	let editingWeekKey = null;
 	let lastProcessedFormResult = null;
 	const weekNotesModalStorageKey = 'egcc_week_notes_modal_open';
+	let recurrenceStartDate = '';
+	let recurrenceEndDate = '';
+	let recurrenceWeeks = 2; // Number of weeks between repeats (default: every other week = 2)
+	let enableRecurrence = false;
 
 	$: filteredWeekNotes = (() => {
 		if (weekNoteSearchDate) {
@@ -64,11 +68,19 @@
 
 		if (formResult?.success) {
 			if (formResult?.type === 'weekNote') {
-				notifications.success('Week note saved successfully');
+				const count = formResult?.count || 1;
+				if (count > 1) {
+					notifications.success(`Week notes saved successfully (${count} dates)`);
+				} else {
+					notifications.success('Week note saved successfully');
+				}
 				editingWeekNote = false;
 				weekNoteDate = '';
 				weekNoteText = '';
 				editingWeekKey = null;
+				recurrenceStartDate = '';
+				recurrenceEndDate = '';
+				enableRecurrence = false;
 			} else if (formResult?.type === 'deleteWeekNote') {
 				notifications.success('Week note deleted successfully');
 				cancelEditingWeekNote();
@@ -86,6 +98,63 @@
 		}
 	}
 
+	// Find related week notes (same text content, likely created as repeats)
+	function findRelatedWeekNotes(currentWeekKey, currentNote) {
+		if (!currentNote?.note) return [];
+		
+		// Find all notes with the same text content
+		const related = weekNotes.filter(note => 
+			note.weekKey !== currentWeekKey && 
+			note.note === currentNote.note
+		);
+		
+		// Sort by weekKey (date)
+		return related.sort((a, b) => a.weekKey.localeCompare(b.weekKey));
+	}
+
+	// Reactive statement for related notes when editing
+	$: relatedNotesWhenEditing = editingWeekKey && weekNoteText 
+		? findRelatedWeekNotes(editingWeekKey, { note: weekNoteText })
+		: [];
+
+	// Detect repeat pattern from related notes
+	function detectRepeatPattern(relatedNotes, currentWeekKey) {
+		if (relatedNotes.length === 0) return null;
+		
+		const allKeys = [currentWeekKey, ...relatedNotes.map(n => n.weekKey)].sort();
+		const dates = allKeys.map(key => {
+			const [year, month, day] = key.split('-').map(Number);
+			return new Date(year, month - 1, day);
+		});
+		
+		// Calculate intervals between dates (in weeks)
+		const intervals = [];
+		for (let i = 1; i < dates.length; i++) {
+			const diffMs = dates[i] - dates[i - 1];
+			const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+			const diffWeeks = diffDays / 7;
+			// Allow for small rounding differences (within 1 day)
+			const roundedWeeks = Math.round(diffWeeks);
+			if (roundedWeeks > 0 && roundedWeeks <= 52 && Math.abs(diffWeeks - roundedWeeks) < 0.5) {
+				intervals.push(roundedWeeks);
+			}
+		}
+		
+		// If all intervals are the same, we have a pattern
+		if (intervals.length > 0 && intervals.every(val => val === intervals[0])) {
+			// Convert week start dates back to regular dates for the date inputs
+			const startDate = dates[0];
+			const endDate = dates[dates.length - 1];
+			return {
+				weeks: intervals[0],
+				startDate: startDate.toISOString().split('T')[0],
+				endDate: endDate.toISOString().split('T')[0]
+			};
+		}
+		
+		return null;
+	}
+
 	function startEditingWeekNote(weekKey = null, existingNote = null) {
 		if (weekKey) {
 			editingWeekKey = weekKey;
@@ -97,6 +166,36 @@
 			weekNoteDate = new Date().toISOString().split('T')[0];
 		}
 		weekNoteText = existingNote?.note || '';
+		
+		// Check for related notes (repeats)
+		const relatedNotes = weekKey && existingNote ? findRelatedWeekNotes(weekKey, existingNote) : [];
+		
+		if (relatedNotes.length > 0) {
+			// Try to detect the repeat pattern
+			const pattern = detectRepeatPattern(relatedNotes, weekKey);
+			if (pattern) {
+				enableRecurrence = true;
+				recurrenceStartDate = pattern.startDate;
+				recurrenceEndDate = pattern.endDate;
+				recurrenceWeeks = pattern.weeks;
+			} else {
+				// If pattern can't be detected, just show the first and last dates
+				enableRecurrence = true;
+				const allKeys = [weekKey, ...relatedNotes.map(n => n.weekKey)].sort();
+				const firstDate = new Date(allKeys[0].split('-').map(Number));
+				const lastDate = new Date(allKeys[allKeys.length - 1].split('-').map(Number));
+				recurrenceStartDate = firstDate.toISOString().split('T')[0];
+				recurrenceEndDate = lastDate.toISOString().split('T')[0];
+				recurrenceWeeks = 2; // Default, user can adjust
+			}
+		} else {
+			// No related notes, start fresh
+			recurrenceStartDate = weekNoteDate;
+			recurrenceEndDate = '';
+			recurrenceWeeks = 2;
+			enableRecurrence = false;
+		}
+		
 		editingWeekNote = true;
 	}
 
@@ -105,7 +204,41 @@
 		weekNoteDate = '';
 		weekNoteText = '';
 		editingWeekKey = null;
+		recurrenceStartDate = '';
+		recurrenceEndDate = '';
+		recurrenceWeeks = 2;
+		enableRecurrence = false;
 	}
+
+	// Calculate all dates for repeat based on number of weeks
+	function calculateRecurrenceDates(startDateStr, endDateStr, weeks = 2) {
+		if (!startDateStr || !endDateStr) return [];
+		
+		const startDate = new Date(startDateStr);
+		const endDate = new Date(endDateStr);
+		const dates = [];
+		
+		// Start with the first date
+		let currentDate = new Date(startDate);
+		
+		// Add dates every N weeks (N * 7 days) until we reach the end date
+		const daysToAdd = weeks * 7;
+		while (currentDate <= endDate) {
+			dates.push(currentDate.toISOString().split('T')[0]);
+			// Add N weeks worth of days
+			currentDate.setDate(currentDate.getDate() + daysToAdd);
+		}
+		
+		return dates;
+	}
+
+	$: if (enableRecurrence && !recurrenceStartDate && weekNoteDate) {
+		recurrenceStartDate = weekNoteDate;
+	}
+
+	$: recurrenceDates = enableRecurrence && recurrenceStartDate && recurrenceEndDate 
+		? calculateRecurrenceDates(recurrenceStartDate, recurrenceEndDate, recurrenceWeeks)
+		: [];
 
 	function closeWeekNotesModal() {
 		showWeekNotesModal = false;
@@ -295,6 +428,35 @@
 		const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
 		goto(`/hub/events/new?date=${dateStr}`);
 	}
+
+	// Format time display for events - show "All day" for all-day events
+	function formatEventTime(occ) {
+		if (occ.allDay) {
+			return 'All day';
+		}
+		const startTime = new Date(occ.startsAt);
+		return startTime.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' });
+	}
+
+	// Format time range display for events - show "All day" for all-day events
+	function formatEventTimeRange(occ) {
+		if (occ.allDay) {
+			return 'All day';
+		}
+		const startTime = new Date(occ.startsAt);
+		const endTime = new Date(occ.endsAt);
+		return `${startTime.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} - ${endTime.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}`;
+	}
+
+	// Format time range display for events (US format) - show "All day" for all-day events
+	function formatEventTimeRangeUS(occ) {
+		if (occ.allDay) {
+			return 'All day';
+		}
+		const startTime = new Date(occ.startsAt);
+		const endTime = new Date(occ.endsAt);
+		return `${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+	}
 </script>
 
 	<div class="mb-6">
@@ -468,29 +630,153 @@
 					<form method="POST" action="?/saveWeekNote" use:enhance>
 						<input type="hidden" name="_csrf" value={csrfToken} />
 						<div class="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-4">
+							{#if !enableRecurrence}
+								<div>
+									<label for="week-note-date" class="block text-xs font-medium text-gray-700 mb-1">
+										Select a date in the week
+									</label>
+									<input
+										id="week-note-date"
+										type="date"
+										bind:value={weekNoteDate}
+										required
+										class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm"
+									/>
+									<p class="mt-1 text-xs text-gray-500">
+										{#if weekNoteDate}
+											Week: {formatWeekKey(getWeekKey(weekNoteDate))}
+										{/if}
+									</p>
+								</div>
+							{/if}
+
 							<div>
-								<label for="week-note-date" class="block text-xs font-medium text-gray-700 mb-1">
-									Select a date in the week
+								<label class="flex items-center gap-2 cursor-pointer">
+									<input
+										type="checkbox"
+										bind:checked={enableRecurrence}
+										on:change={() => {
+											if (enableRecurrence) {
+												// When enabling repeat, set start date to current weekNoteDate
+												if (!recurrenceStartDate && weekNoteDate) {
+													recurrenceStartDate = weekNoteDate;
+												}
+											} else {
+												// When disabling, sync weekNoteDate with start date if it exists
+												if (recurrenceStartDate) {
+													weekNoteDate = recurrenceStartDate;
+												}
+											}
+										}}
+										class="rounded border-gray-300 text-hub-blue-600 focus:ring-hub-blue-500"
+									/>
+									<span class="text-xs font-medium text-gray-700">Add repeat</span>
 								</label>
-								<input
-									id="week-note-date"
-									type="date"
-									name="date"
-									bind:value={weekNoteDate}
-									required
-									class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm"
-								/>
-								<p class="mt-1 text-xs text-gray-500">
-									{#if weekNoteDate}
-										Week: {formatWeekKey(getWeekKey(weekNoteDate))}
-									{/if}
-								</p>
 							</div>
+
+							{#if enableRecurrence}
+								<div class="space-y-3 bg-blue-50 rounded-md p-3 border border-blue-200">
+									<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+										<div>
+											<label for="recurrence-start-date" class="block text-xs font-medium text-gray-700 mb-1">
+												Start date
+											</label>
+											<input
+												id="recurrence-start-date"
+												type="date"
+												bind:value={recurrenceStartDate}
+												required
+												class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm"
+											/>
+										</div>
+										<div>
+											<label for="recurrence-weeks" class="block text-xs font-medium text-gray-700 mb-1">
+												Every number of weeks
+											</label>
+											<input
+												id="recurrence-weeks"
+												type="number"
+												min="1"
+												max="52"
+												bind:value={recurrenceWeeks}
+												required={enableRecurrence}
+												class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm"
+												title={recurrenceWeeks === 1 ? 'Every week' : recurrenceWeeks === 2 ? 'Every other week' : `Every ${recurrenceWeeks} weeks`}
+											/>
+										</div>
+										<div>
+											<label for="recurrence-end-date" class="block text-xs font-medium text-gray-700 mb-1">
+												End date
+											</label>
+											<input
+												id="recurrence-end-date"
+												type="date"
+												bind:value={recurrenceEndDate}
+												required={enableRecurrence}
+												min={recurrenceStartDate}
+												class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm"
+											/>
+										</div>
+									</div>
+									{#if recurrenceDates.length > 0}
+										<div class="mt-2">
+											<p class="text-xs font-medium text-gray-700 mb-1">
+												Will create {recurrenceDates.length} week note{recurrenceDates.length !== 1 ? 's' : ''} 
+												{#if recurrenceWeeks === 1}
+													(every week):
+												{:else if recurrenceWeeks === 2}
+													(every other week):
+												{:else}
+													(every {recurrenceWeeks} weeks):
+												{/if}
+											</p>
+											<div class="text-xs text-gray-600 space-y-1 max-h-32 overflow-y-auto">
+												{#each recurrenceDates as date}
+													<div class="pl-2">• {formatWeekKey(getWeekKey(date))}</div>
+												{/each}
+											</div>
+										</div>
+									{/if}
+									
+									{#if editingWeekKey}
+										{#if relatedNotesWhenEditing.length > 0}
+											<div class="mt-3 pt-3 border-t border-blue-300">
+												<p class="text-xs font-medium text-gray-700 mb-2">
+													Related week notes with same text ({relatedNotesWhenEditing.length}):
+												</p>
+												<div class="space-y-1.5 max-h-32 overflow-y-auto">
+													{#each relatedNotesWhenEditing as relatedNote}
+														<div class="flex items-center justify-between bg-white rounded px-2 py-1.5 border border-gray-200">
+															<span class="text-xs text-gray-700">
+																{formatWeekKey(relatedNote.weekKey)}
+															</span>
+															<button
+																type="button"
+																on:click={() => handleDeleteWeekNote(relatedNote.weekKey)}
+																class="text-xs text-hub-red-600 hover:text-hub-red-800 px-2 py-0.5 rounded hover:bg-red-50"
+																title="Remove this repeat"
+															>
+																Remove
+															</button>
+														</div>
+													{/each}
+												</div>
+											</div>
+										{/if}
+									{/if}
+									{#each recurrenceDates as date}
+										<input type="hidden" name="dates[]" value={date} />
+									{/each}
+								</div>
+							{:else}
+								<input type="hidden" name="date" value={weekNoteDate} />
+							{/if}
+
 							<div>
 								<p class="block text-xs font-medium text-gray-700 mb-1">Week Note</p>
 								<HtmlEditor bind:value={weekNoteText} name="note" />
 								<p class="mt-1 text-xs text-gray-500">
-									This note appears in emails for the selected week.
+									This note appears in emails for the selected week{enableRecurrence && recurrenceDates.length > 1 ? 's' : ''}.
 								</p>
 							</div>
 							<div class="flex gap-2">
@@ -498,7 +784,7 @@
 						type="submit"
 						class="bg-hub-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs whitespace-nowrap"
 					>
-						Save Week Note
+						Save Week Note{enableRecurrence && recurrenceDates.length > 0 ? `s (${recurrenceDates.length})` : ''}
 					</button>
 					{#if editingWeekKey}
 						<button
@@ -666,7 +952,7 @@
 								>
 									<div class="font-medium truncate">{occ.event?.title || 'Event'}</div>
 									<div class="text-xs opacity-75 mt-0.5">
-										{new Date(occ.startsAt).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}
+										{formatEventTime(occ)}
 									</div>
 								</a>
 							{/each}
@@ -716,7 +1002,7 @@
 									title="{occ.event?.title || 'Event'}"
 									on:click|stopPropagation
 								>
-									{new Date(occ.startsAt).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} {occ.event?.title || 'Event'}
+									{formatEventTime(occ)} {occ.event?.title || 'Event'}
 								</a>
 							{/each}
 							{#if dayOccurrences.length > 3}
@@ -780,7 +1066,7 @@
 							>
 								<div class="font-medium truncate">{occ.event?.title || 'Event'}</div>
 								<div class="text-xs opacity-75 mt-0.5">
-									{startTime.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} - {endTime.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}
+									{formatEventTimeRange(occ)}
 								</div>
 							</a>
 						{/each}
@@ -840,7 +1126,7 @@
 						>
 							<div class="font-medium truncate">{occ.event?.title || 'Event'}</div>
 							<div class="text-xs opacity-75">
-								{startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - {endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+								{formatEventTimeRangeUS(occ)}
 							</div>
 						</a>
 					{/each}
@@ -880,7 +1166,7 @@
 									{occ.event?.title || 'Event'}
 								</div>
 								<div class="text-xs sm:text-sm text-gray-600">
-									{occDate.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })} - {occEnd.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })}
+									{formatEventTimeRange(occ)}
 									{#if occ.location}
 										<span class="ml-2">• {occ.location}</span>
 									{/if}
