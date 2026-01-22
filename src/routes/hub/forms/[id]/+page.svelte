@@ -221,6 +221,31 @@
 		}
 	}
 
+	async function handleExport() {
+		try {
+			const response = await fetch(`/hub/forms/${form.id}/export`);
+			if (!response.ok) {
+				const error = await response.json();
+				notifications.error(error.error || 'Failed to export form');
+				return;
+			}
+			
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `form-${form.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;
+			document.body.appendChild(a);
+			a.click();
+			window.URL.revokeObjectURL(url);
+			document.body.removeChild(a);
+			notifications.success('Form exported successfully');
+		} catch (error) {
+			console.error('Export error:', error);
+			notifications.error('Failed to export form');
+		}
+	}
+
 	$: registerColumns = [
 		{ 
 			key: 'submittedAt', 
@@ -269,6 +294,12 @@
 						<span class="hidden sm:inline">View Public Form</span>
 						<span class="sm:hidden">View Form</span>
 					</a>
+					<button
+						on:click={handleExport}
+						class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs"
+					>
+						Export
+					</button>
 					<button
 						on:click={() => editing = true}
 						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs"

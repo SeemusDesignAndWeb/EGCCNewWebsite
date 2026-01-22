@@ -84,6 +84,80 @@
 		goto(`/hub/forms?${params.toString()}`);
 	}
 
+	async function handleExportAll() {
+		try {
+			const response = await fetch('/hub/forms/export');
+			if (!response.ok) {
+				const error = await response.json();
+				notifications.error(error.error || 'Failed to export forms');
+				return;
+			}
+			
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'forms-export.json';
+			document.body.appendChild(a);
+			a.click();
+			window.URL.revokeObjectURL(url);
+			document.body.removeChild(a);
+			notifications.success('Forms exported successfully');
+		} catch (error) {
+			console.error('Export error:', error);
+			notifications.error('Failed to export forms');
+		}
+	}
+
+	async function handleImport() {
+		const input = document.createElement('input');
+		input.type = 'file';
+		input.accept = '.json';
+		input.onchange = async (e) => {
+			const file = e.target.files?.[0];
+			if (!file) return;
+
+			try {
+				const formData = new FormData();
+				formData.append('file', file);
+				formData.append('_csrf', csrfToken);
+
+				const response = await fetch('/hub/forms/import', {
+					method: 'POST',
+					body: formData
+				});
+
+				const result = await response.json();
+
+				if (!response.ok) {
+					notifications.error(result.error || 'Failed to import forms');
+					if (result.details) {
+						console.error('Import errors:', result.details);
+					}
+					return;
+				}
+
+				if (result.failed > 0) {
+					notifications.warning(
+						`Imported ${result.imported} form(s), ${result.failed} failed. Check console for details.`
+					);
+					console.log('Import results:', result.results);
+				} else {
+					notifications.success(`Successfully imported ${result.imported} form(s)`);
+				}
+
+				// Reload the page to show the new forms
+				setTimeout(() => {
+					invalidateAll();
+				}, 500);
+			} catch (error) {
+				console.error('Import error:', error);
+				notifications.error('Failed to import forms');
+			}
+		};
+		input.click();
+	}
+
 	const columns = [
 		{ key: 'name', label: 'Name' },
 		{ 
@@ -111,9 +185,23 @@
 
 <div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 	<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Forms</h2>
-	<a href="/hub/forms/new" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
-		New Form
-	</a>
+	<div class="flex flex-wrap gap-2">
+		<button
+			on:click={handleImport}
+			class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs"
+		>
+			Import
+		</button>
+		<button
+			on:click={handleExportAll}
+			class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs"
+		>
+			Export All
+		</button>
+		<a href="/hub/forms/new" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
+			New Form
+		</a>
+	</div>
 </div>
 
 <div class="mb-4">
