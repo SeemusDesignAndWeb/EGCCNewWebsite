@@ -339,9 +339,9 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 	if (isText) {
 		// Plain text version
 		personalized = personalized.replace(/\{\{rotaLinks\}\}/g, () => {
-			let text = '';
+			let text = 'Your Rotas:\n';
 			if (upcomingRotas.length === 0) {
-				text = 'You have no upcoming rotas in the next 14 days.';
+				text += 'You have no upcoming rotas in the next 14 days.';
 			} else {
 				for (const item of upcomingRotas) {
 					const { rota, event: eventData, occurrence, signupUrl } = item;
@@ -371,9 +371,9 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 		} else {
 			// HTML version
 			personalized = personalized.replace(/\{\{rotaLinks\}\}/g, () => {
-				let html = '';
+				let html = '<h2 style="color: #333; font-size: 18px; font-weight: 600; margin: 0 0 12px 0;">Your Rotas:</h2>';
 				if (upcomingRotas.length === 0) {
-					html = '<p style="color: #333; font-size: 14px;">You have no upcoming rotas in the next 14 days.</p>';
+					html += '<p style="color: #333; font-size: 14px;">You have no upcoming rotas in the next 14 days.</p>';
 				} else {
 					for (const item of upcomingRotas) {
 						const { rota, event: eventData, occurrence, signupUrl } = item;
@@ -408,7 +408,7 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 			
 				return html;
 			});
-	}
+		}
 
 	// Get week note for next week (before replace to avoid async issues)
 	let weekNote = null;
@@ -429,7 +429,7 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 	if (isText) {
 		// Plain text version
 		personalized = personalized.replace(/\{\{upcomingEvents\}\}/g, () => {
-			let text = '';
+			let text = 'Coming Up:\n';
 			
 			// Add week note if it exists
 			if (weekNote && weekNote.note) {
@@ -449,7 +449,8 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 			}
 			
 			if (upcomingEvents.length === 0) {
-				return text || 'There are no upcoming events in the next 14 days.';
+				text += 'There are no upcoming events in the next 14 days.';
+				return text;
 			}
 
 			for (const item of upcomingEvents) {
@@ -475,7 +476,7 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 	} else {
 		// HTML version
 		personalized = personalized.replace(/\{\{upcomingEvents\}\}/g, () => {
-			let html = '';
+			let html = '<h2 style="color: #333; font-size: 18px; font-weight: 600; margin: 0 0 12px 0;">Coming Up:</h2>';
 			
 			// Add week note if it exists
 			if (weekNote && weekNote.note) {
@@ -485,7 +486,8 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 			}
 			
 			if (upcomingEvents.length === 0) {
-				return html || '<p style="color: #333; font-size: 14px;">There are no upcoming events in the next 14 days.</p>';
+				html += '<p style="color: #333; font-size: 14px;">There are no upcoming events in the next 14 days.</p>';
+				return html;
 			}
 
 			for (const item of upcomingEvents) {
