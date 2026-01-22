@@ -24,7 +24,7 @@
 	let formData = {
 		startsAt: '',
 		endsAt: '',
-		location: event?.location || '',
+		location: '',
 		maxSpaces: '',
 		repeatType: 'none',
 		repeatInterval: 1,
@@ -38,6 +38,13 @@
 		occurrenceDate: ''
 	};
 	let information = '';
+	let locationInitialized = false;
+	
+	// Initialize location from event when event loads (only once)
+	$: if (event?.location && !locationInitialized) {
+		formData.location = event.location;
+		locationInitialized = true;
+	}
 
 	$: showRecurrenceOptions = formData.repeatType !== 'none';
 	$: showWeeklyOptions = formData.repeatType === 'weekly';

@@ -18,6 +18,7 @@
 	let loadingImages = false;
 	let imageSearchTerm = '';
 	let isUpdatingFromExternal = false; // Track if we're updating from external source (reactive statement)
+	let ResizableImageClass = null; // Store ResizableImage class for resize functionality
 
 	const placeholders = [
 		{ value: '{{firstName}}', label: 'First Name' },
@@ -45,9 +46,50 @@
 			// Import CSS
 			await import('quill/dist/quill.snow.css');
 
-			// Custom image handler
+			// Custom image handler with resize functionality
 			const Image = Quill.import('formats/image');
 			Image.sanitize = (url) => url; // Allow any URL
+
+			// Create custom ImageBlot with resize functionality
+			const BlockEmbed = Quill.import('blots/block/embed');
+			
+			class ResizableImage extends BlockEmbed {
+				static create(value) {
+					const node = super.create();
+					if (typeof value === 'string') {
+						node.setAttribute('src', value);
+					} else {
+						node.setAttribute('src', value.url || value);
+						if (value.width) node.setAttribute('width', value.width);
+						if (value.height) node.setAttribute('height', value.height);
+					}
+					node.setAttribute('contenteditable', 'false');
+					node.classList.add('ql-resizable-image');
+					return node;
+				}
+
+				static value(node) {
+					return {
+						url: node.getAttribute('src'),
+						width: node.getAttribute('width') || null,
+						height: node.getAttribute('height') || null
+					};
+				}
+
+				static formats(node) {
+					return {
+						width: node.getAttribute('width') || null,
+						height: node.getAttribute('height') || null
+					};
+				}
+			}
+			ResizableImage.blotName = 'resizableImage';
+			ResizableImage.tagName = 'img';
+			ResizableImage.className = 'ql-resizable-image';
+
+			// Register the custom format
+			Quill.register(ResizableImage, true);
+			ResizableImageClass = ResizableImage; // Store for resize function
 
 			// Ensure LTR direction
 			quillContainer.setAttribute('dir', 'ltr');
@@ -75,7 +117,7 @@
 									const url = prompt('Enter image URL:');
 									if (url) {
 										const range = quill.getSelection(true);
-										quill.insertEmbed(range.index, 'image', url, 'user');
+										quill.insertEmbed(range.index, 'resizableImage', url, 'user');
 									}
 								}
 							}
@@ -83,15 +125,18 @@
 					}
 				}
 			});
+
+			// Add resize functionality to images
+			setupImageResize(quill, ResizableImageClass);
 			
 			// Ensure the editor root also has LTR direction
 			if (quill.root) {
 				quill.root.setAttribute('dir', 'ltr');
 			}
 
-			// Handle paste events to ensure LTR direction (simplified, non-blocking)
+			// Handle paste events to ensure LTR direction and convert images
 			quill.root.addEventListener('paste', (e) => {
-				// Let Quill handle paste normally, then fix direction asynchronously
+				// Let Quill handle paste normally, then fix direction and convert images asynchronously
 				setTimeout(() => {
 					if (quill && quill.root) {
 						quill.root.setAttribute('dir', 'ltr');
@@ -105,6 +150,26 @@
 								el.style.direction = 'ltr';
 							}
 						});
+						
+						// Convert any pasted images to resizable format
+						const images = quill.root.querySelectorAll('img:not(.ql-resizable-image)');
+						images.forEach((img) => {
+							const src = img.getAttribute('src');
+							if (src) {
+								try {
+									const leaf = quill.getLeaf(img);
+									if (leaf && leaf[0]) {
+										const index = quill.getIndex(leaf[0]);
+										const width = img.getAttribute('width');
+										const height = img.getAttribute('height');
+										quill.deleteText(index, 1, 'user');
+										quill.insertEmbed(index, 'resizableImage', { url: src, width, height }, 'user');
+									}
+								} catch (error) {
+									console.warn('Error converting pasted image to resizable format:', error);
+								}
+							}
+						});
 					}
 				}, 0);
 			});
@@ -113,6 +178,28 @@
 				// Use Quill's clipboard to properly parse HTML
 				const delta = quill.clipboard.convert({ html: initialValue });
 				quill.setContents(delta);
+				
+				// Convert any existing images to resizable format
+				setTimeout(() => {
+					const images = quill.root.querySelectorAll('img:not(.ql-resizable-image)');
+					images.forEach((img) => {
+						const src = img.getAttribute('src');
+						if (src) {
+							try {
+								const leaf = quill.getLeaf(img);
+								if (leaf && leaf[0]) {
+									const index = quill.getIndex(leaf[0]);
+									const width = img.getAttribute('width');
+									const height = img.getAttribute('height');
+									quill.deleteText(index, 1, 'user');
+									quill.insertEmbed(index, 'resizableImage', { url: src, width, height }, 'user');
+								}
+							} catch (error) {
+								console.warn('Error converting image to resizable format:', error);
+							}
+						}
+					});
+				}, 100);
 			}
 
 			// Simplified text-change handler - don't sanitize on every keystroke (causes delays)
@@ -221,8 +308,217 @@
 	function insertImage(imageUrl) {
 		if (!quill) return;
 		const range = quill.getSelection(true);
-		quill.insertEmbed(range.index, 'image', imageUrl, 'user');
+		quill.insertEmbed(range.index, 'resizableImage', imageUrl, 'user');
 		showImageModal = false;
+	}
+
+	// Setup image resize functionality
+	function setupImageResize(quillInstance, ResizableImageClass) {
+		const editor = quillInstance.root;
+		const editorContainer = quillInstance.container;
+		let selectedImage = null;
+		let resizeHandle = null;
+		let isResizing = false;
+		let startX = 0;
+		let startY = 0;
+		let startWidth = 0;
+		let startHeight = 0;
+		let aspectRatio = 1;
+
+		// Create resize handle
+		function createResizeHandle() {
+			const handle = document.createElement('div');
+			handle.className = 'ql-image-resize-handle';
+			handle.innerHTML = `
+				<div class="ql-resize-handle-top-left"></div>
+				<div class="ql-resize-handle-top-right"></div>
+				<div class="ql-resize-handle-bottom-left"></div>
+				<div class="ql-resize-handle-bottom-right"></div>
+			`;
+			// Append to editor container for proper positioning
+			editorContainer.style.position = 'relative';
+			editorContainer.appendChild(handle);
+			return handle;
+		}
+
+		// Show resize handle for selected image
+		function showResizeHandle(img) {
+			hideResizeHandle();
+			selectedImage = img;
+			resizeHandle = createResizeHandle();
+			
+			const updateHandlePosition = () => {
+				if (!selectedImage || !resizeHandle) return;
+				const rect = selectedImage.getBoundingClientRect();
+				const containerRect = editorContainer.getBoundingClientRect();
+				const scrollTop = editor.scrollTop || 0;
+				const scrollLeft = editor.scrollLeft || 0;
+				
+				resizeHandle.style.position = 'absolute';
+				resizeHandle.style.left = `${rect.left - containerRect.left + scrollLeft}px`;
+				resizeHandle.style.top = `${rect.top - containerRect.top + scrollTop}px`;
+				resizeHandle.style.width = `${rect.width}px`;
+				resizeHandle.style.height = `${rect.height}px`;
+				resizeHandle.style.display = 'block';
+			};
+
+			updateHandlePosition();
+			
+			// Update position on scroll
+			const scrollHandler = () => updateHandlePosition();
+			editor.addEventListener('scroll', scrollHandler);
+			window.addEventListener('scroll', scrollHandler);
+			
+			// Store handler for cleanup
+			resizeHandle._scrollHandler = scrollHandler;
+		}
+
+		// Hide resize handle
+		function hideResizeHandle() {
+			if (resizeHandle) {
+				if (resizeHandle._scrollHandler) {
+					editor.removeEventListener('scroll', resizeHandle._scrollHandler);
+					window.removeEventListener('scroll', resizeHandle._scrollHandler);
+				}
+				resizeHandle.remove();
+				resizeHandle = null;
+			}
+			selectedImage = null;
+		}
+
+		// Handle mouse down on resize handle
+		function handleMouseDown(e, corner) {
+			if (!selectedImage) return;
+			
+			e.preventDefault();
+			e.stopPropagation();
+			isResizing = true;
+			
+			const rect = selectedImage.getBoundingClientRect();
+			startX = e.clientX;
+			startY = e.clientY;
+			startWidth = parseInt(window.getComputedStyle(selectedImage).width, 10);
+			startHeight = parseInt(window.getComputedStyle(selectedImage).height, 10);
+			aspectRatio = startWidth / startHeight;
+
+			const handleMouseMove = (e) => {
+				if (!isResizing || !selectedImage) return;
+				
+				const deltaX = e.clientX - startX;
+				const deltaY = e.clientY - startY;
+				let newWidth = startWidth;
+				let newHeight = startHeight;
+
+				// Calculate new dimensions based on corner
+				if (corner.includes('right')) {
+					newWidth = startWidth + deltaX;
+				} else if (corner.includes('left')) {
+					newWidth = startWidth - deltaX;
+				}
+
+				if (corner.includes('bottom')) {
+					newHeight = startHeight + deltaY;
+				} else if (corner.includes('top')) {
+					newHeight = startHeight - deltaY;
+				}
+
+				// Maintain aspect ratio
+				if (e.shiftKey) {
+					const newAspectRatio = newWidth / newHeight;
+					if (Math.abs(newAspectRatio - aspectRatio) > 0.1) {
+						if (Math.abs(deltaX) > Math.abs(deltaY)) {
+							newHeight = newWidth / aspectRatio;
+						} else {
+							newWidth = newHeight * aspectRatio;
+						}
+					}
+				}
+
+				// Minimum size
+				newWidth = Math.max(50, newWidth);
+				newHeight = Math.max(50, newHeight);
+
+				// Apply new dimensions
+				selectedImage.style.width = `${newWidth}px`;
+				selectedImage.style.height = `${newHeight}px`;
+				selectedImage.setAttribute('width', newWidth);
+				selectedImage.setAttribute('height', newHeight);
+
+				// Update handle position
+				if (resizeHandle) {
+					const rect = selectedImage.getBoundingClientRect();
+					const containerRect = editorContainer.getBoundingClientRect();
+					const scrollTop = editor.scrollTop || 0;
+					const scrollLeft = editor.scrollLeft || 0;
+					resizeHandle.style.left = `${rect.left - containerRect.left + scrollLeft}px`;
+					resizeHandle.style.top = `${rect.top - containerRect.top + scrollTop}px`;
+					resizeHandle.style.width = `${rect.width}px`;
+					resizeHandle.style.height = `${rect.height}px`;
+				}
+			};
+
+			const handleMouseUp = () => {
+				isResizing = false;
+				document.removeEventListener('mousemove', handleMouseMove);
+				document.removeEventListener('mouseup', handleMouseUp);
+				
+				// Update Quill content
+				if (selectedImage) {
+					try {
+						const leaf = quillInstance.getLeaf(selectedImage);
+						if (leaf && leaf[0]) {
+							const index = quillInstance.getIndex(leaf[0]);
+							const value = ResizableImageClass.value(selectedImage);
+							quillInstance.deleteText(index, 1, 'user');
+							quillInstance.insertEmbed(index, 'resizableImage', value, 'user');
+						}
+					} catch (error) {
+						console.warn('Error updating resized image:', error);
+					}
+				}
+			};
+
+			document.addEventListener('mousemove', handleMouseMove);
+			document.addEventListener('mouseup', handleMouseUp);
+		}
+
+		// Click handler for images
+		editor.addEventListener('click', (e) => {
+			const img = e.target.closest('img.ql-resizable-image');
+			if (img) {
+				e.preventDefault();
+				showResizeHandle(img);
+			} else {
+				hideResizeHandle();
+			}
+		});
+
+		// Handle resize handle clicks - attach to document to catch all events
+		const handleResizeMouseDown = (e) => {
+			const handle = e.target.closest('.ql-resize-handle-top-left, .ql-resize-handle-top-right, .ql-resize-handle-bottom-left, .ql-resize-handle-bottom-right');
+			if (handle) {
+				let corner = '';
+				if (handle.classList.contains('ql-resize-handle-top-left')) corner = 'top-left';
+				else if (handle.classList.contains('ql-resize-handle-top-right')) corner = 'top-right';
+				else if (handle.classList.contains('ql-resize-handle-bottom-left')) corner = 'bottom-left';
+				else if (handle.classList.contains('ql-resize-handle-bottom-right')) corner = 'bottom-right';
+				handleMouseDown(e, corner);
+			}
+		};
+		document.addEventListener('mousedown', handleResizeMouseDown);
+
+		// Hide handle when clicking outside
+		document.addEventListener('click', (e) => {
+			if (!editor.contains(e.target) && !e.target.closest('.ql-image-resize-handle')) {
+				hideResizeHandle();
+			}
+		});
+
+		// Cleanup on destroy
+		return () => {
+			hideResizeHandle();
+			document.removeEventListener('mousedown', handleResizeMouseDown);
+		};
 	}
 
 	function openImagePicker() {
@@ -401,5 +697,68 @@
 		font-weight: 600;
 		margin-top: 1.33em;
 		margin-bottom: 1.33em;
+	}
+
+	/* Resizable image styles */
+	:global(.html-editor .ql-editor img.ql-resizable-image) {
+		cursor: pointer;
+		display: inline-block;
+		max-width: 100%;
+		height: auto;
+	}
+
+	:global(.ql-image-resize-handle) {
+		position: absolute;
+		border: 2px solid #4285f4;
+		box-sizing: border-box;
+		pointer-events: none;
+		z-index: 1000;
+	}
+
+	:global(.ql-image-resize-handle .ql-resize-handle-top-left),
+	:global(.ql-image-resize-handle .ql-resize-handle-top-right),
+	:global(.ql-image-resize-handle .ql-resize-handle-bottom-left),
+	:global(.ql-image-resize-handle .ql-resize-handle-bottom-right) {
+		position: absolute;
+		width: 12px;
+		height: 12px;
+		background: #4285f4;
+		border: 2px solid white;
+		border-radius: 50%;
+		pointer-events: all;
+		cursor: nwse-resize;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	}
+
+	:global(.ql-image-resize-handle .ql-resize-handle-top-left) {
+		top: -6px;
+		left: -6px;
+		cursor: nwse-resize;
+	}
+
+	:global(.ql-image-resize-handle .ql-resize-handle-top-right) {
+		top: -6px;
+		right: -6px;
+		cursor: nesw-resize;
+	}
+
+	:global(.ql-image-resize-handle .ql-resize-handle-bottom-left) {
+		bottom: -6px;
+		left: -6px;
+		cursor: nesw-resize;
+	}
+
+	:global(.ql-image-resize-handle .ql-resize-handle-bottom-right) {
+		bottom: -6px;
+		right: -6px;
+		cursor: nwse-resize;
+	}
+
+	:global(.ql-image-resize-handle .ql-resize-handle-top-left:hover),
+	:global(.ql-image-resize-handle .ql-resize-handle-top-right:hover),
+	:global(.ql-image-resize-handle .ql-resize-handle-bottom-left:hover),
+	:global(.ql-image-resize-handle .ql-resize-handle-bottom-right:hover) {
+		background: #1a73e8;
+		transform: scale(1.2);
 	}
 </style>

@@ -236,9 +236,32 @@
 		recurrenceStartDate = weekNoteDate;
 	}
 
-	$: recurrenceDates = enableRecurrence && recurrenceStartDate && recurrenceEndDate 
-		? calculateRecurrenceDates(recurrenceStartDate, recurrenceEndDate, recurrenceWeeks)
-		: [];
+	$: recurrenceDates = (() => {
+		if (!enableRecurrence || !recurrenceStartDate || !recurrenceEndDate) {
+			return [];
+		}
+		
+		const dates = calculateRecurrenceDates(recurrenceStartDate, recurrenceEndDate, recurrenceWeeks);
+		
+		// Always include the initial weekNoteDate if it exists and is within the date range
+		if (weekNoteDate) {
+			const noteDate = new Date(weekNoteDate);
+			const startDate = new Date(recurrenceStartDate);
+			const endDate = new Date(recurrenceEndDate);
+			
+			// Check if weekNoteDate is within the range and not already in the array
+			if (noteDate >= startDate && noteDate <= endDate) {
+				const noteDateStr = noteDate.toISOString().split('T')[0];
+				if (!dates.includes(noteDateStr)) {
+					// Add it and sort to keep dates in order
+					dates.push(noteDateStr);
+					dates.sort();
+				}
+			}
+		}
+		
+		return dates;
+	})();
 
 	function closeWeekNotesModal() {
 		showWeekNotesModal = false;
@@ -657,8 +680,8 @@
 										bind:checked={enableRecurrence}
 										on:change={() => {
 											if (enableRecurrence) {
-												// When enabling repeat, set start date to current weekNoteDate
-												if (!recurrenceStartDate && weekNoteDate) {
+												// When enabling repeat, always set start date to current weekNoteDate
+												if (weekNoteDate) {
 													recurrenceStartDate = weekNoteDate;
 												}
 											} else {

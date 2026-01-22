@@ -24,10 +24,17 @@ export const actions = {
 		}
 
 		try {
+			// Get event to use its location as fallback
+			const event = await findById('events', params.id);
+			if (!event) {
+				return fail(404, { error: 'Event not found' });
+			}
+
 			const repeatType = data.get('repeatType') || 'none';
 			const startsAt = data.get('startsAt');
 			const endsAt = data.get('endsAt');
-			const location = data.get('location') || '';
+			// Use occurrence location if provided, otherwise fall back to event location
+			const location = data.get('location')?.trim() || event.location || '';
 			const maxSpaces = data.get('maxSpaces') ? parseInt(data.get('maxSpaces')) : null;
 			const information = data.get('information') || '';
 			const allDay = data.get('allDay') === 'true';

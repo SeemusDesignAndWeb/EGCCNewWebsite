@@ -387,9 +387,11 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 						});
 
 						// Format: Event Title (bold) - Role (bold) - Date/Time - Location (all on same line, same size)
+						// Get location from occurrence first, fallback to event location
+						const location = occurrence.location || eventData.location || '';
 						let line = `<strong>${eventData.title}</strong> - <strong>${rota.role}</strong> - ${dateStr}`;
-						if (occurrence.location) {
-							line += ` - ${occurrence.location}`;
+						if (location) {
+							line += ` - ${location}`;
 						}
 						
 						html += '<div style="margin-bottom: 8px;">';
@@ -465,9 +467,11 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 				});
 
 				// Format: Title - Date/Time - Location (all on same line)
+				// Get location from occurrence first, fallback to event location
+				const location = occurrence.location || eventData.location || '';
 				let line = `${eventData.title} - ${dateStr}`;
-				if (occurrence.location) {
-					line += ` - ${occurrence.location}`;
+				if (location) {
+					line += ` - ${location}`;
 				}
 				text += `\n- ${line}`;
 			}
@@ -502,10 +506,12 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 				});
 
 				// Format: Title (bold) - Date/Time - Location (all on same line, same size)
+				// Get location from occurrence first, fallback to event location
+				const location = occurrence.location || eventData.location || '';
 				let line = `<strong>${eventData.title}</strong>`;
 				line += ` - ${dateStr}`;
-				if (occurrence.location) {
-					line += ` - ${occurrence.location}`;
+				if (location) {
+					line += ` - ${location}`;
 				}
 				
 				html += '<div style="margin-bottom: 8px;">';
@@ -793,6 +799,9 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 			minute: '2-digit'
 		})
 		: 'TBD';
+	
+	// Get location from occurrence first, fallback to event location
+	const occurrenceLocation = occurrence ? (occurrence.location || eventData.location || '') : '';
 
 	// Get upcoming rotas for this contact (excluding the current one)
 	const upcomingRotas = contact ? await getUpcomingRotas(contact.id, event) : [];
@@ -817,11 +826,12 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 				hour: '2-digit',
 				minute: '2-digit'
 			});
+			const location = item.occurrence.location || item.event.location || '';
 			upcomingRotasHtml += `
 				<div style="border-bottom: 1px solid #e5e7eb; padding: 6px 0; margin-bottom: 6px;">
 					<p style="margin: 0 0 3px 0; color: #333; font-size: 14px; font-weight: 600;">${item.event.title} - ${item.rota.role}</p>
 					<p style="margin: 0 0 3px 0; color: #666; font-size: 13px;">${dateStr}</p>
-					${item.occurrence.location ? `<p style="margin: 0 0 5px 0; color: #666; font-size: 13px;">📍 ${item.occurrence.location}</p>` : ''}
+					${location ? `<p style="margin: 0 0 5px 0; color: #666; font-size: 13px;">📍 ${location}</p>` : ''}
 					${item.signupUrl ? `<a href="${item.signupUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;">View Rota</a>` : ''}
 				</div>
 			`;
@@ -856,9 +866,9 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 				<div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
 					<p style="margin: 0 0 5px 0; color: #666; font-size: 13px;"><strong>Date & Time:</strong></p>
 					<p style="margin: 0; color: #333; font-size: 14px;">${occurrenceDate}</p>
-					${occurrence.location ? `
+					${occurrenceLocation ? `
 					<p style="margin: 10px 0 5px 0; color: #666; font-size: 13px;"><strong>Location:</strong></p>
-					<p style="margin: 0; color: #333; font-size: 14px;">${occurrence.location}</p>
+					<p style="margin: 0; color: #333; font-size: 14px;">${occurrenceLocation}</p>
 					` : ''}
 				</div>
 				` : ''}
@@ -891,9 +901,10 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 				hour: '2-digit',
 				minute: '2-digit'
 			});
+			const location = item.occurrence.location || item.event.location || '';
 			upcomingRotasText += `- ${item.event.title} - ${item.rota.role}\n  ${dateStr}`;
-			if (item.occurrence.location) {
-				upcomingRotasText += `\n  Location: ${item.occurrence.location}`;
+			if (location) {
+				upcomingRotasText += `\n  Location: ${location}`;
 			}
 			if (item.signupUrl) {
 				upcomingRotasText += `\n  View: ${item.signupUrl}`;
@@ -909,7 +920,7 @@ Hello ${name},
 
 You've been invited to volunteer for ${eventTitle} as a ${role}.
 
-${occurrence ? `Date & Time: ${occurrenceDate}${occurrence.location ? `\nLocation: ${occurrence.location}` : ''}` : ''}
+${occurrence ? `Date & Time: ${occurrenceDate}${occurrenceLocation ? `\nLocation: ${occurrenceLocation}` : ''}` : ''}
 
 Accept your invitation by visiting:
 ${signupUrl}
@@ -1021,11 +1032,12 @@ export async function sendCombinedRotaInvites(contactInvites, eventData, eventPa
 						hour: '2-digit',
 						minute: '2-digit'
 					});
+					const location = item.occurrence.location || item.event.location || '';
 					upcomingRotasHtml += `
 						<div style="border-bottom: 1px solid #e5e7eb; padding: 6px 0; margin-bottom: 6px;">
 							<p style="margin: 0 0 3px 0; color: #333; font-size: 14px; font-weight: 600;">${item.event.title} - ${item.rota.role}</p>
 							<p style="margin: 0 0 3px 0; color: #666; font-size: 13px;">${dateStr}</p>
-							${item.occurrence.location ? `<p style="margin: 0 0 5px 0; color: #666; font-size: 13px;">📍 ${item.occurrence.location}</p>` : ''}
+							${location ? `<p style="margin: 0 0 5px 0; color: #666; font-size: 13px;">📍 ${location}</p>` : ''}
 							${item.signupUrl ? `<a href="${item.signupUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px;">View Rota</a>` : ''}
 						</div>
 					`;
@@ -1102,9 +1114,10 @@ export async function sendCombinedRotaInvites(contactInvites, eventData, eventPa
 						hour: '2-digit',
 						minute: '2-digit'
 					});
+					const location = item.occurrence.location || item.event.location || '';
 					upcomingRotasText += `- ${item.event.title} - ${item.rota.role}\n  ${dateStr}`;
-					if (item.occurrence.location) {
-						upcomingRotasText += `\n  Location: ${item.occurrence.location}`;
+					if (location) {
+						upcomingRotasText += `\n  Location: ${location}`;
 					}
 					if (item.signupUrl) {
 						upcomingRotasText += `\n  View: ${item.signupUrl}`;
@@ -1560,6 +1573,9 @@ export async function sendEventSignupConfirmation({ to, name, event, occurrence,
 	const eventDate = formatDate(occurrence.startsAt);
 	const eventTime = `${formatTime(occurrence.startsAt)} - ${formatTime(occurrence.endsAt)}`;
 	const totalAttendees = guestCount + 1; // +1 for the signer-upper
+	
+	// Get location from occurrence first, fallback to event location
+	const location = occurrence.location || event.location || '';
 
 	const branding = getEmailBranding(svelteEvent);
 	const html = `
@@ -1596,10 +1612,10 @@ export async function sendEventSignupConfirmation({ to, name, event, occurrence,
 							<td style="padding: 6px 0; font-weight: 600; color: #666; font-size: 13px;">Time:</td>
 							<td style="padding: 6px 0; color: #333; font-size: 13px;">${eventTime}</td>
 						</tr>
-						${occurrence.location ? `
+						${location ? `
 						<tr>
 							<td style="padding: 6px 0; font-weight: 600; color: #666; font-size: 13px;">Location:</td>
-							<td style="padding: 6px 0; color: #333; font-size: 13px;">${occurrence.location}</td>
+							<td style="padding: 6px 0; color: #333; font-size: 13px;">${location}</td>
 						</tr>
 						` : ''}
 						<tr>
@@ -1637,7 +1653,7 @@ Thank you for signing up for ${event.title}!
 Event Details:
 Date: ${eventDate}
 Time: ${eventTime}
-${occurrence.location ? `Location: ${occurrence.location}` : ''}
+${location ? `Location: ${location}` : ''}
 Attendees: ${totalAttendees === 1 
 		? 'Just you' 
 		: `You + ${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} (${totalAttendees} total)`}
