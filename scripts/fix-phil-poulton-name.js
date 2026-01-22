@@ -22,6 +22,17 @@ function getDataDir() {
 }
 
 const DATA_DIR = getDataDir();
+const MARKER_FILE = join(DATA_DIR, '.phil-poulton-fix-complete');
+
+// Check if script has already been run
+async function hasAlreadyRun() {
+	return existsSync(MARKER_FILE);
+}
+
+// Mark script as complete
+async function markAsComplete() {
+	await writeFile(MARKER_FILE, new Date().toISOString(), 'utf8');
+}
 
 // Read NDJSON file
 async function readCollection(collection) {
@@ -51,6 +62,13 @@ async function writeCollection(collection, records) {
 }
 
 async function fixPhilPoultonName(emailFilter = null) {
+	// Check if already run (unless email filter is provided for manual re-run)
+	if (!emailFilter && await hasAlreadyRun()) {
+		console.log('⏭️  Phil Poulton name fix already completed - skipping');
+		console.log(`   Marker file: ${MARKER_FILE}`);
+		return;
+	}
+	
 	console.log('🔍 Searching for rotas with "Phil." as assignee name...');
 	console.log(`📁 Data directory: ${DATA_DIR}`);
 	
@@ -158,9 +176,11 @@ async function fixPhilPoultonName(emailFilter = null) {
 		}
 		
 		if (rotaUpdates.length === 0) {
-			console.log('❌ No rotas found with "Phil." as assignee name');
-			if (emailFilter) {
-				console.log('💡 Try running without email filter to see all "Phil." entries');
+			console.log('ℹ️  No rotas found with "Phil." as assignee name');
+			// Mark as complete even if nothing to fix (prevents re-running)
+			if (!emailFilter) {
+				await markAsComplete();
+				console.log(`   ✓ Marked fix as complete (no changes needed)`);
 			}
 			return;
 		}
@@ -180,6 +200,12 @@ async function fixPhilPoultonName(emailFilter = null) {
 		
 		await writeCollection('rotas', updatedRotas);
 		console.log(`   ✓ Updated ${rotaUpdates.length} rota(s) in database`);
+		
+		// Mark as complete (only if no email filter - allows manual re-runs)
+		if (!emailFilter) {
+			await markAsComplete();
+			console.log(`   ✓ Marked fix as complete`);
+		}
 		
 		console.log(`\n✅ Successfully updated ${fixedCount} rota(s)!`);
 		console.log('🎉 Phil Poulton\'s name has been fixed in all rotas');
