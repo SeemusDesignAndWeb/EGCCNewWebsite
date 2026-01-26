@@ -16,6 +16,22 @@
 	$: eventOccurrences = $page.data?.eventOccurrences || [];
 	$: assigneesByOccurrence = $page.data?.assigneesByOccurrence || {};
 	$: availableContacts = $page.data?.availableContacts || [];
+	
+	// Filter assigneesByOccurrence to only include current and future occurrences
+	$: upcomingOccurrenceIds = new Set(eventOccurrences.map(occ => occ.id));
+	$: filteredAssigneesByOccurrence = Object.keys(assigneesByOccurrence)
+		.filter(occId => occId === 'unassigned' || upcomingOccurrenceIds.has(occId))
+		.reduce((acc, occId) => {
+			acc[occId] = assigneesByOccurrence[occId];
+			return acc;
+		}, {});
+	
+	// Calculate total assignees for current and future occurrences only (exclude unassigned from occurrence count)
+	$: totalUpcomingAssignees = Object.entries(filteredAssigneesByOccurrence)
+		.filter(([occId]) => occId !== 'unassigned')
+		.reduce((sum, [, assignees]) => sum + (Array.isArray(assignees) ? assignees.length : 0), 0);
+	$: upcomingOccurrenceCount = Object.keys(filteredAssigneesByOccurrence)
+		.filter(key => key !== 'unassigned').length;
 	$: lists = $page.data?.lists || [];
 	$: owner = $page.data?.owner || null;
 	$: signupLink = $page.data?.signupLink || '';
@@ -580,7 +596,7 @@
 				</div>
 				<div>
 					<dt class="text-sm font-medium text-gray-500">Total Assigned</dt>
-					<dd class="mt-1 text-sm text-gray-900">{Array.isArray(rota.assignees) ? rota.assignees.length : 0} across {Object.keys(assigneesByOccurrence).length} {Object.keys(assigneesByOccurrence).length === 1 ? 'occurrence' : 'occurrences'}</dd>
+					<dd class="mt-1 text-sm text-gray-900">{totalUpcomingAssignees} across {upcomingOccurrenceCount} {upcomingOccurrenceCount === 1 ? 'occurrence' : 'occurrences'}</dd>
 				</div>
 				{#if owner}
 					<div>

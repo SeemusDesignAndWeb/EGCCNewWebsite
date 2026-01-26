@@ -195,7 +195,7 @@
 								<h2 class="text-xl font-bold text-gray-900 mb-4">Your Details</h2>
 								<div class="space-y-4">
 									<div>
-										<label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+										<label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name (i.e. Fred Bloggs)</label>
 										<input
 											type="text"
 											id="name"

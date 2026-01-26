@@ -158,7 +158,7 @@
 								<h2 class="text-xl font-bold text-gray-900 mb-4">Your Details</h2>
 								<div class="space-y-4">
 									<div>
-										<label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+										<label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name (i.e. Fred Bloggs)</label>
 										<input
 											type="text"
 											id="name"
@@ -272,8 +272,10 @@
 																{@const isSelected = isRotaSelected(rota.id, occ.id)}
 																{@const alreadySignedUp = isEmailAlreadySignedUp(rota, occ.id)}
 																{@const canSelect = !isFull && !alreadySignedUp}
+																{@const hasSomeFilled = assignees.length > 0 && !isFull}
+																{@const bgColor = isFull ? 'bg-red-100' : (hasSomeFilled ? 'bg-green-100' : 'bg-white')}
 																
-																<div class="border-2 rounded p-2 transition-all {isSelected ? 'bg-brand-green/10 border-brand-green shadow-sm' : 'border-gray-200 hover:border-brand-blue/50'} {!canSelect && !isSelected ? 'opacity-60' : ''}">
+																<div class="border-2 rounded p-2 transition-all {bgColor} {isSelected ? 'border-brand-green shadow-sm ring-2 ring-brand-green/20' : 'border-gray-200 hover:border-brand-blue/50'} {!canSelect && !isSelected ? 'opacity-60' : ''}">
 																	<label class="flex items-start cursor-pointer {!canSelect && !isSelected ? 'cursor-not-allowed' : ''}">
 																		<input
 																			type="checkbox"
