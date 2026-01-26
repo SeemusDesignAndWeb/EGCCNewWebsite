@@ -140,6 +140,40 @@ export const actions = {
 					return fail(400, { error: 'Name and email are required' });
 				}
 
+				// Parse name into firstName and lastName
+				const nameParts = name.trim().split(/\s+/);
+				const firstName = nameParts[0] || '';
+				const lastName = nameParts.slice(1).join(' ') || '';
+
+				// Try to match with existing contact by email
+				const normalizedEmail = email.trim().toLowerCase();
+				const existingContacts = await findMany('contacts', c => 
+					c.email && c.email.toLowerCase() === normalizedEmail
+				);
+
+				let matchedContact = null;
+				if (existingContacts.length > 0) {
+					matchedContact = existingContacts[0];
+					// Optionally update contact name if it's missing or different
+					const existingFullName = `${matchedContact.firstName || ''} ${matchedContact.lastName || ''}`.trim();
+					const newFullName = name.trim();
+					
+					if (!existingFullName || (newFullName.length > existingFullName.length && newFullName !== existingFullName)) {
+						const updatedContact = {
+							...matchedContact,
+							firstName: firstName || matchedContact.firstName || '',
+							lastName: lastName || matchedContact.lastName || '',
+							updatedAt: new Date().toISOString()
+						};
+						matchedContact = await update('contacts', matchedContact.id, updatedContact);
+					}
+				} else {
+					// Contact must exist in database to sign up for rotas
+					return fail(400, { 
+						error: 'No account found with this email address. Please sign up as a member first or contact an administrator to add you to the system.' 
+					});
+				}
+
 				// Get selected rotas and occurrences
 				const selectedRotasStr = data.get('selectedRotas') || '[]';
 				console.log('[Rota Signup] Received selectedRotas string:', selectedRotasStr);
@@ -168,6 +202,7 @@ export const actions = {
 				const eventOccurrences = await findMany('occurrences', o => o.eventId === event.id);
 				const occurrences = filterUpcomingOccurrences(eventOccurrences);
 				const rotas = await findMany('rotas', r => r.eventId === event.id);
+				const allContacts = await readCollection('contacts');
 
 				const errors = [];
 
@@ -223,17 +258,31 @@ export const actions = {
 								return false;
 							});
 
-							const emailExists = assigneesForOcc.some(a => {
+							const alreadySignedUp = assigneesForOcc.some(a => {
 								if (typeof a === 'string') {
-									return false;
+									// Old format: string is contactId
+									return a === matchedContact.id;
 								}
 								if (a && typeof a === 'object') {
-									return a.email && a.email.toLowerCase() === email.toLowerCase();
+									// Check contactId match
+									if (a.contactId) {
+										if (typeof a.contactId === 'string') {
+											return a.contactId === matchedContact.id;
+										}
+										// Handle nested contactId object (shouldn't happen, but be safe)
+										if (a.contactId && typeof a.contactId === 'object' && a.contactId.id) {
+											return a.contactId.id === matchedContact.id;
+										}
+									}
+									// Also check email match for legacy public signup format (shouldn't happen now, but be safe)
+									if (a.email && a.email.toLowerCase() === normalizedEmail) {
+										return true;
+									}
 								}
 								return false;
 							});
 
-							if (emailExists) {
+							if (alreadySignedUp) {
 								const occ = occurrences.find(o => o.id === targetOccurrenceId);
 								const occTime = occ ? formatDateTimeUK(occ.startsAt) : 'this occurrence';
 								errors.push(`You are already signed up for a rota on ${occTime}`);
@@ -295,8 +344,11 @@ export const actions = {
 						continue;
 					}
 
-					// Add assignee as object (name, email, occurrenceId) for public signups
-					existingAssignees.push({ name, email, occurrenceId: targetOccurrenceId });
+					// Add assignee - link to matched contact (contact must exist, checked earlier)
+					existingAssignees.push({ 
+						contactId: matchedContact.id, 
+						occurrenceId: targetOccurrenceId 
+					});
 					console.log(`[Rota Signup] Adding assignee. Total assignees after add: ${existingAssignees.length}`);
 
 					// Update rota
