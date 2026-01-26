@@ -12,6 +12,7 @@
 	let showImagePicker = false;
 	let currentSectionIndex = null;
 	let currentImageIndex = null;
+	let selectingSignature = false;
 	let draggedIndex = null;
 	let draggedOverIndex = null;
 
@@ -23,6 +24,7 @@
 	$: if (!showImagePicker && currentSectionIndex !== null) {
 		currentSectionIndex = null;
 		currentImageIndex = null;
+		selectingSignature = false;
 	}
 
 	async function loadPages() {
@@ -205,15 +207,25 @@
 					// Add new image
 					section.images = [...section.images, imagePath];
 				}
+			} else if (section.type === 'welcome' && selectingSignature) {
+				// For welcome sections, set the signature if we're selecting signature
+				section.signature = imagePath;
+			} else if (section.type === 'welcome') {
+				// For welcome sections, set the main image
+				section.image = imagePath;
 			} else {
 				// For other sections, set the image
 				section.image = imagePath;
 			}
+			// Force reactivity update
+			editing = { ...editing, sections: [...editing.sections] };
 			currentSectionIndex = null;
 			currentImageIndex = null;
+			selectingSignature = false;
 		} else if (editing) {
 			// Setting image for hero
 			editing.heroImage = imagePath;
+			editing = { ...editing };
 		}
 		showImagePicker = false;
 	}
@@ -673,7 +685,90 @@
 										</button>
 									{/if}
 								{:else if section.type === 'welcome'}
-									<div class="relative" style="height: 300px;">
+									<div class="mb-3">
+										<label class="block text-xs font-medium mb-1 text-gray-600">Title</label>
+										<p class="text-xs text-gray-500 mb-1">The main heading for the welcome section. You can use HTML like &lt;span style="color:#4BB170;"&gt;text&lt;/span&gt; for colored text.</p>
+										<input
+											type="text"
+											bind:value={section.title}
+											class="w-full px-3 py-2 border rounded"
+											placeholder="e.g., You are welcome"
+										/>
+									</div>
+									<div class="mb-3">
+										<label class="block text-xs font-medium mb-1 text-gray-600">Image URL</label>
+										<div class="flex gap-2">
+											<input
+												type="text"
+												bind:value={section.image}
+												class="flex-1 px-3 py-2 border rounded"
+												placeholder="Image URL (optional)"
+											/>
+											<button
+												type="button"
+												on:click={() => {
+													showImagePicker = true;
+													// Store which section we're editing
+													currentSectionIndex = sectionIndex;
+													selectingSignature = false;
+												}}
+												class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+											>
+												Select Image
+											</button>
+										</div>
+										{#if section.image}
+											<div class="mt-2">
+												<img
+													src={section.image}
+													alt="Preview"
+													class="max-w-xs h-32 object-cover rounded border"
+												/>
+											</div>
+										{/if}
+									</div>
+									<div class="mb-3">
+										<label class="block text-xs font-medium mb-1 text-gray-600">Image Alt Text</label>
+										<input
+											type="text"
+											bind:value={section.imageAlt}
+											class="w-full px-3 py-2 border rounded"
+											placeholder="Alt text for the image (optional)"
+										/>
+									</div>
+									<div class="mb-3">
+										<label class="block text-xs font-medium mb-1 text-gray-600">Signature Image URL</label>
+										<div class="flex gap-2">
+											<input
+												type="text"
+												bind:value={section.signature}
+												class="flex-1 px-3 py-2 border rounded"
+												placeholder="Signature image URL (optional)"
+											/>
+											<button
+												type="button"
+												on:click={() => {
+													showImagePicker = true;
+													// Store which section we're editing for signature
+													currentSectionIndex = sectionIndex;
+													selectingSignature = true;
+												}}
+												class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+											>
+												Select Signature
+											</button>
+										</div>
+										{#if section.signature}
+											<div class="mt-2">
+												<img
+													src={section.signature}
+													alt="Signature Preview"
+													class="max-w-xs h-16 object-contain rounded border"
+												/>
+											</div>
+										{/if}
+									</div>
+									<div class="relative mb-3" style="height: 300px;">
 										<label class="block text-xs font-medium mb-1 text-gray-600">Welcome Section Content</label>
 										<RichTextEditor bind:value={section.content} height="280px" />
 									</div>
@@ -1143,7 +1238,7 @@
 									type="button"
 									on:click={() => {
 										if (!editing.sections) editing.sections = [];
-										editing.sections = [...editing.sections, { type: 'welcome', content: '' }];
+										editing.sections = [...editing.sections, { type: 'welcome', title: '', content: '', image: '', imageAlt: '', signature: '' }];
 										editing = editing;
 									}}
 									class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
@@ -1295,7 +1390,7 @@
 									type="button"
 									on:click={() => {
 										if (!editing.sections) editing.sections = [];
-										editing.sections = [...editing.sections, { type: 'welcome', content: '' }];
+										editing.sections = [...editing.sections, { type: 'welcome', title: '', content: '', image: '', imageAlt: '', signature: '' }];
 										editing = editing;
 									}}
 									class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
