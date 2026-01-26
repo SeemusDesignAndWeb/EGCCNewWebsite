@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { dialog } from '$lib/crm/stores/notifications.js';
+	import { notifications } from '$lib/crm/stores/notifications.js';
 
 	$: data = $page.data || {};
 	$: events = data.events || [];
@@ -52,8 +53,22 @@
 
 			const data = await response.json();
 			results = data;
+			
+			if (data.error) {
+				notifications.error(data.error || 'Failed to send invitations');
+			} else if (data.success && data.results) {
+				const sentCount = data.results.filter(r => r.status === 'sent').length;
+				const errorCount = data.results.filter(r => r.status === 'error').length;
+				
+				if (sentCount > 0) {
+					notifications.success(`Successfully sent ${sentCount} invitation${sentCount !== 1 ? 's' : ''}${errorCount > 0 ? ` (${errorCount} failed)` : ''}`);
+				} else if (errorCount > 0) {
+					notifications.error(`Failed to send ${errorCount} invitation${errorCount !== 1 ? 's' : ''}`);
+				}
+			}
 		} catch (error) {
 			results = { error: error.message };
+			notifications.error(error.message || 'Failed to send invitations');
 		} finally {
 			sending = false;
 		}
