@@ -6,9 +6,12 @@ import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
 import { generateOccurrences } from '$lib/crm/server/recurrence.js';
 import { generateId } from '$lib/crm/server/ids.js';
 
+import { readCollection } from '$lib/crm/server/fileStore.js';
+
 export async function load({ cookies }) {
 	const csrfToken = getCsrfToken(cookies) || '';
-	return { csrfToken };
+	const lists = await readCollection('lists');
+	return { csrfToken, lists };
 }
 
 export const actions = {
@@ -24,6 +27,9 @@ export const actions = {
 			const description = data.get('description') || '';
 			const sanitized = await sanitizeHtml(description);
 
+			// Handle listIds - can be multiple form values with the same name
+			const listIds = data.getAll('listIds').filter(id => id && id.trim().length > 0);
+
 			const eventData = {
 				title: data.get('title'),
 				description: sanitized,
@@ -32,6 +38,7 @@ export const actions = {
 				enableSignup: data.get('enableSignup') === 'on' || data.get('enableSignup') === 'true',
 				hideFromEmail: data.get('hideFromEmail') === 'on' || data.get('hideFromEmail') === 'true',
 				color: data.get('color') || '#9333ea',
+				listIds: listIds,
 				// Recurrence fields
 				repeatType: data.get('repeatType') || 'none',
 				repeatInterval: data.get('repeatInterval') ? parseInt(data.get('repeatInterval')) : 1,
