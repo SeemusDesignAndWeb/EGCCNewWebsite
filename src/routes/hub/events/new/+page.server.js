@@ -1,5 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { create } from '$lib/crm/server/fileStore.js';
+import { create, readCollection } from '$lib/crm/server/fileStore.js';
 import { validateEvent, validateOccurrence, getEventColors } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
@@ -10,7 +10,8 @@ import { logDataChange } from '$lib/crm/server/audit.js';
 export async function load({ cookies }) {
 	const csrfToken = getCsrfToken(cookies) || '';
 	const eventColors = await getEventColors();
-	return { csrfToken, eventColors };
+	const lists = await readCollection('lists');
+	return { csrfToken, eventColors, lists };
 }
 
 export const actions = {
@@ -26,6 +27,9 @@ export const actions = {
 			const description = data.get('description') || '';
 			const sanitized = await sanitizeHtml(description);
 
+			// Handle listIds - can be multiple form values with the same name
+			const listIds = data.getAll('listIds').filter(id => id && id.trim().length > 0);
+
 			const eventData = {
 				title: data.get('title'),
 				description: sanitized,
@@ -34,6 +38,7 @@ export const actions = {
 				enableSignup: data.get('enableSignup') === 'on' || data.get('enableSignup') === 'true',
 				hideFromEmail: data.get('hideFromEmail') === 'on' || data.get('hideFromEmail') === 'true',
 				color: data.get('color') || '#9333ea',
+				listIds: listIds,
 				// Recurrence fields
 				repeatType: data.get('repeatType') || 'none',
 				repeatInterval: data.get('repeatInterval') ? parseInt(data.get('repeatInterval')) : 1,

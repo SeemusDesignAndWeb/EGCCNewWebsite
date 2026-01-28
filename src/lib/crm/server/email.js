@@ -86,9 +86,10 @@ async function getUnsubscribeLink(contactIdOrEmail, event) {
 /**
  * Get upcoming public events (next 14 days)
  * @param {object} event - SvelteKit event object (for base URL)
+ * @param {object} contact - Optional contact object to filter events by list membership
  * @returns {Promise<Array>} Array of event occurrences
  */
-export async function getUpcomingEvents(event) {
+export async function getUpcomingEvents(event, contact = null) {
 	const now = new Date();
 	
 	// Calculate 14 days from now (end of day at 23:59:59)
@@ -98,14 +99,35 @@ export async function getUpcomingEvents(event) {
 
 	const events = await readCollection('events');
 	const occurrences = await readCollection('occurrences');
+	const lists = await readCollection('lists');
 	const baseUrl = getBaseUrl(event);
 
 	// Filter to public and internal events (internal events are for members/contacts only)
 	// Exclude events that are hidden from email
-	const memberEvents = events.filter(e => 
+	let memberEvents = events.filter(e => 
 		(e.visibility === 'public' || e.visibility === 'internal') && 
 		!e.hideFromEmail
 	);
+
+	// If a contact is provided, filter events by list membership
+	if (contact && contact.id) {
+		memberEvents = memberEvents.filter(e => {
+			// If event has no listIds (empty array or undefined), include it for everyone
+			if (!e.listIds || !Array.isArray(e.listIds) || e.listIds.length === 0) {
+				return true;
+			}
+
+			// Check if contact is in any of the event's lists
+			return e.listIds.some(listId => {
+				const list = lists.find(l => l.id === listId);
+				if (!list || !list.contactIds || !Array.isArray(list.contactIds)) {
+					return false;
+				}
+				return list.contactIds.includes(contact.id);
+			});
+		});
+	}
+
 	const memberEventIds = new Set(memberEvents.map(e => e.id));
 
 	// Get upcoming occurrences for public and internal events
@@ -546,8 +568,8 @@ export async function prepareNewsletterEmail({ newsletterId, to, name, contact }
 	const baseUrl = getBaseUrl(event);
 	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
-	// Get upcoming events for personalisation
-	const upcomingEvents = await getUpcomingEvents(event);
+	// Get upcoming events for personalisation (filtered by contact's list membership)
+	const upcomingEvents = await getUpcomingEvents(event, contact);
 	
 	// Get upcoming rotas for this contact
 	const upcomingRotas = contact?.id ? await getUpcomingRotas(contact.id, event) : [];

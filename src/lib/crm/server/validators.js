@@ -146,6 +146,25 @@ export async function validateEvent(data) {
 	const allowedColours = eventColours.map(c => c.value);
 	const color = allowedColours.includes(data.color) ? data.color : (eventColours[0]?.value || '#9333ea');
 	
+	// Validate listIds - must be an array of strings
+	let listIds = [];
+	if (data.listIds) {
+		if (Array.isArray(data.listIds)) {
+			listIds = data.listIds.filter(id => typeof id === 'string' && id.trim().length > 0);
+		} else if (typeof data.listIds === 'string') {
+			// Handle JSON string or comma-separated values
+			try {
+				const parsed = JSON.parse(data.listIds);
+				if (Array.isArray(parsed)) {
+					listIds = parsed.filter(id => typeof id === 'string' && id.trim().length > 0);
+				}
+			} catch {
+				// If not JSON, try comma-separated
+				listIds = data.listIds.split(',').map(id => id.trim()).filter(id => id.length > 0);
+			}
+		}
+	}
+
 	return {
 		title: validateString(data.title, 'Title', 200),
 		description: validateString(data.description || '', 'Description', 10000),
@@ -155,6 +174,7 @@ export async function validateEvent(data) {
 		hideFromEmail: data.hideFromEmail === true || data.hideFromEmail === 'true' || data.hideFromEmail === 'on',
 		maxSpaces: typeof data.maxSpaces === 'number' && data.maxSpaces > 0 ? data.maxSpaces : (data.maxSpaces ? parseInt(data.maxSpaces) || null : null),
 		color: color, // Default to purple if not provided or invalid
+		listIds: listIds, // Array of list IDs that this event should be sent to
 		// Recurrence fields
 		repeatType: ['none', 'daily', 'weekly', 'monthly', 'yearly'].includes(data.repeatType) ? data.repeatType : 'none',
 		repeatInterval: typeof data.repeatInterval === 'number' && data.repeatInterval > 0 ? data.repeatInterval : (data.repeatInterval ? parseInt(data.repeatInterval) || 1 : 1),

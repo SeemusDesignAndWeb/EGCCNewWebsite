@@ -3,12 +3,14 @@
 	import { page } from '$app/stores';
 	import FormField from '$lib/crm/components/FormField.svelte';
 	import HtmlEditor from '$lib/crm/components/HtmlEditor.svelte';
+	import MultiSelect from '$lib/crm/components/MultiSelect.svelte';
 	import { notifications } from '$lib/crm/stores/notifications.js';
 	import { EVENT_COLORS } from '$lib/crm/constants/eventColours.js';
 
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
 	$: eventColors = $page.data?.eventColors || EVENT_COLORS;
+	$: lists = $page.data?.lists || [];
 	
 	// Get date from URL parameter and pre-fill form
 	$: {
@@ -45,6 +47,7 @@
 	}
 
 	let description = '';
+	let selectedListIds = [];
 	let formData = {
 		title: '',
 		location: '',
@@ -163,6 +166,16 @@
 					<label for="hideFromEmail" class="ml-2 block text-sm text-gray-700">
 						Hide from email
 					</label>
+				</div>
+				<div>
+					<MultiSelect
+						label="Email Lists"
+						name="listIds"
+						options={lists.map(list => ({ id: list.id, name: list.name }))}
+						bind:selected={selectedListIds}
+						placeholder="Select lists..."
+					/>
+					<p class="text-xs text-gray-500 mt-1">Select lists to show this event to on an email. If no lists are selected, the event will be sent to everyone (based on visibility).</p>
 				</div>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Event Color</label>

@@ -7,6 +7,7 @@
 	import FormField from '$lib/crm/components/FormField.svelte';
 	import HtmlEditor from '$lib/crm/components/HtmlEditor.svelte';
 	import Table from '$lib/crm/components/Table.svelte';
+	import MultiSelect from '$lib/crm/components/MultiSelect.svelte';
 	import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
 	import { notifications } from '$lib/crm/stores/notifications.js';
 	import { dialog } from '$lib/crm/stores/notifications.js';
@@ -21,6 +22,7 @@
 	$: eventColors = $page.data?.eventColors || EVENT_COLORS;
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
+	$: lists = $page.data?.lists || [];
 	
 	let occurrenceLinkCopied = {};
 
@@ -76,6 +78,7 @@
 
 	let editing = false;
 	let description = '';
+	let selectedListIds = [];
 	let formData = {
 		title: '',
 		location: '',
@@ -98,6 +101,7 @@
 			color: event.color || '#9333ea'
 		};
 		description = event.description || '';
+		selectedListIds = Array.isArray(event.listIds) ? [...event.listIds] : [];
 	}
 
 	async function handleDelete() {
@@ -405,6 +409,16 @@
 									Hide from email
 								</label>
 							</div>
+							<div>
+								<MultiSelect
+									label="Email Lists"
+									name="listIds"
+									options={lists.map(list => ({ id: list.id, name: list.name }))}
+									bind:selected={selectedListIds}
+									placeholder="Select lists..."
+								/>
+								<p class="text-xs text-gray-500 mt-1">Select lists to show this event to on an email. If no lists are selected, the event will be sent to everyone (based on visibility).</p>
+							</div>
 						</div>
 					</div>
 					
@@ -451,6 +465,24 @@
 								})()}</span>
 							</dd>
 						</div>
+						{#if event.listIds && event.listIds.length > 0}
+							<div>
+								<dt class="text-xs font-medium text-gray-500 uppercase">Email Lists</dt>
+								<dd class="mt-1 text-sm text-gray-900">
+									<ul class="list-disc list-inside space-y-1">
+										{#each event.listIds as listId}
+											{@const list = lists.find(l => l.id === listId)}
+											<li class="text-xs">{list ? list.name : listId}</li>
+										{/each}
+									</ul>
+								</dd>
+							</div>
+						{:else}
+							<div>
+								<dt class="text-xs font-medium text-gray-500 uppercase">Email Lists</dt>
+								<dd class="mt-1 text-sm text-gray-900 text-xs text-gray-500 italic">No lists selected (sent to everyone based on visibility)</dd>
+							</div>
+						{/if}
 					</dl>
 				</div>
 				

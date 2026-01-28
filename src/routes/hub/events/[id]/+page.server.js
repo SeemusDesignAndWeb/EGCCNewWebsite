@@ -113,7 +113,8 @@ export async function load({ params, cookies, url }) {
 
 	const csrfToken = getCsrfToken(cookies) || '';
 	const eventColors = await getEventColors();
-	return { event, occurrences: occurrencesWithStats, rotas, meetingPlanners, rotaSignupLink, publicEventLink, occurrenceLinks, csrfToken, eventColors };
+	const lists = await readCollection('lists');
+	return { event, occurrences: occurrencesWithStats, rotas, meetingPlanners, rotaSignupLink, publicEventLink, occurrenceLinks, csrfToken, eventColors, lists };
 }
 
 export const actions = {
@@ -135,6 +136,9 @@ export const actions = {
 			const description = data.get('description') || '';
 			const sanitized = await sanitizeHtml(description);
 
+			// Handle listIds - can be multiple form values with the same name
+			const listIds = data.getAll('listIds').filter(id => id && id.trim().length > 0);
+
 			const eventData = {
 				title: data.get('title'),
 				description: sanitized,
@@ -144,6 +148,7 @@ export const actions = {
 				hideFromEmail: data.get('hideFromEmail') === 'on' || data.get('hideFromEmail') === 'true',
 				maxSpaces: data.get('maxSpaces') ? parseInt(data.get('maxSpaces')) : null,
 				color: data.get('color') || existingEvent.color || '#9333ea',
+				listIds: listIds,
 				// Preserve recurrence fields if they exist
 				repeatType: existingEvent.repeatType || 'none',
 				repeatInterval: existingEvent.repeatInterval || 1,

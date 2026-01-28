@@ -35,7 +35,7 @@ export async function load({ params, url, event }) {
 		if (selectedContact) {
 			// Get upcoming rotas and events for this contact
 			const upcomingRotas = await getUpcomingRotas(contactId, event);
-			const upcomingEvents = await getUpcomingEvents(event);
+			const upcomingEvents = await getUpcomingEvents(event, selectedContact);
 			
 			// Check if contact has any rotas
 			const contactHasRotas = await hasAnyRotas(contactId);
