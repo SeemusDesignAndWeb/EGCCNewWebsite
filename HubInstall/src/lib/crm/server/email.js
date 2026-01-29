@@ -915,14 +915,14 @@ export async function sendCombinedRotaInvites(contactInvites, eventData, eventPa
 				rotasHtml += `
 					<div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #2d7a32;">
 						<p style="margin: 0 0 8px 0; color: #333; font-size: 16px; font-weight: 600;">${role}</p>
-						<p style="margin: 0 0 10px 0; color: #666; font-size: 13px;">Capacity: ${capacity} ${capacity === 1 ? 'person' : 'people'} per occurrence</p>
+						<p style="margin: 0 0 10px 0; color: #666; font-size: 13px;">Capacity: ${capacity} ${capacity === 1 ? 'person is' : 'people are'} ideal for this rota</p>
 						<div style="text-align: center; margin-top: 10px;">
 							<a href="${signupUrl}" style="display: inline-block; background: #2d7a32; color: white; padding: 8px 16px; text-decoration: none; border-radius: 5px; font-weight: 600; font-size: 13px;">Select Date for ${role}</a>
 						</div>
 					</div>
 				`;
 
-				rotasText += `\n${role} (Capacity: ${capacity} ${capacity === 1 ? 'person' : 'people'} per occurrence)`;
+				rotasText += `\n${role} (Capacity: ${capacity} ${capacity === 1 ? 'person is' : 'people are'} ideal for this rota)`;
 				rotasText += `\nSelect date: ${signupUrl}\n`;
 			}
 
@@ -1792,7 +1792,7 @@ export async function sendRotaUpdateNotification({ to, name }, rotaData, event) 
 					<h2 style="color: #2d7a32; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">Rota Details</h2>
 					<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Role:</strong> ${role}</p>
 					<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Event:</strong> ${eventTitle}${occurrenceDateDisplay ? ` - ${occurrenceDateDisplay}` : ''}</p>
-					<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Capacity:</strong> ${rota.capacity} per occurrence</p>
+					<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Capacity:</strong> ${rota.capacity} ${rota.capacity === 1 ? 'person is' : 'people are'} ideal for this rota</p>
 					<p style="margin: 5px 0; color: #333; font-size: 14px;"><strong>Total Assignees:</strong> ${(rota.assignees || []).length}</p>
 					${assigneesHtml}
 				</div>
@@ -1816,7 +1816,7 @@ The rota ${role} for ${eventTitle}${occurrenceDateDisplay ? ` - ${occurrenceDate
 Rota Details:
 Role: ${role}
 Event: ${eventTitle}${occurrenceDateDisplay ? ` - ${occurrenceDateDisplay}` : ''}
-Capacity: ${rota.capacity} per occurrence
+Capacity: ${rota.capacity} ${rota.capacity === 1 ? 'person is' : 'people are'} ideal for this rota
 Total Assignees: ${(rota.assignees || []).length}${assigneesText}
 
 View the rota: ${hubUrl}

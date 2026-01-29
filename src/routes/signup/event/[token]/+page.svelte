@@ -206,6 +206,15 @@
 			}
 		};
 	}
+	let expandedDescriptions = new Set();
+	function toggleDescription(eventId) {
+		if (expandedDescriptions.has(eventId)) {
+			expandedDescriptions.delete(eventId);
+		} else {
+			expandedDescriptions.add(eventId);
+		}
+		expandedDescriptions = expandedDescriptions;
+	}
 </script>
 
 <div class="min-h-screen bg-gray-50 pt-[70px]">
@@ -257,13 +266,36 @@
 						<div class="bg-white shadow rounded-lg p-6 sticky top-[76px] space-y-6">
 							<div>
 								<h1 class="text-2xl font-bold text-brand-blue mb-2">{event?.title || 'Event Signup'}</h1>
-								{#if event?.location}
-									<div class="flex items-center gap-2 text-gray-600 mb-4 text-sm">
-										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-										</svg>
-										<span>{event.location}</span>
+								<div class="flex items-center justify-between gap-4 mb-4">
+									{#if event?.location}
+										<div class="flex items-center gap-2 text-gray-600 text-sm">
+											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+											</svg>
+											<span>{event.location}</span>
+										</div>
+									{:else}
+										<div></div>
+									{/if}
+
+									{#if event?.description}
+										<button 
+											type="button"
+											on:click={() => toggleDescription(event.id)}
+											class="text-xs text-brand-blue hover:underline focus:outline-none whitespace-nowrap flex items-center gap-1"
+										>
+											<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+											</svg>
+											{expandedDescriptions.has(event.id) ? 'Hide Event Description' : 'View Event Description'}
+										</button>
+									{/if}
+								</div>
+
+								{#if event?.description && expandedDescriptions.has(event.id)}
+									<div class="text-sm text-gray-600 mb-4 bg-gray-50 p-3 rounded border border-gray-100">
+										{@html event.description}
 									</div>
 								{/if}
 								<h2 class="text-xl font-bold text-gray-900 mb-4">Your Details</h2>
@@ -369,7 +401,7 @@
 													<div class="text-sm text-gray-600 mt-1 ml-4">{@html rota.notes}</div>
 												{/if}
 												<p class="text-sm text-gray-500 mt-1 ml-4">
-													Capacity: <span class="font-medium text-brand-blue">{rota.capacity}</span> {rota.capacity === 1 ? 'person' : 'people'} per occurrence
+													Capacity: <span class="font-medium text-brand-blue">{rota.capacity}</span> {rota.capacity === 1 ? 'person is' : 'people are'} ideal for this rota
 												</p>
 											</div>
 										</div>
