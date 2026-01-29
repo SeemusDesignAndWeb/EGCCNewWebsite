@@ -45,31 +45,6 @@ export async function load({ params, cookies, url }) {
 		};
 	});
 
-	// For backward compatibility and to ensure we don't lose data, 
-	// also check if there are rotas already linked to the planner that aren't in settings
-	const linkedRotaIds = new Set([
-		meetingPlanner.meetingLeaderRotaId,
-		meetingPlanner.worshipLeaderRotaId,
-		meetingPlanner.speakerRotaId,
-		meetingPlanner.callToWorshipRotaId,
-		...(meetingPlanner.rotas || []).map(r => r.rotaId)
-	].filter(Boolean));
-
-	linkedRotaIds.forEach(id => {
-		const rota = allRotas.find(r => r.id === id);
-		if (rota) {
-			const role = (rota.role || '').trim();
-			const isAlreadyLoading = rotasToLoad.some(rtl => (rtl.role || '').trim() === role);
-			if (!isAlreadyLoading) {
-				rotasToLoad.push({
-					key: role.toLowerCase().replace(/[^a-z0-9]/g, ''),
-					role: role,
-					rota: rota
-				});
-			}
-		}
-	});
-
 	// Load contacts for assignee selection
 	const contactsRaw = await readCollection('contacts');
 	
