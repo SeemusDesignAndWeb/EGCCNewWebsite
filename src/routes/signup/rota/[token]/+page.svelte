@@ -278,6 +278,29 @@
 					use:syncHiddenInput
 				/>
 
+				{#if rotas.length > 0}
+					<div class="bg-white shadow rounded-lg p-4 mb-6 sticky top-[76px] z-20 overflow-x-auto lg:overflow-x-visible">
+						<div class="flex flex-col lg:flex-row lg:items-center gap-3">
+							<h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2 flex-shrink-0">
+								<svg class="w-4 h-4 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+								</svg>
+								Quick Links:
+							</h3>
+							<nav class="flex flex-wrap gap-2">
+								{#each rotas as rota}
+									<a
+										href="#rota-{rota.id}"
+										class="inline-flex items-center text-xs text-brand-blue hover:text-brand-blue/80 hover:underline py-1 px-2 rounded hover:bg-brand-blue/5 border border-brand-blue/10 transition-colors whitespace-nowrap"
+									>
+										{rota.role}
+									</a>
+								{/each}
+							</nav>
+						</div>
+					</div>
+				{/if}
+
 				<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 					<!-- Your Details - Left column on large screens -->
 					<div class="lg:col-span-1">
@@ -349,26 +372,18 @@
 								</div>
 							</div>
 
-							{#if rotas.length > 0}
-								<div class="border-t border-gray-200 pt-6">
-									<h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-										<svg class="w-4 h-4 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-										</svg>
-										Quick Links
-									</h3>
-									<nav class="space-y-2">
-										{#each rotas as rota}
-											<a
-												href="#rota-{rota.id}"
-												class="block text-sm text-brand-blue hover:text-brand-blue/80 hover:underline py-1.5 px-2 rounded hover:bg-brand-blue/5 transition-colors"
-											>
-												{rota.role}
-											</a>
-										{/each}
-									</nav>
-								</div>
-							{/if}
+							<div class="border-t border-gray-200 pt-6">
+								<button
+									type="submit"
+									disabled={selectedRotas.size === 0 || !name || !email || !contactConfirmed}
+									class="w-full bg-brand-green text-white px-8 py-3 rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:transform-none flex items-center justify-center gap-2"
+								>
+									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+									</svg>
+									Sign Up for Selected Rotas ({selectedRotas.size})
+								</button>
+							</div>
 
 							{#if !contactConfirmed && email && name}
 								<div class="border-t border-gray-200 pt-6">
@@ -385,18 +400,6 @@
 									</div>
 								</div>
 							{/if}
-							<div class="border-t border-gray-200 pt-6">
-								<button
-									type="submit"
-									disabled={selectedRotas.size === 0 || !name || !email || !contactConfirmed}
-									class="w-full bg-brand-green text-white px-8 py-3 rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:transform-none flex items-center justify-center gap-2"
-								>
-									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-									</svg>
-									Sign Up for Selected Rotas ({selectedRotas.size})
-								</button>
-							</div>
 						</div>
 					</div>
 
@@ -405,7 +408,7 @@
 						<div class="bg-white shadow rounded-lg p-6">
 							<div class="space-y-6">
 								{#each rotas as rota}
-									<div id="rota-{rota.id}" class="border-l-4 border-l-brand-blue border border-gray-200 rounded-lg p-4 scroll-mt-6 bg-white hover:shadow-md transition-shadow">
+									<div id="rota-{rota.id}" class="border-l-4 border-l-brand-blue border border-gray-200 rounded-lg p-4 scroll-mt-[160px] bg-white hover:shadow-md transition-shadow">
 										<div class="flex items-start justify-between mb-3">
 											<div class="flex-1">
 												<h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
