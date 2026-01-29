@@ -143,9 +143,7 @@ export const actions = {
 				communionHappening: false,
 				notes: sanitized,
 				speakerTopic: '',
-				speakerSeries: '',
-				...rotaIds,
-				rotas: dynamicRotas
+				speakerSeries: ''
 			};
 
 			const validated = validateMeetingPlanner(meetingPlannerData);

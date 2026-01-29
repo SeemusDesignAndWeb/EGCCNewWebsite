@@ -19,75 +19,56 @@ export async function load({ params, cookies, url }) {
 	const eventOccurrences = allOccurrences.filter(o => o.eventId === meetingPlanner.eventId);
 
 	// Load all rotas
-	const rotas = await readCollection('rotas');
+	const allRotas = await readCollection('rotas');
 	const settings = await getSettings();
 	const settingsRotas = settings.meetingPlannerRotas || [];
 	
-	// Determine which rotas to load
-	let rotasToLoad = [];
-	
-	if (meetingPlanner.rotas && Array.isArray(meetingPlanner.rotas) && meetingPlanner.rotas.length > 0) {
-		// New dynamic rotas format
-		rotasToLoad = meetingPlanner.rotas.map(r => ({
-			key: r.role.toLowerCase().replace(/[^a-z0-9]/g, ''),
-			role: r.role,
-			rota: rotas.find(rota => rota.id === r.rotaId)
-		}));
+	// Find rotas for this event
+	const eventRotas = allRotas.filter(r => r.eventId === meetingPlanner.eventId);
 
-		// Sort based on settings order if available
-		if (settingsRotas.length > 0) {
-			const settingsRolesOrder = settingsRotas.map(sr => (sr.role || '').trim());
-			
-			rotasToLoad.sort((a, b) => {
-				let roleA = (a.role || '').trim();
-				let roleB = (b.role || '').trim();
-				
-				// Fuzzy match for Worship Team legacy name
-				if (roleA === 'Worship Leader and Team') roleA = 'Worship Team';
-				if (roleB === 'Worship Leader and Team') roleB = 'Worship Team';
-
-				const indexA = settingsRolesOrder.indexOf(roleA);
-				const indexB = settingsRolesOrder.indexOf(roleB);
-				
-				// If both found in settings, sort by settings order
-				if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-				// If only one found, put the found one first
-				if (indexA !== -1) return -1;
-				if (indexB !== -1) return 1;
-				// If neither found, sort alphabetically by role
-				return roleA.localeCompare(roleB);
-			});
+	// Determine which rotas to load based on settings
+	const rotasToLoad = settingsRotas.map(sr => {
+		const role = (sr.role || '').trim();
+		let matchedRota = eventRotas.find(r => (r.role || '').trim() === role);
+		
+		// Fuzzy match for Worship Team legacy name
+		if (!matchedRota && role === 'Worship Team') {
+			matchedRota = eventRotas.find(r => (r.role || '').trim() === 'Worship Leader and Team');
+		} else if (!matchedRota && role === 'Worship Leader and Team') {
+			matchedRota = eventRotas.find(r => (r.role || '').trim() === 'Worship Team');
 		}
-	} else {
-		// Old fixed rotas format
-		rotasToLoad = [
-			{ key: 'meetingLeader', role: 'Meeting Leader', rota: meetingPlanner.meetingLeaderRotaId ? rotas.find(r => r.id === meetingPlanner.meetingLeaderRotaId) : null },
-			{ key: 'worshipLeader', role: 'Worship Leader and Team', rota: meetingPlanner.worshipLeaderRotaId ? rotas.find(r => r.id === meetingPlanner.worshipLeaderRotaId) : null },
-			{ key: 'speaker', role: 'Speaker', rota: meetingPlanner.speakerRotaId ? rotas.find(r => r.id === meetingPlanner.speakerRotaId) : null },
-			{ key: 'callToWorship', role: 'Call to Worship', rota: meetingPlanner.callToWorshipRotaId ? rotas.find(r => r.id === meetingPlanner.callToWorshipRotaId) : null }
-		];
 
-		// Also sort the fixed rotas based on settings order
-		if (settingsRotas.length > 0) {
-			const settingsRolesOrder = settingsRotas.map(sr => (sr.role || '').trim());
-			rotasToLoad.sort((a, b) => {
-				let roleA = (a.role || '').trim();
-				let roleB = (b.role || '').trim();
+		return {
+			key: role.toLowerCase().replace(/[^a-z0-9]/g, ''),
+			role: role,
+			rota: matchedRota || null
+		};
+	});
 
-				// Fuzzy match for Worship Team legacy name
-				if (roleA === 'Worship Leader and Team') roleA = 'Worship Team';
-				if (roleB === 'Worship Leader and Team') roleB = 'Worship Team';
+	// For backward compatibility and to ensure we don't lose data, 
+	// also check if there are rotas already linked to the planner that aren't in settings
+	const linkedRotaIds = new Set([
+		meetingPlanner.meetingLeaderRotaId,
+		meetingPlanner.worshipLeaderRotaId,
+		meetingPlanner.speakerRotaId,
+		meetingPlanner.callToWorshipRotaId,
+		...(meetingPlanner.rotas || []).map(r => r.rotaId)
+	].filter(Boolean));
 
-				const indexA = settingsRolesOrder.indexOf(roleA);
-				const indexB = settingsRolesOrder.indexOf(roleB);
-				
-				if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-				if (indexA !== -1) return -1;
-				if (indexB !== -1) return 1;
-				return 0; // Keep fixed order for others
-			});
+	linkedRotaIds.forEach(id => {
+		const rota = allRotas.find(r => r.id === id);
+		if (rota) {
+			const role = (rota.role || '').trim();
+			const isAlreadyLoading = rotasToLoad.some(rtl => (rtl.role || '').trim() === role);
+			if (!isAlreadyLoading) {
+				rotasToLoad.push({
+					key: role.toLowerCase().replace(/[^a-z0-9]/g, ''),
+					role: role,
+					rota: rota
+				});
+			}
 		}
-	}
+	});
 
 	// Load contacts for assignee selection
 	const contactsRaw = await readCollection('contacts');
@@ -242,12 +223,7 @@ export const actions = {
 				communionHappening: data.get('communionHappening') === 'on' || data.get('communionHappening') === 'true',
 				notes: sanitized,
 				speakerTopic: data.get('speakerTopic') || '',
-				speakerSeries: data.get('speakerSeries') || '',
-				meetingLeaderRotaId: meetingPlanner.meetingLeaderRotaId,
-				worshipLeaderRotaId: meetingPlanner.worshipLeaderRotaId,
-				speakerRotaId: meetingPlanner.speakerRotaId,
-				callToWorshipRotaId: meetingPlanner.callToWorshipRotaId,
-				rotas: meetingPlanner.rotas || []
+				speakerSeries: data.get('speakerSeries') || ''
 			};
 
 			const validated = validateMeetingPlanner(meetingPlannerData);
