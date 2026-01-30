@@ -327,6 +327,16 @@ export const actions = {
 					return fail(400, { error: 'Contact IDs must be an array' });
 				}
 
+				const guestJson = data.get('guest');
+				let guestData = null;
+				if (guestJson) {
+					try {
+						guestData = JSON.parse(guestJson);
+					} catch (e) {
+						return fail(400, { error: 'Invalid guest data' });
+					}
+				}
+
 				const existingAssignees = Array.isArray(rota.assignees) ? [...rota.assignees] : [];
 				
 				// Get occurrenceId from form or use rota's occurrenceId
@@ -357,46 +367,23 @@ export const actions = {
 				console.log('[ADD ASSIGNEES DEBUG] Final targetOccurrenceId:', targetOccurrenceId);
 				console.log('[ADD ASSIGNEES DEBUG] Rota capacity:', rota.capacity);
 				console.log('[ADD ASSIGNEES DEBUG] New contact IDs to add:', newContactIds);
+				console.log('[ADD ASSIGNEES DEBUG] Guest data to add:', guestData);
 				console.log('[ADD ASSIGNEES DEBUG] Existing assignees count:', existingAssignees.length);
-				console.log('[ADD ASSIGNEES DEBUG] Existing assignees:', JSON.stringify(existingAssignees, null, 2));
 				
 				// Check capacity per occurrence before adding
 				const assigneesForOccurrence = existingAssignees.filter((a, index) => {
-					console.log(`[ADD ASSIGNEES DEBUG] Checking assignee ${index}:`, JSON.stringify(a, null, 2));
-					
 					if (typeof a === 'string') {
-						// Old format: string is contact ID
-						// If rota is for a specific occurrence, only count if it matches
-						// If rota is for all occurrences (null), don't count old format for specific occurrences
-						if (rota.occurrenceId === null) {
-							// Rota is for all occurrences, old format assignees don't have occurrenceId
-							// They should not be counted for a specific occurrence
-							console.log(`[ADD ASSIGNEES DEBUG] Assignee ${index}: Old format string, rota.occurrenceId is null, returning false`);
-							return false;
-						}
-						const matches = rota.occurrenceId === targetOccurrenceId;
-						console.log(`[ADD ASSIGNEES DEBUG] Assignee ${index}: Old format string, rota.occurrenceId (${rota.occurrenceId}) === targetOccurrenceId (${targetOccurrenceId}): ${matches}`);
-						return matches;
+						if (rota.occurrenceId === null) return false;
+						return rota.occurrenceId === targetOccurrenceId;
 					}
 					if (a && typeof a === 'object') {
-						// New format: object with occurrenceId
-						// If assignee has explicit occurrenceId, use it
-						// If assignee occurrenceId is null/undefined, fall back to rota.occurrenceId
 						const aOccurrenceId = a.occurrenceId !== null && a.occurrenceId !== undefined 
 							? a.occurrenceId 
 							: rota.occurrenceId;
-						const matches = aOccurrenceId === targetOccurrenceId;
-						console.log(`[ADD ASSIGNEES DEBUG] Assignee ${index}: New format object, a.occurrenceId: ${a.occurrenceId}, rota.occurrenceId: ${rota.occurrenceId}, resolved aOccurrenceId: ${aOccurrenceId}, matches targetOccurrenceId (${targetOccurrenceId}): ${matches}`);
-						return matches;
+						return aOccurrenceId === targetOccurrenceId;
 					}
-					console.log(`[ADD ASSIGNEES DEBUG] Assignee ${index}: Unknown format, returning false`);
 					return false;
 				});
-				
-				console.log('[ADD ASSIGNEES DEBUG] Assignees for occurrence after filter:', assigneesForOccurrence.length);
-				console.log('[ADD ASSIGNEES DEBUG] Filtered assignees:', JSON.stringify(assigneesForOccurrence, null, 2));
-				console.log('[ADD ASSIGNEES DEBUG] Current count:', assigneesForOccurrence.length);
-				console.log('[ADD ASSIGNEES DEBUG] Trying to add:', newContactIds.length);
 				
 				// Get existing contact IDs for this occurrence to check for duplicates
 				const existingContactIdsForOcc = assigneesForOccurrence
@@ -406,34 +393,31 @@ export const actions = {
 				// Filter out duplicates from new contact IDs BEFORE checking capacity
 				const uniqueNewContactIds = newContactIds.filter(contactId => !existingContactIdsForOcc.includes(contactId));
 				
-				console.log('[ADD ASSIGNEES DEBUG] Unique new contact IDs (after filtering duplicates):', uniqueNewContactIds.length);
-				console.log('[ADD ASSIGNEES DEBUG] Total would be:', assigneesForOccurrence.length + uniqueNewContactIds.length);
-				console.log('[ADD ASSIGNEES DEBUG] Capacity:', rota.capacity);
-				console.log('[ADD ASSIGNEES DEBUG] ===========================================');
-				
-				// If all were duplicates, return early
-				if (uniqueNewContactIds.length === 0) {
-					return { success: true, type: 'addAssignees', message: 'All selected contacts are already assigned to this occurrence', skipped: newContactIds.length };
+				// Check if we have anything to add
+				if (uniqueNewContactIds.length === 0 && !guestData) {
+					return { success: true, type: 'addAssignees', message: 'No new assignees to add', skipped: newContactIds.length };
 				}
 				
-				// If some were duplicates, include that in the response
-				if (uniqueNewContactIds.length < newContactIds.length) {
-					const skipped = newContactIds.length - uniqueNewContactIds.length;
-					return { success: true, type: 'addAssignees', message: `Added ${uniqueNewContactIds.length} contact(s). ${skipped} contact(s) were already assigned and skipped.`, added: uniqueNewContactIds.length, skipped: skipped };
+				// Check capacity
+				const totalToAdd = uniqueNewContactIds.length + (guestData ? 1 : 0);
+				if (assigneesForOccurrence.length + totalToAdd > rota.capacity) {
+					return fail(400, { error: `Cannot add ${totalToAdd} assignee(s). This occurrence can only have ${rota.capacity} assignee(s) and currently has ${assigneesForOccurrence.length}.` });
 				}
 				
-				// Check capacity with only the unique new assignees
-				if (assigneesForOccurrence.length + uniqueNewContactIds.length > rota.capacity) {
-					return fail(400, { error: `Cannot add ${uniqueNewContactIds.length} contact(s). This occurrence can only have ${rota.capacity} assignee(s) and currently has ${assigneesForOccurrence.length}.` });
-				}
-				
-				// Add new assignees with occurrenceId (only unique ones)
-				const uniqueNewAssignees = uniqueNewContactIds.map(contactId => ({
+				// Add new assignees
+				const newAssignees = uniqueNewContactIds.map(contactId => ({
 					contactId: contactId,
 					occurrenceId: targetOccurrenceId
 				}));
+
+				if (guestData) {
+					newAssignees.push({
+						contactId: { name: `Guest: ${guestData.name}`, email: '' },
+						occurrenceId: targetOccurrenceId
+					});
+				}
 				
-				const updatedAssignees = [...existingAssignees, ...uniqueNewAssignees];
+				const updatedAssignees = [...existingAssignees, ...newAssignees];
 
 				// Update with all rota fields to preserve them
 				const updatedRota = {
@@ -466,7 +450,14 @@ export const actions = {
 					}
 				}
 
-				return { success: true, type: 'addAssignees', message: `Added ${uniqueNewContactIds.length} contact(s) successfully.`, added: uniqueNewContactIds.length };
+				let message = `Added ${uniqueNewContactIds.length} contact(s) successfully.`;
+				if (guestData && uniqueNewContactIds.length === 0) {
+					message = 'Guest added successfully.';
+				} else if (guestData) {
+					message = `Added ${uniqueNewContactIds.length} contact(s) and guest successfully.`;
+				}
+
+				return { success: true, type: 'addAssignees', message: message, added: uniqueNewContactIds.length + (guestData ? 1 : 0) };
 			} catch (error) {
 				console.error('Error adding assignees:', error);
 				return fail(400, { error: error.message || 'Failed to add assignees' });

@@ -190,6 +190,7 @@
 	// Rota management functions
 	let showAddAssignees = {};
 	let searchTerm = {};
+	let guestName = {};
 	let selectedContactIds = {};
 	let selectedOccurrenceId = {};
 	let selectedListId = {};
@@ -197,6 +198,7 @@
 	function initializeRotaState(rotaKey) {
 		if (!showAddAssignees[rotaKey]) showAddAssignees[rotaKey] = false;
 		if (!searchTerm[rotaKey]) searchTerm[rotaKey] = '';
+		if (!guestName[rotaKey]) guestName[rotaKey] = '';
 		if (!selectedContactIds[rotaKey]) selectedContactIds[rotaKey] = new Set();
 		if (!selectedListId[rotaKey]) selectedListId[rotaKey] = '';
 		if (!selectedOccurrenceId[rotaKey]) {
@@ -410,6 +412,59 @@
 		}
 	}
 
+	async function handleAddGuest(rotaKey) {
+		if (!guestName[rotaKey]) {
+			await dialog.alert('Please enter a guest name', 'Missing Name');
+			return;
+		}
+
+		const rota = rotas[rotaKey];
+		if (!rota || !rawRotas[rotaKey]) {
+			notifications.error('Rota not found');
+			return;
+		}
+
+		const formData = new FormData();
+		formData.append('_csrf', csrfToken);
+		formData.append('rotaId', rawRotas[rotaKey].id);
+		formData.append('contactIds', JSON.stringify([]));
+		formData.append('guest', JSON.stringify({ name: guestName[rotaKey] }));
+		if (eventOccurrences.length > 0 && selectedOccurrenceId[rotaKey]) {
+			formData.append('occurrenceId', selectedOccurrenceId[rotaKey]);
+		}
+
+		try {
+			const response = await fetch('?/addAssignee', {
+				method: 'POST',
+				headers: { 'accept': 'application/json' },
+				body: formData
+			});
+
+			if (response.ok || response.redirected) {
+				let message = 'Guest added successfully';
+				if (browser && typeof sessionStorage !== 'undefined') {
+					sessionStorage.setItem('assigneeNotification', message);
+					if (meetingPlanner?.id) {
+						const unsavedFormDataKey = `unsavedMeetingPlanner_${meetingPlanner.id}`;
+						const unsavedData = {
+							notes: notes,
+							communionHappening: formData.communionHappening,
+							speakerTopic: formData.speakerTopic,
+							speakerSeries: formData.speakerSeries
+						};
+						sessionStorage.setItem(unsavedFormDataKey, JSON.stringify(unsavedData));
+					}
+				}
+				window.location.reload();
+			} else {
+				notifications.error('Failed to add guest');
+			}
+		} catch (error) {
+			console.error('[CLIENT] Error adding guest:', error);
+			notifications.error('Failed to add guest');
+		}
+	}
+
 	async function handleRemoveAssignee(rotaKey, assignee, index) {
 		const confirmed = await dialog.confirm('Are you sure you want to remove this assignee?', 'Remove Assignee');
 		if (confirmed) {
@@ -448,17 +503,19 @@
 						}
 					} else if (a.contactId && typeof a.contactId === 'object') {
 						if (assignee.id === null || assignee.id === undefined) {
-							const aEmail = a.contactId.email || a.email;
-							const aName = a.contactId.name || a.name;
-							if (aEmail && assignee.email) {
-								return aEmail.toLowerCase() === assignee.email.toLowerCase() && (aName || '') === (assignee.name || '');
-							}
+							const aEmail = (a.contactId.email || a.email || '').toLowerCase();
+							const aName = a.contactId.name || a.name || '';
+							const assigneeEmail = (assignee.email || '').toLowerCase();
+							const assigneeName = assignee.name || '';
+							return aEmail === assigneeEmail && aName === assigneeName;
 						}
 					} else if (a.email && a.name) {
 						if (assignee.id === null || assignee.id === undefined) {
-							if (a.email && assignee.email) {
-								return a.email.toLowerCase() === assignee.email.toLowerCase() && (a.name || '') === (assignee.name || '');
-							}
+							const aEmail = (a.email || '').toLowerCase();
+							const aName = a.name || '';
+							const assigneeEmail = (assignee.email || '').toLowerCase();
+							const assigneeName = assignee.name || '';
+							return aEmail === assigneeEmail && aName === assigneeName;
 						}
 					}
 					return false;
@@ -752,44 +809,50 @@
 
 								<!-- Add Assignees Modal -->
 								{#if showAddAssignees[rotaKey]}
-									<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4" on:click={() => showAddAssignees[rotaKey] = false}>
+									<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4" on:click={() => { showAddAssignees[rotaKey] = false; searchTerm[rotaKey] = ''; guestName[rotaKey] = ''; selectedContactIds[rotaKey] = new Set(); selectedListId[rotaKey] = ''; }}>
 										<div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] sm:max-h-[80vh] flex flex-col" on:click|stopPropagation>
 											<div class="p-3 sm:p-4 border-b border-gray-200">
 												<h3 class="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3">Add Assignees - {getRotaDisplayName(rotaKey)}</h3>
 												
-												{#if eventOccurrences.length > 0}
-													<div class="mb-2 sm:mb-3">
-														<label class="block text-xs font-medium text-gray-700 mb-1">Occurrence <span class="text-hub-red-500">*</span></label>
-														<select bind:value={selectedOccurrenceId[rotaKey]} required class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2.5 sm:px-3 text-xs sm:text-sm">
-															<option value="">Select an occurrence</option>
-															{#each eventOccurrences as occ}
-																<option value={occ.id}>
-																	{formatDateTimeUK(occ.startsAt)}
-																</option>
+												<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 items-end">
+													<div>
+														<label class="block text-[10px] font-medium text-gray-700 mb-0.5">Filter by List</label>
+														<select bind:value={selectedListId[rotaKey]} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1 px-2 text-xs">
+															<option value="">All Contacts</option>
+															{#each lists as list}
+																<option value={list.id}>{list.name}</option>
 															{/each}
 														</select>
-														<p class="mt-1 text-xs text-gray-500">Rotas apply to all occurrences. Select which occurrence to assign to.</p>
 													</div>
-												{/if}
-												
-												<div class="mb-2 sm:mb-3">
-													<label class="block text-xs font-medium text-gray-700 mb-1">Filter by List (optional)</label>
-													<select bind:value={selectedListId[rotaKey]} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2.5 sm:px-3 text-xs sm:text-sm">
-														<option value="">All Contacts</option>
-														{#each lists as list}
-															<option value={list.id}>{list.name}</option>
-														{/each}
-													</select>
-													<p class="mt-1 text-xs text-gray-500">Select a list to filter contacts</p>
+													<div>
+														<label class="block text-[10px] font-medium text-gray-700 mb-0.5">Search Contacts</label>
+														<input
+															type="text"
+															bind:value={searchTerm[rotaKey]}
+															placeholder="Search..."
+															class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1 px-2 text-xs"
+														/>
+													</div>
 												</div>
-												
-												<div>
-													<input
-														type="text"
-														bind:value={searchTerm[rotaKey]}
-														placeholder="Search contacts..."
-														class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2.5 sm:px-3 text-xs sm:text-sm"
-													/>
+
+												<div class="mt-3 pt-3 border-t border-gray-200">
+													<label class="block text-[10px] font-medium text-gray-700 mb-1.5">Add Guest (not in contacts)</label>
+													<div class="flex flex-col sm:flex-row gap-2">
+														<input
+															type="text"
+															bind:value={guestName[rotaKey]}
+															placeholder="Guest Name *"
+															class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1 px-2 text-xs"
+														/>
+														<button
+															type="button"
+															on:click={() => handleAddGuest(rotaKey)}
+															disabled={!guestName[rotaKey]}
+															class="bg-hub-blue-600 text-white px-3 py-1 rounded-md hover:bg-hub-blue-700 disabled:opacity-50 text-[10px] whitespace-nowrap"
+														>
+															Add Guest
+														</button>
+													</div>
 												</div>
 											</div>
 
@@ -841,6 +904,7 @@
 													on:click={() => { 
 														showAddAssignees[rotaKey] = false; 
 														searchTerm[rotaKey] = ''; 
+														guestName[rotaKey] = '';
 														selectedContactIds[rotaKey] = new Set(); 
 														selectedListId[rotaKey] = '';
 													}}

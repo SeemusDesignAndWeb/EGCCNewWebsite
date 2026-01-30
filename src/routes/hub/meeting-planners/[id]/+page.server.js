@@ -270,6 +270,16 @@ export const actions = {
 				return fail(400, { error: 'Contact IDs must be an array' });
 			}
 
+			const guestJson = data.get('guest');
+			let guestData = null;
+			if (guestJson) {
+				try {
+					guestData = JSON.parse(guestJson);
+				} catch (e) {
+					return fail(400, { error: 'Invalid guest data' });
+				}
+			}
+
 			const rota = await findById('rotas', rotaId);
 			if (!rota) {
 				return fail(404, { error: 'Rota not found' });
@@ -297,23 +307,31 @@ export const actions = {
 			// Filter out duplicates from new contact IDs BEFORE checking capacity
 			const uniqueNewContactIds = newContactIds.filter(contactId => !existingContactIdsForOcc.includes(contactId));
 			
-			// If all were duplicates, return early
-			if (uniqueNewContactIds.length === 0) {
-				return { success: true, type: 'addAssignee', message: 'All selected contacts are already assigned to this occurrence', skipped: newContactIds.length };
+			// Check if we have anything to add
+			if (uniqueNewContactIds.length === 0 && !guestData) {
+				return { success: true, type: 'addAssignee', message: 'No new assignees to add', skipped: newContactIds.length };
 			}
 			
-			// Check capacity with only the unique new assignees
-			if (assigneesForOccurrence.length + uniqueNewContactIds.length > rota.capacity) {
-				return fail(400, { error: `Cannot add ${uniqueNewContactIds.length} contact(s). This occurrence can only have ${rota.capacity} assignee(s) and currently has ${assigneesForOccurrence.length}.` });
+			// Check capacity
+			const totalToAdd = uniqueNewContactIds.length + (guestData ? 1 : 0);
+			if (assigneesForOccurrence.length + totalToAdd > rota.capacity) {
+				return fail(400, { error: `Cannot add ${totalToAdd} assignee(s). This occurrence can only have ${rota.capacity} assignee(s) and currently has ${assigneesForOccurrence.length}.` });
 			}
 			
-			// Add new assignees with occurrenceId (only unique ones)
-			const uniqueNewAssignees = uniqueNewContactIds.map(contactId => ({
+			// Add new assignees
+			const newAssignees = uniqueNewContactIds.map(contactId => ({
 				contactId: contactId,
 				occurrenceId: occurrenceId
 			}));
+
+			if (guestData) {
+				newAssignees.push({
+					contactId: { name: `Guest: ${guestData.name}`, email: '' },
+					occurrenceId: occurrenceId
+				});
+			}
 			
-			const updatedAssignees = [...existingAssignees, ...uniqueNewAssignees];
+			const updatedAssignees = [...existingAssignees, ...newAssignees];
 
 			const updatedRota = {
 				...rota,
@@ -322,14 +340,18 @@ export const actions = {
 			const validated = validateRota(updatedRota);
 			await update('rotas', rotaId, validated);
 
-			// Build success message - include info about skipped duplicates if any
+			// Build success message
 			let message = `Added ${uniqueNewContactIds.length} contact(s) successfully.`;
-			if (uniqueNewContactIds.length < newContactIds.length) {
+			if (guestData && uniqueNewContactIds.length === 0) {
+				message = 'Guest added successfully.';
+			} else if (guestData) {
+				message = `Added ${uniqueNewContactIds.length} contact(s) and guest successfully.`;
+			} else if (uniqueNewContactIds.length < newContactIds.length) {
 				const skipped = newContactIds.length - uniqueNewContactIds.length;
 				message = `Added ${uniqueNewContactIds.length} contact(s). ${skipped} contact(s) were already assigned and skipped.`;
 			}
 
-			return { success: true, type: 'addAssignee', message: message, added: uniqueNewContactIds.length };
+			return { success: true, type: 'addAssignee', message: message, added: uniqueNewContactIds.length + (guestData ? 1 : 0) };
 		} catch (error) {
 			console.error('Error adding assignee:', error);
 			return fail(400, { error: error.message || 'Failed to add assignee' });

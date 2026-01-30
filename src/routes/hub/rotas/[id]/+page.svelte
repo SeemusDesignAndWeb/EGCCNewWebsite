@@ -214,6 +214,7 @@
 
 	let showAddAssignees = false;
 	let searchTerm = '';
+	let guestName = '';
 	let selectedContactIds = new Set();
 	let selectedOccurrenceId = '';
 	let selectedListId = '';
@@ -308,9 +309,46 @@
 			occurrenceIdInput.name = 'occurrenceId';
 			occurrenceIdInput.value = selectedOccurrenceId;
 			form.appendChild(occurrenceIdInput);
-			console.log('[CLIENT] Sending occurrenceId in form:', selectedOccurrenceId);
-		} else {
-			console.log('[CLIENT] No occurrenceId to send, selectedOccurrenceId:', selectedOccurrenceId);
+		}
+		
+		document.body.appendChild(form);
+		form.submit();
+	}
+
+	async function handleAddGuest() {
+		if (!guestName) {
+			await dialog.alert('Please enter a guest name', 'Missing Name');
+			return;
+		}
+
+		const form = document.createElement('form');
+		form.method = 'POST';
+		form.action = '?/addAssignees';
+		
+		const csrfInput = document.createElement('input');
+		csrfInput.type = 'hidden';
+		csrfInput.name = '_csrf';
+		csrfInput.value = csrfToken;
+		form.appendChild(csrfInput);
+		
+		const contactIdsInput = document.createElement('input');
+		contactIdsInput.type = 'hidden';
+		contactIdsInput.name = 'contactIds';
+		contactIdsInput.value = JSON.stringify([]);
+		form.appendChild(contactIdsInput);
+
+		const guestInput = document.createElement('input');
+		guestInput.type = 'hidden';
+		guestInput.name = 'guest';
+		guestInput.value = JSON.stringify({ name: guestName });
+		form.appendChild(guestInput);
+		
+		if (selectedOccurrenceId) {
+			const occurrenceIdInput = document.createElement('input');
+			occurrenceIdInput.type = 'hidden';
+			occurrenceIdInput.name = 'occurrenceId';
+			occurrenceIdInput.value = selectedOccurrenceId;
+			form.appendChild(occurrenceIdInput);
 		}
 		
 		document.body.appendChild(form);
@@ -385,34 +423,34 @@
 							console.log(`[REMOVE ASSIGNEE] Index ${index}: Contact ID does not match`);
 						}
 					} else if (a.contactId && typeof a.contactId === 'object') {
-						// This is a public signup - contactId is an object with { name, email }
+						// This is a public signup or guest - contactId is an object with { name, email }
 						if (assignee.id === null || assignee.id === undefined) {
-							const aEmail = a.contactId.email || a.email;
-							const aName = a.contactId.name || a.name;
-							console.log(`[REMOVE ASSIGNEE] Index ${index}: Public signup - a.contactId.email: "${aEmail}", assignee.email: "${assignee.email}"`);
-							if (aEmail && assignee.email) {
-								const emailMatch = aEmail.toLowerCase() === assignee.email.toLowerCase();
-								const nameMatch = (aName || '') === (assignee.name || '');
-								console.log(`[REMOVE ASSIGNEE] Index ${index}: Email match: ${emailMatch}, Name match: ${nameMatch}`);
-								if (emailMatch && nameMatch) {
-									console.log(`[REMOVE ASSIGNEE] Index ${index}: Public signup matches!`);
-									return true;
-								}
+							const aEmail = a.contactId.email || a.email || '';
+							const aName = a.contactId.name || a.name || '';
+							const assigneeEmail = assignee.email || '';
+							const assigneeName = assignee.name || '';
+							
+							console.log(`[REMOVE ASSIGNEE] Index ${index}: Public signup/guest - aEmail: "${aEmail}", assigneeEmail: "${assigneeEmail}"`);
+							
+							const emailMatch = aEmail.toLowerCase() === assigneeEmail.toLowerCase();
+							const nameMatch = aName === assigneeName;
+							console.log(`[REMOVE ASSIGNEE] Index ${index}: Email match: ${emailMatch}, Name match: ${nameMatch}`);
+							
+							if (emailMatch && nameMatch) {
+								console.log(`[REMOVE ASSIGNEE] Index ${index}: Match found!`);
+								return true;
 							}
-							console.log(`[REMOVE ASSIGNEE] Index ${index}: Public signup does not match`);
 						}
 					} else if (a.email && a.name) {
 						// Legacy format: { name, email, occurrenceId } directly on the object
 						if (assignee.id === null || assignee.id === undefined) {
-							console.log(`[REMOVE ASSIGNEE] Index ${index}: Legacy public signup format - a.email: "${a.email}", assignee.email: "${assignee.email}"`);
-							if (a.email && assignee.email) {
-								const emailMatch = a.email.toLowerCase() === assignee.email.toLowerCase();
-								const nameMatch = (a.name || '') === (assignee.name || '');
-								console.log(`[REMOVE ASSIGNEE] Index ${index}: Email match: ${emailMatch}, Name match: ${nameMatch}`);
-								if (emailMatch && nameMatch) {
-									console.log(`[REMOVE ASSIGNEE] Index ${index}: Legacy public signup matches!`);
-									return true;
-								}
+							const aEmail = a.email || '';
+							const aName = a.name || '';
+							const assigneeEmail = assignee.email || '';
+							const assigneeName = assignee.name || '';
+							
+							if (aEmail.toLowerCase() === assigneeEmail.toLowerCase() && aName === assigneeName) {
+								return true;
 							}
 						}
 					}
@@ -1010,54 +1048,52 @@
 	</div>
 
 	{#if showAddAssignees}
-		<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" role="button" tabindex="0" on:click={() => showAddAssignees = false} on:keydown={(e) => e.key === 'Escape' && (showAddAssignees = false)} aria-label="Close modal">
+		<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" role="button" tabindex="0" on:click={() => { showAddAssignees = false; searchTerm = ''; guestName = ''; selectedContactIds = new Set(); selectedListId = ''; }} on:keydown={(e) => e.key === 'Escape' && (showAddAssignees = false)} aria-label="Close modal">
 			<div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] flex flex-col" on:click|stopPropagation role="dialog" aria-modal="true">
 				<!-- Header (fixed) -->
 				<div class="p-6 border-b border-gray-200">
 					<h3 class="text-xl font-bold text-gray-900 mb-4">Add Assignees</h3>
 					
-					{#if !rota.occurrenceId && eventOccurrences.length > 0 && !selectedOccurrenceId}
-						<div class="mb-4">
-							<label for="occurrence-select" class="block text-sm font-medium text-gray-700 mb-1">Occurrence</label>
-							<select id="occurrence-select" bind:value={selectedOccurrenceId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4">
-								{#each eventOccurrences as occ}
-									{@const occAssignees = assigneesByOccurrence[occ.id] || []}
-									{@const isFull = occAssignees.length >= rota.capacity}
-									<option value={occ.id}>
-										{formatDateTimeUK(occ.startsAt)} {isFull ? '(Full)' : `(${occAssignees.length}/${rota.capacity})`}
-									</option>
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 items-end">
+						<div>
+							<label for="list-filter" class="block text-sm font-medium text-gray-700 mb-1 text-xs">Filter by List</label>
+							<select id="list-filter" bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm">
+								<option value="">All Contacts</option>
+								{#each lists as list}
+									<option value={list.id}>{list.name}</option>
 								{/each}
 							</select>
-							<p class="mt-1 text-xs text-gray-500">Select which occurrence to assign these contacts to</p>
 						</div>
-					{:else if !rota.occurrenceId && eventOccurrences.length > 0 && selectedOccurrenceId}
-						<div class="mb-4 p-3 bg-hub-blue-50 border border-hub-blue-200 rounded-md">
-							<p class="text-sm text-gray-700">
-								<strong>Adding to:</strong> {formatDateTimeUK(eventOccurrences.find(o => o.id === selectedOccurrenceId)?.startsAt || '')}
-							</p>
+						<div>
+							<label for="contact-search" class="block text-sm font-medium text-gray-700 mb-1 text-xs">Search Contacts</label>
+							<input
+								id="contact-search"
+								type="text"
+								bind:value={searchTerm}
+								placeholder="Search contacts..."
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 text-sm"
+							/>
 						</div>
-					{/if}
-					
-					<div class="mb-4">
-						<label for="list-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by List (optional)</label>
-						<select id="list-filter" bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4">
-							<option value="">All Contacts</option>
-							{#each lists as list}
-								<option value={list.id}>{list.name}</option>
-							{/each}
-						</select>
-						<p class="mt-1 text-xs text-gray-500">Select a list to filter contacts</p>
 					</div>
 					
-					<div>
-						<label for="contact-search" class="block text-sm font-medium text-gray-700 mb-1 sr-only">Search contacts</label>
-						<input
-							id="contact-search"
-							type="text"
-							bind:value={searchTerm}
-							placeholder="Search contacts..."
-							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4"
-						/>
+					<div class="mt-4 pt-4 border-t border-gray-200">
+						<label class="block text-sm font-medium text-gray-700 mb-2">Add Guest (not in contacts)</label>
+						<div class="flex flex-col sm:flex-row gap-2">
+							<input
+								type="text"
+								bind:value={guestName}
+								placeholder="Guest Name *"
+								class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+							/>
+							<button
+								type="button"
+								on:click={handleAddGuest}
+								disabled={!guestName}
+								class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700 disabled:opacity-50 text-sm whitespace-nowrap"
+							>
+								Add Guest
+							</button>
+						</div>
 					</div>
 				</div>
 
@@ -1111,6 +1147,7 @@
 						on:click={() => { 
 							showAddAssignees = false; 
 							searchTerm = ''; 
+							guestName = '';
 							selectedContactIds = new Set(); 
 							selectedListId = '';
 						}}
