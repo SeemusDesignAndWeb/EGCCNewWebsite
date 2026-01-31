@@ -700,9 +700,9 @@
 								{#each eventsWithRotas as { event, rotas, occurrences }}
 									{#if rotas.length > 0}
 										<div class="bg-white shadow rounded-lg p-4 lg:p-6">
-											<!-- Event header: hidden on mobile (accordion headers show event + rota), visible on lg -->
-											<div class="mb-6 hidden lg:block">
-												<h2 id="event-{event.id}" class="text-2xl font-bold text-brand-blue mb-2 scroll-mt-[160px]">{event.title}</h2>
+											<!-- Event header: visible on all screen sizes -->
+											<div class="mb-6">
+												<h2 id="event-{event.id}" class="text-xl lg:text-2xl font-bold text-brand-blue mb-2 scroll-mt-[160px]">{event.title}</h2>
 												<div class="flex items-center justify-between gap-4 mb-2">
 													{#if event.location}
 														<div class="flex items-center gap-2 text-gray-600 text-sm">
