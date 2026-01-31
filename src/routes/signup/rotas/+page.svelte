@@ -149,6 +149,16 @@
 		expandedDescriptions = expandedDescriptions;
 	}
 
+	let expandedRotaDescriptions = new Set();
+	function toggleRotaDescription(rotaId) {
+		if (expandedRotaDescriptions.has(rotaId)) {
+			expandedRotaDescriptions.delete(rotaId);
+		} else {
+			expandedRotaDescriptions.add(rotaId);
+		}
+		expandedRotaDescriptions = expandedRotaDescriptions;
+	}
+
 	// Holiday / Away Day state
 	let holidayStart = '';
 	let holidayEnd = '';
@@ -357,7 +367,7 @@
 									{/each}
 								{/each}
 							</nav>
-							<div class="flex-shrink-0 lg:ml-auto">
+							<div class="flex-shrink-0 lg:ml-auto hidden lg:flex">
 								<button
 									type="button"
 									on:click={() => showHolidayPopup = true}
@@ -375,7 +385,7 @@
 
 				{#if showHolidayPopup}
 					<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4" on:click={() => showHolidayPopup = false}>
-						<div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" on:click|stopPropagation>
+						<div class="bg-white rounded-xl shadow-2xl w-full max-w-md min-w-0 p-4 sm:p-6 overflow-hidden max-h-[90vh] overflow-y-auto [max-width:min(28rem,calc(100vw-2rem))]" on:click|stopPropagation>
 							<div class="flex items-center justify-between mb-6">
 								<h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
 									<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -405,40 +415,40 @@
 									</div>
 								{/if}
 
-								<div class="grid grid-cols-1 gap-4">
-									<div>
+								<div class="grid grid-cols-1 gap-4 min-w-0">
+									<div class="min-w-0">
 										<label for="popup-holiday-start" class="block text-sm font-medium text-gray-700 mb-1">From</label>
 										{#if holidayAllDay}
 											<input
 												type="date"
 												id="popup-holiday-start"
 												bind:value={holidayStart}
-												class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm"
+												class="w-full min-w-0 max-w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm box-border"
 											/>
 										{:else}
 											<input
 												type="datetime-local"
 												id="popup-holiday-start"
 												bind:value={holidayStart}
-												class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm"
+												class="w-full min-w-0 max-w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm box-border"
 											/>
 										{/if}
 									</div>
-									<div>
+									<div class="min-w-0">
 										<label for="popup-holiday-end" class="block text-sm font-medium text-gray-700 mb-1">To</label>
 										{#if holidayAllDay}
 											<input
 												type="date"
 												id="popup-holiday-end"
 												bind:value={holidayEnd}
-												class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm"
+												class="w-full min-w-0 max-w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm box-border"
 											/>
 										{:else}
 											<input
 												type="datetime-local"
 												id="popup-holiday-end"
 												bind:value={holidayEnd}
-												class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm"
+												class="w-full min-w-0 max-w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm box-border"
 											/>
 										{/if}
 									</div>
@@ -550,6 +560,19 @@
 										</div>
 									{/if}
 								</div>
+								<!-- Book Away Day - visible on mobile only (after name/email) -->
+								<div class="pt-4 flex lg:hidden">
+									<button
+										type="button"
+										on:click={() => showHolidayPopup = true}
+										class="w-full bg-blue-600 text-white px-4 py-2.5 rounded-md hover:bg-blue-700 font-medium shadow transition-colors flex items-center justify-center gap-2 text-sm"
+									>
+										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+										</svg>
+										Book Away Day
+									</button>
+								</div>
 							</div>
 
 							<div class="border-t border-gray-200 pt-6">
@@ -635,7 +658,19 @@
 																{rota.role}
 															</h3>
 															{#if rota.notes}
-																<div class="text-sm text-gray-600 mt-1 ml-4">{@html rota.notes}</div>
+																<button
+																	type="button"
+																	on:click={() => toggleRotaDescription(rota.id)}
+																	class="text-xs text-brand-blue hover:underline focus:outline-none whitespace-nowrap flex items-center gap-1 mt-1 ml-4"
+																>
+																	<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+																	</svg>
+																	{expandedRotaDescriptions.has(rota.id) ? 'Hide Rota Description' : 'View Rota Description'}
+																</button>
+															{/if}
+															{#if rota.notes && expandedRotaDescriptions.has(rota.id)}
+																<div class="text-sm text-gray-600 mt-2 ml-4 bg-gray-50 p-3 rounded border border-gray-100">{@html rota.notes}</div>
 															{/if}
 															<p class="text-sm text-gray-500 mt-1 ml-4">
 																Capacity: <span class="font-medium text-brand-blue">{rota.capacity}</span> {rota.capacity === 1 ? 'person is' : 'people are'} ideal for this rota
