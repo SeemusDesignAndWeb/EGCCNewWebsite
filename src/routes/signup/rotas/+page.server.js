@@ -236,8 +236,29 @@ export const actions = {
 			const upcomingOccurrences = filterUpcomingOccurrences(allOccurrences);
 			const allRotas = await readCollection('rotas');
 			const allContacts = await readCollection('contacts');
+			const holidays = await readCollection('holidays');
 
 			const errors = [];
+
+			// Check for holidays
+			const contactHolidays = holidays.filter(h => h.contactId === matchedContact.id);
+			for (const { rotaId, occurrenceId } of selectedRotas) {
+				const occ = upcomingOccurrences.find(o => o.id === occurrenceId);
+				if (occ) {
+					const occStart = new Date(occ.startsAt);
+					const occEnd = new Date(occ.endsAt || occ.startsAt);
+					
+					const isAway = contactHolidays.some(h => {
+						const hStart = new Date(h.startDate);
+						const hEnd = new Date(h.endDate);
+						return (occStart < hEnd && occEnd > hStart);
+					});
+					
+					if (isAway) {
+						errors.push(`You have booked an away day for ${formatDateTimeUK(occ.startsAt)}`);
+					}
+				}
+			}
 
 			// Check for clashes - same occurrence selected multiple times (check this FIRST)
 			const occurrenceCounts = {};

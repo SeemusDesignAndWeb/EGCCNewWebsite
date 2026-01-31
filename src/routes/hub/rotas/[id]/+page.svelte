@@ -301,9 +301,13 @@
 				if (response.ok) {
 					const { conflicts } = await response.json();
 					if (conflicts && conflicts.length > 0) {
-						let conflictMessage = 'The following contact(s) are already assigned to other rotas on this date:\n\n';
+						let conflictMessage = 'The following issues were found:\n\n';
 						conflicts.forEach(c => {
-							conflictMessage += `- ${c.contactName}: ${c.rotaRole} for ${c.eventName}\n`;
+							if (c.type === 'holiday') {
+								conflictMessage += `- ${c.contactName} is AWAY (booked holiday)\n`;
+							} else {
+								conflictMessage += `- ${c.contactName}: ${c.rotaRole} for ${c.eventName}\n`;
+							}
 						});
 						conflictMessage += '\nAre you sure you want to proceed with these assignments?';
 

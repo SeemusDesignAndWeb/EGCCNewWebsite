@@ -326,6 +326,7 @@ export const actions = {
 			// Get all occurrences for this event
 			const allOccurrences = await readCollection('occurrences');
 			const eventOccurrences = allOccurrences.filter(o => o.eventId === rota.eventId);
+			const holidays = await readCollection('holidays');
 
 			console.log('[BULK ASSIGN] Total event occurrences:', eventOccurrences.length);
 			console.log('[BULK ASSIGN] Pattern:', patternType, patternType === 'day-of-week' ? `${dayOfWeek} (${weekOfMonth})` : dayOfMonthPosition);
@@ -365,11 +366,17 @@ export const actions = {
 			let assignmentsMade = 0;
 			let skippedFull = 0;
 			let skippedDuplicate = 0;
+			let skippedHoliday = 0;
 
 			// For each matching occurrence, assign contacts
 			for (const occurrence of matchingOccurrences) {
 				console.log(`[BULK ASSIGN] Processing occurrence ${occurrence.id}, startsAt: ${occurrence.startsAt}`);
-				// Check current capacity for this occurrence
+				
+				// 1. Get the occurrence times for holiday checking
+				const occStart = new Date(occurrence.startsAt);
+				const occEnd = new Date(occurrence.endsAt || occurrence.startsAt);
+
+				// 2. Check current capacity for this occurrence
 				const assigneesForOcc = existingAssignees.filter(a => {
 					if (typeof a === 'string') {
 						return rota.occurrenceId === occurrence.id;
@@ -391,20 +398,41 @@ export const actions = {
 					continue;
 				}
 
-				// Get existing contact IDs for this occurrence to avoid duplicates
+				// 3. Get existing contact IDs for this occurrence to avoid duplicates
 				const existingContactIdsForOcc = assigneesForOcc
 					.map(a => typeof a === 'string' ? a : (a.contactId && typeof a.contactId === 'string' ? a.contactId : null))
 					.filter(id => id !== null);
 
-				// Filter out contacts already assigned to this occurrence
-				const newContactsForOcc = contactIds.filter(id => !existingContactIdsForOcc.includes(id));
+				// 4. Filter out contacts who are on holiday
+				const availableContactIds = contactIds.filter(id => {
+					// Skip if already assigned
+					if (existingContactIdsForOcc.includes(id)) {
+						skippedDuplicate++;
+						return false;
+					}
 
-				// Limit to available spots
-				const contactsToAdd = newContactsForOcc.slice(0, availableSpots);
+					// Check holiday conflict
+					const contactHolidays = holidays.filter(h => h.contactId === id);
+					const isAway = contactHolidays.some(h => {
+						const hStart = new Date(h.startDate);
+						const hEnd = new Date(h.endDate);
+						return (occStart < hEnd && occEnd > hStart);
+					});
 
-				console.log(`[BULK ASSIGN] Occurrence ${occurrence.id}: currentCount=${currentCount}, availableSpots=${availableSpots}, newContactsForOcc=${newContactsForOcc.length}, contactsToAdd=${contactsToAdd.length}`);
+					if (isAway) {
+						skippedHoliday++;
+						return false;
+					}
 
-				// Add assignees for this occurrence
+					return true;
+				});
+
+				// 5. Limit to available spots
+				const contactsToAdd = availableContactIds.slice(0, availableSpots);
+
+				console.log(`[BULK ASSIGN] Occurrence ${occurrence.id}: currentCount=${currentCount}, availableSpots=${availableSpots}, availableContactIds=${availableContactIds.length}, contactsToAdd=${contactsToAdd.length}`);
+
+				// 6. Add assignees for this occurrence
 				for (const contactId of contactsToAdd) {
 					existingAssignees.push({
 						contactId: contactId,
@@ -412,13 +440,9 @@ export const actions = {
 					});
 					assignmentsMade++;
 				}
-
-				// Track duplicates
-				const duplicates = newContactsForOcc.length - contactsToAdd.length;
-				skippedDuplicate += duplicates;
 			}
 
-			console.log('[BULK ASSIGN] Final counts - assignmentsMade:', assignmentsMade, 'skippedFull:', skippedFull, 'skippedDuplicate:', skippedDuplicate);
+			console.log('[BULK ASSIGN] Final counts - assignmentsMade:', assignmentsMade, 'skippedFull:', skippedFull, 'skippedDuplicate:', skippedDuplicate, 'skippedHoliday:', skippedHoliday);
 
 			// Update the rota
 			const updatedRota = {
@@ -438,7 +462,8 @@ export const actions = {
 				eventName: eventRecord?.title || 'unknown',
 				bulkAssignment: true,
 				assignmentsMade,
-				occurrencesMatched: matchingOccurrences.length
+				occurrencesMatched: matchingOccurrences.length,
+				skippedHoliday
 			}, event);
 
 			const result = {
@@ -446,7 +471,8 @@ export const actions = {
 				assignmentsMade,
 				occurrencesMatched: matchingOccurrences.length,
 				skippedFull,
-				skippedDuplicate
+				skippedDuplicate,
+				skippedHoliday
 			};
 			console.log('[BULK ASSIGN] Returning result:', result);
 			return result;

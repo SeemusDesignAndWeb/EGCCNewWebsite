@@ -177,6 +177,7 @@
 				const occurrencesMatched = Number(result.occurrencesMatched) || 0;
 				const skippedFull = Number(result.skippedFull) || 0;
 				const skippedDuplicate = Number(result.skippedDuplicate) || 0;
+				const skippedHoliday = Number(result.skippedHoliday) || 0;
 				
 				// Create a new object to ensure reactivity
 				results = {
@@ -184,7 +185,8 @@
 					assignmentsMade,
 					occurrencesMatched,
 					skippedFull,
-					skippedDuplicate
+					skippedDuplicate,
+					skippedHoliday
 				};
 				
 				console.log('[CLIENT] Setting results:', results);
@@ -457,7 +459,7 @@
 							✓ Successfully assigned {results.assignmentsMade || 0} contact{(results.assignmentsMade || 0) !== 1 ? 's' : ''} to {results.occurrencesMatched || 0} occurrence{(results.occurrencesMatched || 0) !== 1 ? 's' : ''}
 						</p>
 					</div>
-					{#if results.skippedFull > 0 || results.skippedDuplicate > 0}
+					{#if results.skippedFull > 0 || results.skippedDuplicate > 0 || results.skippedHoliday > 0}
 						<div class="p-4 bg-hub-yellow-50 border border-hub-yellow-200 rounded-md">
 							<p class="text-hub-yellow-800 font-medium">
 								⚠ Some assignments were skipped:
@@ -468,6 +470,9 @@
 								{/if}
 								{#if results.skippedDuplicate > 0}
 									<li>• {results.skippedDuplicate} assignment{results.skippedDuplicate !== 1 ? 's' : ''} were duplicates (already assigned)</li>
+								{/if}
+								{#if results.skippedHoliday > 0}
+									<li>• {results.skippedHoliday} assignment{results.skippedHoliday !== 1 ? 's' : ''} were skipped due to booked holidays (AWAY)</li>
 								{/if}
 							</ul>
 						</div>

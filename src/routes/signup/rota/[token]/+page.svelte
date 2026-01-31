@@ -251,6 +251,95 @@
 		}
 		expandedDescriptions = expandedDescriptions;
 	}
+
+	// Holiday / Away Day state
+	let holidayStart = '';
+	let holidayEnd = '';
+	let holidayAllDay = true;
+	let bookingHoliday = false;
+	let showHolidayPopup = false;
+
+	// Set default holiday dates to today/tomorrow
+	$: if (!holidayStart) {
+		const now = new Date();
+		now.setMinutes(0);
+		now.setSeconds(0);
+		now.setMilliseconds(0);
+		
+		if (holidayAllDay) {
+			holidayStart = now.toISOString().split('T')[0];
+			const tomorrow = new Date(now);
+			tomorrow.setDate(tomorrow.getDate() + 1);
+			holidayEnd = tomorrow.toISOString().split('T')[0];
+		} else {
+			holidayStart = now.toISOString().slice(0, 16);
+			const tomorrow = new Date(now);
+			tomorrow.setDate(tomorrow.getDate() + 1);
+			holidayEnd = tomorrow.toISOString().slice(0, 16);
+		}
+	}
+
+	// Adjust format when switching allDay
+	let lastAllDay = holidayAllDay;
+	$: if (holidayAllDay !== lastAllDay) {
+		if (holidayAllDay) {
+			// Switching to date only
+			if (holidayStart && holidayStart.includes('T')) holidayStart = holidayStart.split('T')[0];
+			if (holidayEnd && holidayEnd.includes('T')) holidayEnd = holidayEnd.split('T')[0];
+		} else {
+			// Switching to datetime
+			if (holidayStart && !holidayStart.includes('T')) holidayStart = holidayStart + 'T09:00';
+			if (holidayEnd && !holidayEnd.includes('T')) holidayEnd = holidayEnd + 'T17:00';
+		}
+		lastAllDay = holidayAllDay;
+	}
+
+	async function bookAwayDay() {
+		if (!email || !name) {
+			notifications.error('Please enter your name and email first');
+			document.getElementById('name')?.focus();
+			return;
+		}
+
+		if (!holidayStart || !holidayEnd) {
+			notifications.error('Please select start and end dates');
+			return;
+		}
+
+		bookingHoliday = true;
+		try {
+			const response = await fetch('/api/holidays', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					email,
+					name,
+					startDate: holidayStart,
+					endDate: holidayEnd,
+					allDay: holidayAllDay
+				})
+			});
+
+			const result = await response.json();
+			if (response.ok) {
+				notifications.success('Away day booked successfully!');
+				// Reset holiday dates but keep email/name
+				const nextWeek = new Date(holidayStart);
+				nextWeek.setDate(nextWeek.getDate() + 7);
+				holidayStart = nextWeek.toISOString().slice(0, 16);
+				const nextWeekEnd = new Date(holidayEnd);
+				nextWeekEnd.setDate(nextWeekEnd.getDate() + 7);
+				holidayEnd = nextWeekEnd.toISOString().slice(0, 16);
+			} else {
+				notifications.error(result.error || 'Failed to book away day');
+			}
+		} catch (error) {
+			console.error('Error booking away day:', error);
+			notifications.error('An error occurred. Please try again.');
+		} finally {
+			bookingHoliday = false;
+		}
+	}
 </script>
 
 <div class="min-h-screen bg-gray-50 pt-[70px]">
@@ -289,7 +378,7 @@
 				/>
 
 				{#if rotas.length > 0}
-					<div class="bg-white shadow rounded-lg p-4 mb-6 sticky top-[76px] z-20 overflow-x-auto lg:overflow-x-visible">
+					<div class="bg-white shadow rounded-lg p-4 mb-6 lg:sticky top-[76px] z-20 overflow-x-auto lg:overflow-x-visible">
 						<div class="flex flex-col lg:flex-row lg:items-center gap-3">
 							<h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2 flex-shrink-0">
 								<svg class="w-4 h-4 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -297,7 +386,7 @@
 								</svg>
 								Quick Links:
 							</h3>
-							<nav class="flex flex-wrap gap-2">
+							<nav class="flex flex-wrap gap-2 flex-1">
 								{#each rotas as rota}
 									<a
 										href="#rota-{rota.id}"
@@ -307,6 +396,132 @@
 									</a>
 								{/each}
 							</nav>
+							<div class="flex-shrink-0 lg:ml-auto">
+								<button
+									type="button"
+									on:click={() => showHolidayPopup = true}
+									class="bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700 font-medium shadow transition-colors flex items-center justify-center gap-2 text-xs whitespace-nowrap"
+								>
+									<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+									</svg>
+									Book Away Day
+								</button>
+							</div>
+						</div>
+					</div>
+				{/if}
+
+				{#if showHolidayPopup}
+					<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4" on:click={() => showHolidayPopup = false}>
+						<div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" on:click|stopPropagation>
+							<div class="flex items-center justify-between mb-6">
+								<h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+									<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-7l.94-2.06L15 11l-2.06.94L12 14l-.94-2.06L9 11l2.06-.94L12 9z" />
+									</svg>
+									Book Your Away Day
+								</h3>
+								<button type="button" on:click={() => showHolidayPopup = false} class="text-gray-400 hover:text-gray-600 transition-colors">
+									<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+									</svg>
+								</button>
+							</div>
+
+							<div class="space-y-4">
+								<div class="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-4">
+									<p class="text-sm text-blue-800">
+										Enter your away dates below. We'll make sure you aren't assigned to any rotas during this period.
+									</p>
+								</div>
+
+								{#if !name || !email}
+									<div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200 mb-4">
+										<p class="text-xs text-yellow-800 font-medium">
+											Please enter your name and email in the main form first.
+										</p>
+									</div>
+								{/if}
+
+								<div class="grid grid-cols-1 gap-4">
+									<div>
+										<label for="popup-holiday-start" class="block text-sm font-medium text-gray-700 mb-1">From</label>
+										{#if holidayAllDay}
+											<input
+												type="date"
+												id="popup-holiday-start"
+												bind:value={holidayStart}
+												class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm"
+											/>
+										{:else}
+											<input
+												type="datetime-local"
+												id="popup-holiday-start"
+												bind:value={holidayStart}
+												class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm"
+											/>
+										{/if}
+									</div>
+									<div>
+										<label for="popup-holiday-end" class="block text-sm font-medium text-gray-700 mb-1">To</label>
+										{#if holidayAllDay}
+											<input
+												type="date"
+												id="popup-holiday-end"
+												bind:value={holidayEnd}
+												class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm"
+											/>
+										{:else}
+											<input
+												type="datetime-local"
+												id="popup-holiday-end"
+												bind:value={holidayEnd}
+												class="w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm"
+											/>
+										{/if}
+									</div>
+									<div class="flex items-center gap-4 py-2">
+										<label class="flex items-center gap-2 cursor-pointer group">
+											<input
+												type="checkbox"
+												bind:checked={holidayAllDay}
+												class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+											<span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">All Day</span>
+										</label>
+									</div>
+								</div>
+
+								<div class="pt-4 flex flex-col gap-3">
+									<button
+										type="button"
+										on:click={async () => {
+											await bookAwayDay();
+											if (!bookingHoliday) showHolidayPopup = false;
+										}}
+										disabled={bookingHoliday || !name || !email}
+										class="w-full bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold shadow-lg transition-all flex items-center justify-center gap-2"
+									>
+										{#if bookingHoliday}
+											<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+												<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+												<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+											</svg>
+											Booking...
+										{:else}
+											Confirm Away Day
+										{/if}
+									</button>
+									<button
+										type="button"
+										on:click={() => showHolidayPopup = false}
+										class="w-full bg-gray-100 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-200 font-medium transition-colors text-sm"
+									>
+										Cancel
+									</button>
+								</div>
+							</div>
 						</div>
 					</div>
 				{/if}
@@ -314,7 +529,7 @@
 				<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 					<!-- Your Details - Left column on large screens -->
 					<div class="lg:col-span-1">
-						<div class="bg-white shadow rounded-lg p-6 sticky top-[76px] space-y-6">
+						<div class="bg-white shadow rounded-lg p-6 lg:sticky top-[76px] space-y-6">
 							<div>
 								<h1 class="text-2xl font-bold text-brand-blue mb-2">{event?.title || 'Volunteer Signup'}</h1>
 								<div class="flex items-center justify-between gap-4 mb-4">

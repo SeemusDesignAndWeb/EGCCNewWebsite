@@ -27,12 +27,38 @@ export async function POST({ request }) {
 		
 		const occurrenceIdsOnSameDate = new Set(occurrencesOnSameDate.map(o => o.id));
 
-		// 3. Load all rotas and find conflicts
+		// 3. Load all rotas, holidays and find conflicts
 		const allRotas = await readCollection('rotas');
 		const events = await readCollection('events');
 		const contacts = await readCollection('contacts');
+		const holidays = await readCollection('holidays');
 
 		const conflicts = [];
+
+		// Check for holiday conflicts
+		for (const contactId of contactIds) {
+			const contactHolidays = holidays.filter(h => h.contactId === contactId);
+			const occStart = new Date(targetOccurrence.startsAt);
+			const occEnd = new Date(targetOccurrence.endsAt || targetOccurrence.startsAt); // Fallback to startsAt if no endsAt
+
+			const holidayConflict = contactHolidays.find(h => {
+				const hStart = new Date(h.startDate);
+				const hEnd = new Date(h.endDate);
+				return (occStart < hEnd && occEnd > hStart);
+			});
+
+			if (holidayConflict) {
+				const contact = contacts.find(c => c.id === contactId);
+				conflicts.push({
+					contactId,
+					contactName: contact ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim() : 'Unknown',
+					type: 'holiday',
+					holidayId: holidayConflict.id,
+					startDate: holidayConflict.startDate,
+					endDate: holidayConflict.endDate
+				});
+			}
+		}
 
 		for (const rota of allRotas) {
 			// Skip the current rota
