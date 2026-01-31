@@ -1,6 +1,9 @@
 <script>
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
+	import { browser } from '$app/environment';
 	import FormField from '$lib/crm/components/FormField.svelte';
 	import { formatDateTimeUK, formatDateUK } from '$lib/crm/utils/dateFormat.js';
 	import { notifications } from '$lib/crm/stores/notifications.js';
@@ -21,12 +24,15 @@
 			} else if (result.type === 'failure') {
 				notifications.error(result.data?.error || 'Failed to sign up');
 			}
-			await update();
+			await update({ reset: false });
 		};
 	}
 
+	const SIGNUP_REMEMBER_KEY = 'egcc_signup_remember';
+
 	let name = '';
 	let email = '';
+	let rememberMe = false;
 	let selectedRotas = new Set(); // Store as "rotaId:occurrenceId" or "rotaId" if no occurrence
 	let spouse = null;
 	let signUpWithSpouse = false;
@@ -268,7 +274,59 @@
 	let holidayAllDay = true;
 	let bookingHoliday = false;
 	let showHolidayPopup = false;
+	let showAwayOnboarding = false;
+	let dontShowAwayOnboardingAgain = false;
+	let onboardingTriggered = false;
 	let myHolidays = [];
+
+	let signupRememberInitialized = false;
+
+	onMount(() => {
+		if (browser) {
+			try {
+				const stored = localStorage.getItem(SIGNUP_REMEMBER_KEY);
+				if (stored) {
+					const parsed = JSON.parse(stored);
+					if (parsed?.name && parsed?.email) {
+						name = parsed.name;
+						email = parsed.email;
+						rememberMe = true;
+					}
+				}
+			} catch (_) {}
+			signupRememberInitialized = true;
+			if (!onboardingTriggered) {
+				const dismissed = localStorage.getItem('awayOnboardingDismissed');
+				if (!dismissed) {
+					onboardingTriggered = true;
+					// Small delay to let the page settle
+					setTimeout(() => {
+						if (!localStorage.getItem('awayOnboardingDismissed')) {
+							showAwayOnboarding = true;
+						}
+					}, 1000);
+				}
+			}
+		}
+	});
+
+	$: if (browser && rememberMe && name?.trim() && email?.trim()) {
+		try {
+			localStorage.setItem(SIGNUP_REMEMBER_KEY, JSON.stringify({ name: name.trim(), email: email.trim() }));
+		} catch (_) {}
+	}
+	$: if (browser && signupRememberInitialized && !rememberMe) {
+		try {
+			localStorage.removeItem(SIGNUP_REMEMBER_KEY);
+		} catch (_) {}
+	}
+
+	function dismissAwayOnboarding() {
+		showAwayOnboarding = false;
+		if (dontShowAwayOnboardingAgain && browser) {
+			localStorage.setItem('awayOnboardingDismissed', 'true');
+		}
+	}
 	let cancellingHolidayId = null;
 
 	// Set default holiday dates to today/tomorrow
@@ -456,7 +514,52 @@
 									<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
 									</svg>
-									Book Away Day
+									Tell us your away
+								</button>
+							</div>
+						</div>
+					</div>
+				{/if}
+
+				{#if showAwayOnboarding && contactConfirmed}
+					<div 
+						class="fixed bottom-[44px] left-[36px] right-[36px] sm:left-[44px] sm:right-auto z-[110] max-w-sm"
+						transition:fade={{ duration: 200 }}
+					>
+						<div class="bg-brand-blue text-white p-6 rounded-xl shadow-2xl relative border border-white/20">
+							<!-- Arrow (optional, pointing generally towards content) -->
+							<div class="absolute -bottom-2 left-6 sm:left-12 w-4 h-4 bg-brand-blue rotate-45 border-r border-b border-white/20"></div>
+							
+							<button 
+								on:click={() => showAwayOnboarding = false}
+								class="absolute top-3 right-3 text-white hover:text-white/80 transition-colors"
+							>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+								</svg>
+							</button>
+
+							<h3 class="font-bold text-lg mb-2 flex items-start gap-2 pr-8 text-white">
+								<svg class="w-6 h-6 mt-0.5 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								</svg>
+								Tell us when you're away!
+							</h3>
+							<p class="text-base text-white mb-6 ml-8 leading-relaxed">
+								Click the "Tell us your away" button to set your away dates. We'll make sure you {spouse?.firstName ? `and ${spouse.firstName}` : ''} aren't assigned to any rotas while you're gone.
+							</p>
+							
+							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 ml-8">
+								<label class="flex items-center gap-2 text-sm text-white cursor-pointer select-none">
+									<input type="checkbox" bind:checked={dontShowAwayOnboardingAgain} class="w-4 h-4 rounded border-white/50 text-brand-blue focus:ring-white bg-white/20" />
+									Don't show again
+								</label>
+								<button 
+									type="button"
+									on:click={dismissAwayOnboarding}
+									class="bg-transparent border-2 border-white text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-white/10 transition-colors shadow-sm"
+								>
+									Got it
 								</button>
 							</div>
 						</div>
@@ -464,8 +567,8 @@
 				{/if}
 
 				{#if showHolidayPopup}
-					<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4" on:click={() => showHolidayPopup = false}>
-						<div class="bg-white rounded-xl shadow-2xl w-full max-w-md min-w-0 p-4 sm:p-6 overflow-hidden max-h-[90vh] overflow-y-auto [max-width:min(28rem,calc(100vw-2rem))]" on:click|stopPropagation>
+					<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[110] p-4 pb-24 sm:pb-4" on:click={() => showHolidayPopup = false}>
+						<div class="bg-white rounded-xl shadow-2xl w-full max-w-md min-w-0 p-4 sm:p-6 overflow-hidden max-h-[85vh] sm:max-h-[90vh] overflow-y-auto [max-width:min(28rem,calc(100vw-2rem))]" on:click|stopPropagation>
 							<div class="flex items-center justify-between mb-6">
 								<h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
 									<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -670,7 +773,16 @@
 										{/if}
 									</div>
 									{#if spouse}
-										<div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+										<div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
+											<label class="flex items-center gap-3 cursor-pointer">
+												<input
+													type="checkbox"
+													name="rememberMe"
+													bind:checked={rememberMe}
+													class="w-5 h-5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue cursor-pointer"
+												/>
+												<span class="text-sm font-medium text-gray-900">Remember my name and email</span>
+											</label>
 											<label class="flex items-start cursor-pointer group">
 												<input
 													type="checkbox"
@@ -678,14 +790,21 @@
 													bind:checked={signUpWithSpouse}
 													class="mt-1 mr-3 w-5 h-5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue cursor-pointer"
 												/>
-												<div class="flex-1">
-													<span class="text-sm font-medium text-gray-900 block">
-														Sign up for you and {spouse.firstName || spouse.lastName ? `${spouse.firstName || ''} ${spouse.lastName || ''}`.trim() : 'your partner'}?
-													</span>
-													<span class="text-xs text-gray-600 mt-1 block">
-														Both of you will be signed up for the selected rotas
-													</span>
-												</div>
+												<span class="text-sm font-medium text-gray-900 block">
+													Sign up for you and {spouse.firstName || 'your partner'}?
+												</span>
+											</label>
+										</div>
+									{:else}
+										<div class="mt-4">
+											<label class="flex items-center gap-3 cursor-pointer">
+												<input
+													type="checkbox"
+													name="rememberMe"
+													bind:checked={rememberMe}
+													class="w-5 h-5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue cursor-pointer"
+												/>
+												<span class="text-sm font-medium text-gray-900">Remember my name and email</span>
 											</label>
 										</div>
 									{/if}
@@ -704,10 +823,10 @@
 										class="w-full bg-blue-600 text-white px-4 py-2.5 rounded-md hover:bg-blue-700 font-medium shadow transition-colors flex items-center justify-center gap-2 text-sm"
 									>
 										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-										</svg>
-										Book Away Day
-									</button>
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+									</svg>
+									Tell us your away
+								</button>
 								</div>
 							</div>
 

@@ -336,7 +336,7 @@
 												/>
 												<div class="flex-1">
 													<span class="text-sm font-medium text-gray-900 block">
-														Sign up for you and {spouse.firstName || spouse.lastName ? `${spouse.firstName || ''} ${spouse.lastName || ''}`.trim() : 'your partner'}?
+														Sign up for you and {spouse.firstName || 'your partner'}?
 													</span>
 													<span class="text-xs text-gray-600 mt-1 block">
 														Both of you will be signed up for the selected rotas

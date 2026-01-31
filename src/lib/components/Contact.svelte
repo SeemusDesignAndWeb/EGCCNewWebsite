@@ -1,4 +1,9 @@
 <script>
+	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
+
+	const CONTACT_REMEMBER_KEY = 'egcc_contact_remember';
+
 	export let contactInfo = {
 		address: '542 Westhorne Avenue, Eltham, London, SE9 6RR',
 		phone: '020 8850 1331',
@@ -13,7 +18,47 @@
 		message: '',
 		website: '' // Honeypot field - bots will fill this, humans won't see it
 	};
-	
+
+	let rememberMe = false;
+
+	let contactRememberInitialized = false;
+
+	onMount(() => {
+		if (browser) {
+			try {
+				const stored = localStorage.getItem(CONTACT_REMEMBER_KEY);
+				if (stored) {
+					const { name, email } = JSON.parse(stored);
+					if (name && email) {
+						formData = { ...formData, name, email };
+						rememberMe = true;
+					}
+				}
+			} catch (_) {}
+			contactRememberInitialized = true;
+		}
+	});
+
+	function saveRememberedContact() {
+		if (rememberMe && formData.name?.trim() && formData.email?.trim()) {
+			try {
+				localStorage.setItem(
+					CONTACT_REMEMBER_KEY,
+					JSON.stringify({ name: formData.name.trim(), email: formData.email.trim() })
+				);
+			} catch (_) {}
+		} else {
+			try {
+				localStorage.removeItem(CONTACT_REMEMBER_KEY);
+			} catch (_) {}
+		}
+	}
+
+	// Persist when "remember me" is checked (and clear when unchecked), but only after mount so we don't clear before load
+	$: if (browser && contactRememberInitialized) {
+		saveRememberedContact();
+	}
+
 	let formStartTime = Date.now();
 
 	let success = false;
@@ -130,7 +175,18 @@
 
 			if (response.ok && result.success) {
 				success = true;
+				saveRememberedContact();
 				formData = { name: '', email: '', phone: '', message: '', website: '' };
+				if (rememberMe) {
+					try {
+						const stored = localStorage.getItem(CONTACT_REMEMBER_KEY);
+						if (stored) {
+							const { name, email } = JSON.parse(stored);
+							formData.name = name || '';
+							formData.email = email || '';
+						}
+					} catch (_) {}
+				}
 				fieldErrors = {};
 				formStartTime = Date.now(); // Reset timer for next submission
 				setTimeout(() => {
@@ -269,6 +325,19 @@
 						{#if fieldErrors.email}
 							<p class="mt-1 text-sm text-red-600">{fieldErrors.email}</p>
 						{/if}
+					</div>
+
+					<!-- Remember me -->
+					<div class="flex items-center gap-2">
+						<input
+							id="remember-me"
+							type="checkbox"
+							bind:checked={rememberMe}
+							class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+						/>
+						<label for="remember-me" class="text-sm text-gray-600">
+							Remember my name and email for next time
+						</label>
 					</div>
 
 					<!-- Phone -->
