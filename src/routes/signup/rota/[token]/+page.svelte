@@ -811,7 +811,7 @@
 									{#if matchedContact}
 										<div class="mt-2 flex items-center gap-2 text-xs text-gray-500">
 											<i class="fa fa-heart text-red-500"></i>
-											<span>This shows if you are already signed up</span>
+											<span>If you see this, you are already signed up on that date.</span>
 										</div>
 									{/if}
 								</div>
