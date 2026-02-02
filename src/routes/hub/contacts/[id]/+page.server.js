@@ -3,6 +3,7 @@ import { findById, update, remove, readCollection } from '$lib/crm/server/fileSt
 import { validateContact } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { logDataChange, getAdminIdFromEvent } from '$lib/crm/server/audit.js';
+import { getSettings } from '$lib/crm/server/settings.js';
 
 export async function load({ params, cookies }) {
 	const contact = await findById('contacts', params.id);
@@ -33,7 +34,8 @@ export async function load({ params, cookies }) {
 		});
 
 	const csrfToken = getCsrfToken(cookies) || '';
-	return { contact, spouse, contacts, csrfToken };
+	const settings = await getSettings();
+	return { contact, spouse, contacts, csrfToken, theme: settings?.theme || null };
 }
 
 export const actions = {

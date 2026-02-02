@@ -193,17 +193,17 @@
 	<div class="flex flex-wrap gap-2">
 		<button
 			on:click={handleImport}
-			class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs"
+			class="btn-theme-1 px-2.5 py-1.5 rounded-md text-xs"
 		>
 			Import
 		</button>
 		<button
 			on:click={handleExportAll}
-			class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs"
+			class="btn-theme-1 px-2.5 py-1.5 rounded-md text-xs"
 		>
 			Export All
 		</button>
-		<a href="/hub/forms/new" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
+		<a href="/hub/forms/new" class="btn-theme-2 px-2.5 py-1.5 rounded-md text-xs">
 			New Form
 		</a>
 	</div>
@@ -215,9 +215,9 @@
 			type="text"
 			bind:value={searchInput}
 			placeholder="Search forms..."
-			class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4"
+			class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4"
 		/>
-		<button type="submit" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs">
+		<button type="submit" class="btn-theme-3 px-2.5 py-1.5 rounded-md text-xs">
 			Search
 		</button>
 	</form>

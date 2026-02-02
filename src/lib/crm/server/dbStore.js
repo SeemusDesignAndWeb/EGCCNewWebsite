@@ -30,11 +30,13 @@ function getPool() {
 		} catch (e) {
 			if (e.message.includes('DATABASE_URL')) throw e;
 		}
-		// Railway public URL and other external Postgres need SSL; internal (postgres.railway.internal) does not
+		// Use SSL only for remote hosts. Localhost and Railway internal URLs do not use SSL.
 		const isInternal = url.includes('railway.internal');
+		const isLocalhost = /localhost|127\.0\.0\.1/.test(url);
+		const useSsl = !isInternal && !isLocalhost;
 		pool = new Pool({
 			connectionString: url,
-			...(isInternal ? {} : { ssl: { rejectUnauthorized: false } })
+			...(useSsl ? { ssl: { rejectUnauthorized: false } } : {})
 		});
 	}
 	return pool;

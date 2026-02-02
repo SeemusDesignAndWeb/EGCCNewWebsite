@@ -7,9 +7,25 @@ export default {
 				sans: ['Montserrat', 'sans-serif']
 			},
 			colors: {
-				primary: '#4BB170', // Green (main brand color)
+				// Theme colours: overridden by Hub Settings theme (CSS vars set in root layout)
+				primary: 'var(--color-primary, #4BB170)', // Green (main brand color)
 				'primary-dark': '#3a8a56',
-				'brand-blue': '#4A97D2',
+				'brand-blue': 'var(--color-brand, #4A97D2)',
+				// Navbar, buttons (up to 5), panel heads (up to 3)
+				'theme-navbar': 'var(--color-navbar-bg, #4A97D2)',
+				'theme-button': {
+					1: 'var(--color-button-1, #4A97D2)',
+					2: 'var(--color-button-2, #4BB170)',
+					3: 'var(--color-button-3, #3B79A8)',
+					4: 'var(--color-button-4, #3C8E5A)',
+					5: 'var(--color-button-5, #E6A324)'
+				},
+				'theme-panel-head': {
+					1: 'var(--color-panel-head-1, #4A97D2)',
+					2: 'var(--color-panel-head-2, #3B79A8)',
+					3: 'var(--color-panel-head-3, #2C5B7E)'
+				},
+				'theme-panel-bg': 'var(--color-panel-bg, #E8F2F9)',
 				'brand-green': '#4BB170',
 				'brand-yellow': '#E6A324',
 				'brand-red': '#A62524',
@@ -68,6 +84,25 @@ export default {
 			}
 		}
 	},
-	plugins: []
+	plugins: [],
+	safelist: [
+		'bg-theme-navbar',
+		'bg-theme-button-1',
+		'bg-theme-button-2',
+		'bg-theme-button-3',
+		'bg-theme-button-4',
+		'bg-theme-button-5',
+		'bg-theme-panel-head-1',
+		'bg-theme-panel-head-2',
+		'bg-theme-panel-head-3',
+		'text-theme-button-1',
+		'text-theme-button-2',
+		'border-theme-button-1',
+		'border-theme-button-2',
+		'focus:ring-theme-button-1',
+		'focus:ring-theme-button-2',
+		'focus:border-theme-button-1',
+		'focus:border-theme-button-2'
+	]
 };
 

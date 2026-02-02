@@ -3,6 +3,7 @@
 	import Preloader from '$lib/components/Preloader.svelte';
 	import EventHighlightBanner from '$lib/components/EventHighlightBanner.svelte';
 	import Navbar from '$lib/components/Navbar.svelte';
+	import StandaloneHeader from '$lib/components/StandaloneHeader.svelte';
 	import NotificationPopup from '$lib/crm/components/NotificationPopup.svelte';
 	import ConfirmDialog from '$lib/crm/components/ConfirmDialog.svelte';
 	import { onMount, setContext } from 'svelte';
@@ -11,6 +12,11 @@
 
 	export let data;
 	export let params = {};
+
+	// Theme from Hub settings: only used for Navbar/StandaloneHeader when public "Hub branding" is on. Public site always uses its own CSS (app.css). Hub injects its theme in Hub layout.
+	$: theme = data?.theme || null;
+	// Public pages: always use EGCC branding (own CSS). Hub/admin: use theme.
+	$: effectiveTheme = hideWebsiteElements ? theme : null;
 
 	let showPreloader = true;
 	let showHighlightBanner = false;
@@ -23,8 +29,22 @@
 	$: isSignupPage = $page.url.pathname.startsWith('/signup/rota') || $page.url.pathname.startsWith('/signup/event') || $page.url.pathname.startsWith('/signup/member');
 	$: isSundaysPage = $page.url.pathname === '/sundays';
 	$: hideWebsiteElements = isAdminArea || isHubArea;
+	// External pages: signup, event token, forms, unsubscribe, view-rotas (can use standalone header)
+	$: isExternalPage = $page.url.pathname.startsWith('/signup') || $page.url.pathname.startsWith('/event/') || $page.url.pathname.startsWith('/forms') || $page.url.pathname.startsWith('/unsubscribe') || $page.url.pathname.startsWith('/view-rotas');
+	$: useStandaloneHeader = theme?.externalPagesLayout === 'standalone' && isExternalPage;
 	$: showWebsiteNavbar = !hideWebsiteElements || isSignupPage;
+	$: showStandaloneHeader = showWebsiteNavbar && useStandaloneHeader;
+	$: showFullNavbar = showWebsiteNavbar && !useStandaloneHeader;
 	$: showWebsiteBanner = !hideWebsiteElements && !isSignupPage && !isSundaysPage && showHighlightBanner;
+
+	// Single padding class for content (avoid multiple padding classes)
+	$: contentPaddingClass = showStandaloneHeader
+		? 'pt-[56px]'
+		: hideWebsiteElements || ((isSignupPage || isSundaysPage) && showFullNavbar)
+			? 'pt-0'
+			: showHighlightBanner
+				? 'pt-[110px]'
+				: 'pt-[80px]';
 
 	// Share banner visibility with child components via store
 	const bannerVisibleStore = writable(false);
@@ -69,13 +89,17 @@
 	/>
 {/if}
 
-<!-- Website Navbar - only show outside admin area -->
-{#if showWebsiteNavbar}
-	<Navbar bannerVisible={showHighlightBanner && !isSignupPage && !isSundaysPage} class="gallery-hide-when-fullscreen" />
+<!-- Standalone header (external pages when theme is standalone) -->
+{#if showStandaloneHeader}
+	<StandaloneHeader theme={effectiveTheme} class="gallery-hide-when-fullscreen" />
+{/if}
+<!-- Website Navbar - full site nav when not standalone external page -->
+{#if showFullNavbar}
+	<Navbar theme={effectiveTheme} bannerVisible={showHighlightBanner && !isSignupPage && !isSundaysPage} class="gallery-hide-when-fullscreen" />
 {/if}
 
 <!-- Page Content with dynamic padding to account for fixed navbar and banner -->
-<div class="transition-all duration-300" class:pt-[110px]={showHighlightBanner && !hideWebsiteElements && !isSignupPage && !isSundaysPage} class:pt-[80px]={!showHighlightBanner && !hideWebsiteElements && !isSignupPage && !isSundaysPage} class:pt-0={hideWebsiteElements || isSignupPage || isSundaysPage}>
+<div class="transition-all duration-300 {contentPaddingClass}">
 	<slot />
 </div>
 

@@ -33,7 +33,7 @@
 </script>
 
 <div class="space-y-6">
-	<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 shadow-lg rounded-lg p-6 text-white">
+	<div class="panel-head-theme shadow-lg rounded-lg p-6 text-white">
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 			<div>
 				<div class="flex items-center gap-3">
@@ -67,7 +67,7 @@
 		<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 			<!-- Personal Information Panel -->
 			<div class="bg-white border-2 border-hub-blue-200 rounded-lg shadow-md overflow-hidden">
-				<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 px-6 py-4">
+				<div class="panel-head-theme px-6 py-4">
 					<div class="flex items-center gap-2">
 						<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -84,7 +84,7 @@
 					<FormField label="Phone" name="phone" bind:value={formData.phone} />
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Spouse</label>
-						<select name="spouseId" bind:value={formData.spouseId} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-blue-500 focus:ring-hub-blue-500 py-3 px-4">
+						<select name="spouseId" bind:value={formData.spouseId} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-1 focus:ring-theme-button-1 py-3 px-4">
 							<option value="">None</option>
 							{#each contacts as contact}
 								<option value={contact.id}>
@@ -99,7 +99,7 @@
 								type="checkbox"
 								name="subscribed"
 								bind:checked={formData.subscribed}
-								class="rounded border-gray-300 text-hub-green-600 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500"
+								class="rounded border-gray-300 text-hub-green-600 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2"
 							/>
 							<span class="ml-2 text-sm text-gray-700">Subscribed to newsletters</span>
 						</label>
@@ -109,7 +109,7 @@
 
 			<!-- Address Panel -->
 			<div class="bg-white border-2 border-hub-blue-200 rounded-lg shadow-md overflow-hidden">
-				<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 px-6 py-4">
+				<div class="panel-head-theme px-6 py-4">
 					<div class="flex items-center gap-2">
 						<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -145,7 +145,7 @@
 				<div class="p-6 space-y-4">
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Membership Status</label>
-						<select name="membershipStatus" bind:value={formData.membershipStatus} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
+						<select name="membershipStatus" bind:value={formData.membershipStatus} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4">
 							<option value="">Select status</option>
 							<option value="member">Member</option>
 							<option value="regular-attender">Regular Attender</option>

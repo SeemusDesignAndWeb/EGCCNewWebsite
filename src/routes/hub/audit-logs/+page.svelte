@@ -111,7 +111,7 @@
 								type="text"
 								bind:value={searchInput}
 								placeholder="Search logs..."
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-3 py-2"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 px-3 py-2"
 							/>
 						</div>
 
@@ -122,7 +122,7 @@
 								id="action"
 								bind:value={selectedAction}
 								on:change={handleFilterChange}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-3 py-2"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 px-3 py-2"
 							>
 								<option value="">All Actions</option>
 								{#each uniqueActions as action}
@@ -138,7 +138,7 @@
 								id="adminId"
 								bind:value={selectedAdminId}
 								on:change={handleFilterChange}
-								class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-3 py-2"
+								class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 px-3 py-2"
 							>
 								<option value="">All Admins</option>
 								{#each uniqueAdminIds as adminId}
@@ -158,7 +158,7 @@
 							<button
 								type="button"
 								on:click={clearFilters}
-								class="bg-gray-500 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-600"
+								class="btn-theme-3 px-[18px] py-2.5 rounded-md"
 							>
 								Clear
 							</button>

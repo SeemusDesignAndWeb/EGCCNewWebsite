@@ -50,10 +50,10 @@
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 			<h2 class="text-lg sm:text-xl font-bold text-gray-900">New Meeting Planner</h2>
 			<div class="flex flex-wrap gap-2">
-				<a href="/hub/meeting-planners" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-sm">
+				<a href="/hub/meeting-planners" class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-sm">
 					Cancel
 				</a>
-				<button type="submit" form="meeting-planner-form" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-sm">
+				<button type="submit" form="meeting-planner-form" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-sm">
 					<span class="hidden sm:inline">Create Meeting Planner</span>
 					<span class="sm:hidden">Create</span>
 				</button>
@@ -75,7 +75,7 @@
 						name="eventId" 
 						bind:value={formData.eventId} 
 						required 
-						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
 					>
 						<option value="">Select an event</option>
 						{#each events as event}
@@ -89,7 +89,7 @@
 						<select 
 							name="occurrenceId" 
 							bind:value={formData.occurrenceId} 
-							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
 						>
 							<option value="">All occurrences (recurring)</option>
 							{#each filteredOccurrences as occurrence}

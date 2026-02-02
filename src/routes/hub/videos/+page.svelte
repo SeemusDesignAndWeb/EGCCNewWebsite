@@ -48,7 +48,7 @@
 
 <div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 	<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Video Tutorials</h2>
-	<a href="/hub/videos/new" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
+	<a href="/hub/videos/new" class="btn-theme-2 px-2.5 py-1.5 rounded-md text-xs">
 		Add Video
 	</a>
 </div>
@@ -59,9 +59,9 @@
 			type="text"
 			bind:value={searchInput}
 			placeholder="Search videos..."
-			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-[18px] py-2.5"
+			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 px-[18px] py-2.5"
 		/>
-		<button type="submit" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs">
+		<button type="submit" class="btn-theme-3 px-2.5 py-1.5 rounded-md text-xs">
 			Search
 		</button>
 	</form>

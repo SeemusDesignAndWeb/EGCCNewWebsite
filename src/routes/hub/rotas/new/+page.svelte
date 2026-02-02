@@ -92,10 +92,10 @@
 	<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
 		<h2 class="text-xl sm:text-2xl font-bold text-gray-900">New Rota</h2>
 		<div class="flex flex-wrap gap-2">
-			<a href="/hub/rotas" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs">
+			<a href="/hub/rotas" class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 				Cancel
 			</a>
-			<button type="submit" form="rota-create-form" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
+			<button type="submit" form="rota-create-form" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 				<span class="hidden sm:inline">Create Rota</span>
 				<span class="sm:hidden">Create</span>
 			</button>
@@ -112,7 +112,7 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<div class="md:col-span-2">
 					<label class="block text-sm font-medium text-gray-700 mb-1">Event</label>
-					<select name="eventId" bind:value={formData.eventId} required class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
+					<select name="eventId" bind:value={formData.eventId} required class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4">
 						<option value="">Select an event</option>
 						{#each events as event}
 							<option value={event.id}>{event.title}</option>
@@ -122,7 +122,7 @@
 				{#if filteredOccurrences.length > 0}
 					<div class="md:col-span-2">
 						<label class="block text-sm font-medium text-gray-700 mb-1">Occurrence (optional)</label>
-						<select name="occurrenceId" bind:value={formData.occurrenceId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
+						<select name="occurrenceId" bind:value={formData.occurrenceId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4">
 							<option value="">All occurrences (recurring)</option>
 							{#each filteredOccurrences as occurrence}
 								<option value={occurrence.id}>{formatDateTimeUK(occurrence.startsAt)}</option>
@@ -134,7 +134,7 @@
 				<FormField label="Capacity" name="capacity" type="number" bind:value={formData.capacity} required />
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
-					<select name="visibility" bind:value={formData.visibility} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
+					<select name="visibility" bind:value={formData.visibility} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4">
 						<option value="public">Public</option>
 						<option value="internal">Internal</option>
 					</select>
@@ -153,7 +153,7 @@
 						type="text"
 						bind:value={ownerSearchTerm}
 						placeholder="Search by name or email..."
-						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4"
 					/>
 				</div>
 				<div>
@@ -164,7 +164,7 @@
 						on:change={(e) => {
 							formData.ownerId = e.target.value || '';
 						}}
-						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4"
 					>
 						<option value="">No owner</option>
 						{#each filteredOwnerContacts as contact (contact.id)}

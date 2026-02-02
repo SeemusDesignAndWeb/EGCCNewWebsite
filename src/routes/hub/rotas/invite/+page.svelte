@@ -83,7 +83,7 @@
 			<div class="flex gap-3">
 				<a
 					href="/hub/rotas"
-					class="bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700 flex items-center gap-2"
+					class="bg-theme-button-3 text-white px-[18px] py-2.5 rounded-md hover:opacity-90 flex items-center gap-2"
 				>
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -93,7 +93,7 @@
 				<button
 					on:click={sendInvites}
 					disabled={sending || !selectedEventId || selectedRotaIds.length === 0 || !selectedListId}
-					class="bg-hub-green-600 text-white px-6 py-2 rounded-md hover:bg-hub-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+					class="bg-theme-button-2 text-white px-6 py-2 rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
 				>
 					{#if sending}
 						<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -118,7 +118,7 @@
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 			<div>
 				<label class="block text-sm font-medium text-gray-700 mb-1">Event <span class="text-hub-red-500">*</span></label>
-				<select bind:value={selectedEventId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3">
+				<select bind:value={selectedEventId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3">
 					<option value="">Select an event</option>
 					{#each events as event}
 						<option value={event.id}>{event.title}</option>
@@ -127,7 +127,7 @@
 			</div>
 			<div>
 				<label class="block text-sm font-medium text-gray-700 mb-1">Contact List <span class="text-hub-red-500">*</span></label>
-				<select bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3">
+				<select bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3">
 					<option value="">Select a list</option>
 					{#each lists as list}
 						<option value={list.id}>{list.name}</option>
@@ -147,7 +147,7 @@
 				bind:value={customMessage}
 				placeholder="Enter your custom message here..."
 				rows="4"
-				class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3"
+				class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3"
 			></textarea>
 		</div>
 	</div>
@@ -185,7 +185,7 @@
 							type="checkbox" 
 							bind:group={selectedRotaIds} 
 							value={rota.id} 
-							class="mr-3 h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded" 
+							class="mr-3 h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded" 
 						/>
 						<div class="flex-1">
 							<div class="font-medium text-sm text-gray-900">{rota.role}</div>

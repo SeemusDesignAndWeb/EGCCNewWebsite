@@ -143,7 +143,7 @@
 					accept=".csv,.xlsx,.xls"
 					required
 					on:change={handleFileSelect}
-					class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-hub-green-600 file:text-white hover:file:bg-hub-green-700"
+					class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-theme-button-2 file:text-white hover:file:bg-hub-green-700"
 				/>
 				<p class="mt-2 text-xs text-gray-500">
 					Upload a CSV or Excel (.xlsx, .xls) file with contact information. The first row should contain column headers.
@@ -204,10 +204,10 @@
 				</p>
 			</div>
 
-			<button type="submit" class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700">
+			<button type="submit" class="bg-theme-button-2 text-white px-[18px] py-2.5 rounded-md hover:opacity-90">
 				Upload and Map Fields
 			</button>
-			<a href="/hub/contacts" class="ml-2 bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700 inline-block">
+			<a href="/hub/contacts" class="ml-2 bg-theme-button-3 text-white px-[18px] py-2.5 rounded-md hover:opacity-90 inline-block">
 				Cancel
 			</a>
 		</form>
@@ -281,7 +281,7 @@
 							<td class="px-4 py-3">
 								<select
 									bind:value={fieldMapping[header]}
-									class="block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+									class="block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
 								>
 									{#each contactFields as field}
 										<option value={field.value}>{field.label}</option>
@@ -308,14 +308,14 @@
 			<button
 				type="button"
 				on:click={proceedToPreview}
-				class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700"
+				class="bg-theme-button-2 text-white px-[18px] py-2.5 rounded-md hover:opacity-90"
 			>
 				Preview Import
 			</button>
 			<button
 				type="button"
 				on:click={() => step = 'upload'}
-				class="bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700"
+				class="bg-theme-button-3 text-white px-[18px] py-2.5 rounded-md hover:opacity-90"
 			>
 				Back
 			</button>
@@ -366,14 +366,14 @@
 			<button
 				type="button"
 				on:click={handleImport}
-				class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700"
+				class="bg-theme-button-2 text-white px-[18px] py-2.5 rounded-md hover:opacity-90"
 			>
 				Import {totalRows} Contacts
 			</button>
 			<button
 				type="button"
 				on:click={() => step = 'map'}
-				class="bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700"
+				class="bg-theme-button-3 text-white px-[18px] py-2.5 rounded-md hover:opacity-90"
 			>
 				Back to Mapping
 			</button>
@@ -412,13 +412,13 @@
 
 
 		<div class="flex gap-2">
-			<a href="/hub/contacts" class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700">
+			<a href="/hub/contacts" class="bg-theme-button-2 text-white px-[18px] py-2.5 rounded-md hover:opacity-90">
 				View Contacts
 			</a>
 			<button
 				type="button"
 				on:click={() => { step = 'upload'; fileText = ''; fileData = ''; fileType = 'csv'; csvHeaders = []; csvRows = []; fieldMapping = {}; importResults = null; }}
-				class="bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700"
+				class="bg-theme-button-3 text-white px-[18px] py-2.5 rounded-md hover:opacity-90"
 			>
 				Import Another File
 			</button>

@@ -188,7 +188,7 @@
 			<div class="flex flex-wrap gap-2">
 				<a 
 					href="/hub/users" 
-					class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 inline-flex items-center gap-1.5 text-xs"
+					class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 inline-flex items-center gap-1.5 text-xs"
 				>
 					<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -199,27 +199,27 @@
 					<button
 						type="submit"
 						form="admin-edit-form"
-						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs"
+						class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Save Changes
 					</button>
 					<button
 						on:click={() => editing = false}
-						class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs"
+						class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Cancel
 					</button>
 				{:else}
 					<button
 						on:click={() => editing = true}
-						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs"
+						class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Edit
 					</button>
 					{#if !admin.emailVerified}
 						<button
 							on:click={handleVerify}
-							class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs"
+							class="bg-theme-button-1 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 						>
 							<span class="hidden sm:inline">Verify Email</span>
 							<span class="sm:hidden">Verify</span>
@@ -332,7 +332,7 @@
 										checked={isSuperAdminEmailMatch || hasSuperAdminPermission || formData.permissions.includes(area.value)}
 										disabled={isSuperAdminEmailMatch || hasSuperAdminPermission}
 										on:change={() => !isSuperAdminEmailMatch && !hasSuperAdminPermission && togglePermission(area.value)}
-										class="mt-1 mr-3 h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded"
+										class="mt-1 mr-3 h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
 									/>
 									<div class="flex-1">
 										<div class="text-sm font-semibold text-gray-900">{area.label}</div>
@@ -472,7 +472,7 @@
 										bind:value={passwordData.newPassword}
 										required
 										placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-										class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
+										class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4 pr-10"
 									/>
 								{:else}
 									<input
@@ -482,7 +482,7 @@
 										bind:value={passwordData.newPassword}
 										required
 										placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-										class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
+										class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4 pr-10"
 									/>
 								{/if}
 								<button
@@ -519,7 +519,7 @@
 									bind:value={passwordData.confirmPassword}
 									required
 									placeholder="Confirm new password"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4"
 								/>
 							{:else}
 								<input
@@ -529,14 +529,14 @@
 									bind:value={passwordData.confirmPassword}
 									required
 									placeholder="Confirm new password"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4"
 								/>
 							{/if}
 						</div>
 					</div>
 
 					<div class="flex gap-2 mt-6">
-						<button type="submit" class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700">
+						<button type="submit" class="bg-theme-button-2 text-white px-[18px] py-2.5 rounded-md hover:opacity-90">
 							Reset Password
 						</button>
 						<button
@@ -545,7 +545,7 @@
 								resettingPassword = false;
 								passwordData = { newPassword: '', confirmPassword: '' };
 							}}
-							class="bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700"
+							class="bg-theme-button-3 text-white px-[18px] py-2.5 rounded-md hover:opacity-90"
 						>
 							Back
 						</button>

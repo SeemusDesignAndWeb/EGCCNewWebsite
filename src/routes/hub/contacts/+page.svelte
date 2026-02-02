@@ -78,7 +78,7 @@
 			render: (val, row) => {
 				return `<button 
 					data-contact-id="${row.id}"
-					class="make-admin-btn bg-hub-blue-600 text-white p-2 rounded hover:bg-hub-blue-700 inline-flex items-center justify-center relative"
+					class="make-admin-btn bg-theme-button-1 text-white p-2 rounded hover:opacity-90 inline-flex items-center justify-center relative"
 					title="Make Hub Admin"
 					aria-label="Make Hub Admin"
 				>
@@ -120,7 +120,7 @@
 		{#if isSuperAdmin}
 			<button
 				on:click={() => showBulkUpdateDialog = true}
-				class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs"
+				class="bg-theme-button-1 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 			>
 				Bulk Update
 			</button>
@@ -139,10 +139,10 @@
 			<span class="hidden sm:inline">Membership Form</span>
 			<span class="sm:hidden">Membership</span>
 		</a>
-		<a href="/hub/contacts/import" class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs">
+		<a href="/hub/contacts/import" class="bg-theme-button-1 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 			Import
 		</a>
-		<a href="/hub/contacts/new" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
+		<a href="/hub/contacts/new" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 			Add Contact
 		</a>
 	</div>
@@ -154,9 +154,9 @@
 			type="text"
 			bind:value={searchInput}
 			placeholder="Search contacts..."
-			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-[18px] py-2.5"
+			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 px-[18px] py-2.5"
 		/>
-		<button type="submit" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs">
+		<button type="submit" class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 			Search
 		</button>
 	</form>
@@ -241,7 +241,7 @@
 									updateValue = '';
 								}
 							}}
-							class="w-full rounded-md border border-gray-300 shadow-sm focus:border-hub-blue-500 focus:ring-hub-blue-500 py-2 px-3"
+							class="w-full rounded-md border border-gray-300 shadow-sm focus:border-theme-button-1 focus:ring-theme-button-1 py-2 px-3"
 						>
 							<option value="membershipStatus">Membership Status</option>
 							<option value="dateJoined">Date Joined</option>
@@ -255,7 +255,7 @@
 							<select 
 								bind:value={updateValue}
 								name="updateValue"
-								class="w-full rounded-md border border-gray-300 shadow-sm focus:border-hub-blue-500 focus:ring-hub-blue-500 py-2 px-3"
+								class="w-full rounded-md border border-gray-300 shadow-sm focus:border-theme-button-1 focus:ring-theme-button-1 py-2 px-3"
 							>
 								<option value="member">Member</option>
 								<option value="regular-attender">Regular Attender</option>
@@ -271,7 +271,7 @@
 								type="date"
 								bind:value={updateValue}
 								name="updateValue"
-								class="w-full rounded-md border border-gray-300 shadow-sm focus:border-hub-blue-500 focus:ring-hub-blue-500 py-2 px-3"
+								class="w-full rounded-md border border-gray-300 shadow-sm focus:border-theme-button-1 focus:ring-theme-button-1 py-2 px-3"
 							/>
 							<p class="mt-1 text-xs text-gray-500">Leave empty to clear the date</p>
 						</div>
@@ -283,7 +283,7 @@
 						<select 
 							bind:value={filterCondition}
 							name="filterCondition"
-							class="w-full rounded-md border border-gray-300 shadow-sm focus:border-hub-blue-500 focus:ring-hub-blue-500 py-2 px-3"
+							class="w-full rounded-md border border-gray-300 shadow-sm focus:border-theme-button-1 focus:ring-theme-button-1 py-2 px-3"
 						>
 							<option value="empty">Only contacts where field is empty</option>
 							<option value="all">All contacts (override existing values)</option>
@@ -311,7 +311,7 @@
 					</button>
 					<button
 						type="submit"
-						class="px-[18px] py-2.5 bg-hub-blue-600 text-white rounded-md hover:bg-hub-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+						class="px-[18px] py-2.5 bg-theme-button-1 text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
 						disabled={isSubmitting}
 					>
 						{isSubmitting ? 'Updating...' : 'Update Contacts'}

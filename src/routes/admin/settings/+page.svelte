@@ -22,6 +22,13 @@
 	let loading = true;
 	let saving = false;
 
+	// Download / Upload data (Production ↔ Development)
+	let downloading = false;
+	let uploading = false;
+	let uploadFile = null;
+	let uploadError = null;
+	let uploadSuccess = null;
+
 	onMount(async () => {
 		await loadSettings();
 	});
@@ -132,7 +139,86 @@
 		}
 	}
 
+	async function downloadData() {
+		downloading = true;
+		uploadError = null;
+		uploadSuccess = null;
+		try {
+			const res = await fetch('/admin/settings/api/download-data', { credentials: 'include' });
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				notifications.error(data.error || `Download failed (${res.status})`);
+				return;
+			}
+			const blob = await res.blob();
+			const disposition = res.headers.get('Content-Disposition');
+			const match = disposition && disposition.match(/filename="([^"]+)"/);
+			const filename = match ? match[1] : `egcc-content-${new Date().toISOString().slice(0, 10)}.json`;
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = filename;
+			a.click();
+			URL.revokeObjectURL(url);
+			notifications.success('Data downloaded. Save the file and use Upload on the other site.');
+		} catch (err) {
+			notifications.error(err.message || 'Download failed');
+		} finally {
+			downloading = false;
+		}
+	}
 
+	function onUploadFileChange(e) {
+		const file = e.target.files?.[0];
+		uploadFile = file || null;
+		uploadError = null;
+		uploadSuccess = null;
+	}
+
+	async function uploadData() {
+		if (!uploadFile) {
+			uploadError = 'Please choose a JSON file first.';
+			return;
+		}
+		uploading = true;
+		uploadError = null;
+		uploadSuccess = null;
+		try {
+			const text = await uploadFile.text();
+			let payload;
+			try {
+				payload = JSON.parse(text);
+			} catch {
+				uploadError = 'File is not valid JSON.';
+				return;
+			}
+			const res = await fetch('/admin/settings/api/upload-data', {
+				method: 'POST',
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			});
+			const data = await res.json().catch(() => ({}));
+			if (!res.ok) {
+				uploadError = data.error || `Upload failed (${res.status})`;
+				return;
+			}
+			const written = (data.results?.written || []).reduce((n, w) => n + (w.count || 0), 0);
+			const numCollections = (data.results?.written || []).length;
+			if (data.results?.errors?.length) {
+				uploadError = data.results.errors.map((e) => `${e.collection}: ${e.error}`).join('; ');
+			}
+			if (numCollections > 0) {
+				uploadSuccess = `Uploaded ${numCollections} collections (${written} records).`;
+				notifications.success(uploadSuccess);
+			}
+		} catch (err) {
+			uploadError = err.message || 'Upload failed';
+			notifications.error(uploadError);
+		} finally {
+			uploading = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -391,6 +477,53 @@
 				>
 					{saving ? 'Saving...' : 'Save YouTube Settings'}
 				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Download / Upload data (Production ↔ Development) -->
+	<div class="mt-8">
+		<div class="bg-white p-6 rounded-lg shadow">
+			<h2 class="text-2xl font-bold mb-2">Production / Development data</h2>
+			<p class="text-sm text-gray-600 mb-4">
+				Download all website content (contacts, events, emails, rotas, Hub settings, etc.) as a JSON file from this site, then upload it on another site (e.g. download on Production, upload on Development). Admins and sessions are not included.
+			</p>
+			<div class="flex flex-wrap gap-6 items-end">
+				<div>
+					<button
+						on:click={downloadData}
+						disabled={downloading}
+						class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						{downloading ? 'Downloading…' : 'Download data'}
+					</button>
+					<p class="mt-1 text-xs text-gray-500">Use on Production to export content.</p>
+				</div>
+				<div class="flex flex-col gap-2">
+					<div class="flex items-center gap-2">
+						<input
+							type="file"
+							accept=".json,application/json"
+							on:change={onUploadFileChange}
+							class="text-sm"
+							id="upload-data-file"
+						/>
+						<button
+							on:click={uploadData}
+							disabled={uploading || !uploadFile}
+							class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							{uploading ? 'Uploading…' : 'Upload data'}
+						</button>
+					</div>
+					{#if uploadError}
+						<p class="text-sm text-red-600">{uploadError}</p>
+					{/if}
+					{#if uploadSuccess && !uploadError}
+						<p class="text-sm text-green-600">{uploadSuccess}</p>
+					{/if}
+					<p class="text-xs text-gray-500">Use on Development to load content from the downloaded file.</p>
+				</div>
 			</div>
 		</div>
 	</div>

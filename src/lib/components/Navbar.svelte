@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 
 	export let bannerVisible = false;
+	/** @type {{ logoPath?: string; primaryColor?: string; brandColor?: string } | null} */
+	export let theme = null;
 
 	let menuOpen = false;
 	let scrolled = false;
@@ -67,16 +69,17 @@
 </script>
 
 <nav
-	class="fixed left-0 right-0 z-50 transition-all duration-300 {bannerVisible ? 'top-[45px]' : 'top-0'} {menuOpen ? 'bg-brand-blue shadow-md' : scrolled ? 'bg-white/90 backdrop-blur-sm shadow-md' : 'bg-white/70 backdrop-blur-sm'}"
+	class="fixed left-0 right-0 z-50 transition-all duration-300 {bannerVisible ? 'top-[45px]' : 'top-0'} {scrolled ? 'shadow-md' : ''}"
+	style="background-color: var(--color-navbar-bg, #FFFFFF);"
 >
 	<div class="container mx-auto px-4">
 		<div class="flex items-center justify-between transition-all duration-300" class:py-3={bannerVisible} class:py-4={!bannerVisible}>
-			<!-- Logo -->
+			<!-- Logo: colour on public (no theme), white/invert on themed/Hub banner -->
 			<a href="/" class="flex items-center z-10">
 				<img
-					src="/images/egcc-color.png"
+					src={theme?.logoPath?.trim() || '/images/egcc-color.png'}
 					alt="Eltham Green Community Church"
-					class="h-12 w-auto transition-all duration-300 {menuOpen ? 'brightness-0 invert' : ''} {menuOpen ? 'md:brightness-0 md:invert' : 'md:brightness-100 md:invert-0'}"
+					class="h-12 w-auto {theme ? 'brightness-0 invert' : ''}"
 				/>
 			</a>
 
@@ -88,7 +91,7 @@
 							<a
 								href={getPageRoute(page.id)}
 								on:click={() => (menuOpen = false)}
-								class="transition-colors text-gray-900 hover:text-brand-blue"
+								class="transition-colors {theme ? 'text-white hover:text-white/90' : 'text-gray-800 hover:text-primary'}"
 							>
 								{getNavigationLabel(page)}
 							</a>
@@ -104,16 +107,16 @@
 				aria-label="Toggle menu"
 			>
 				<span
-					class="block w-6 h-0.5 transition-all duration-300 {menuOpen ? 'bg-white' : 'bg-gray-900'}"
+					class="block w-6 h-0.5 transition-all duration-300 {theme ? 'bg-white' : 'bg-gray-800'}"
 					class:rotate-45={menuOpen}
 					class:translate-y-2={menuOpen}
 				></span>
 				<span
-					class="block w-6 h-0.5 transition-all duration-300 {menuOpen ? 'bg-white' : 'bg-gray-900'}"
+					class="block w-6 h-0.5 transition-all duration-300 {theme ? 'bg-white' : 'bg-gray-800'}"
 					class:opacity-0={menuOpen}
 				></span>
 				<span
-					class="block w-6 h-0.5 transition-all duration-300 {menuOpen ? 'bg-white' : 'bg-gray-900'}"
+					class="block w-6 h-0.5 transition-all duration-300 {theme ? 'bg-white' : 'bg-gray-800'}"
 					class:-rotate-45={menuOpen}
 					class:-translate-y-2={menuOpen}
 				></span>
@@ -122,14 +125,14 @@
 
 		<!-- Mobile menu -->
 		{#if menuOpen}
-			<div class="md:hidden pb-4 bg-brand-blue -mx-4 px-4 pt-4">
+			<div class="md:hidden pb-4 -mx-4 px-4 pt-4" style="background-color: var(--color-navbar-bg, #FFFFFF);">
 				<ul class="flex flex-col gap-4">
 					{#each navigationPages as page}
 						<li>
 							<a
 								href={getPageRoute(page.id)}
 								on:click={() => (menuOpen = false)}
-								class="block transition-colors text-white hover:text-gray-200"
+								class="block transition-colors {theme ? 'text-white hover:text-gray-200' : 'text-gray-800 hover:text-primary'}"
 							>
 								{getNavigationLabel(page)}
 							</a>

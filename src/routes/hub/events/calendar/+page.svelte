@@ -497,14 +497,14 @@
 							cancelEditingWeekNote();
 						}
 					}}
-					class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs"
+					class="bg-theme-button-1 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 				>
 					Week Notes
 				</button>
-				<a href="/hub/events?view=list" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs">
+				<a href="/hub/events?view=list" class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 					List View
 				</a>
-				<a href="/hub/events/new" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
+				<a href="/hub/events/new" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 					New Event
 				</a>
 			</div>
@@ -646,7 +646,7 @@
 					<button
 						type="button"
 						on:click={() => startEditingWeekNote()}
-						class="bg-hub-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs whitespace-nowrap"
+						class="bg-theme-button-1 text-white px-3 py-1.5 rounded-md hover:opacity-90 text-xs whitespace-nowrap"
 					>
 						New Week Note
 					</button>
@@ -666,7 +666,7 @@
 										type="date"
 										bind:value={weekNoteDate}
 										required
-										class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm"
+										class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1.5 px-2 text-sm"
 									/>
 									<p class="mt-1 text-xs text-gray-500">
 										{#if weekNoteDate}
@@ -694,7 +694,7 @@
 												}
 											}
 										}}
-										class="rounded border-gray-300 text-hub-blue-600 focus:ring-hub-blue-500"
+										class="rounded border-gray-300 text-hub-blue-600 focus:ring-theme-button-1"
 									/>
 									<span class="text-xs font-medium text-gray-700">Add repeat</span>
 								</label>
@@ -712,7 +712,7 @@
 												type="date"
 												bind:value={recurrenceStartDate}
 												required
-												class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm"
+												class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1.5 px-2 text-sm"
 											/>
 										</div>
 										<div>
@@ -726,7 +726,7 @@
 												max="52"
 												bind:value={recurrenceWeeks}
 												required={enableRecurrence}
-												class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm"
+												class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1.5 px-2 text-sm"
 												title={recurrenceWeeks === 1 ? 'Every week' : recurrenceWeeks === 2 ? 'Every other week' : `Every ${recurrenceWeeks} weeks`}
 											/>
 										</div>
@@ -740,7 +740,7 @@
 												bind:value={recurrenceEndDate}
 												required={enableRecurrence}
 												min={recurrenceStartDate}
-												class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm"
+												class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1.5 px-2 text-sm"
 											/>
 										</div>
 									</div>
@@ -808,7 +808,7 @@
 							<div class="flex gap-2">
 					<button
 						type="submit"
-						class="bg-hub-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs whitespace-nowrap"
+						class="bg-theme-button-1 text-white px-3 py-1.5 rounded-md hover:opacity-90 text-xs whitespace-nowrap"
 					>
 						Save Week Note{enableRecurrence && recurrenceDates.length > 0 ? `s (${recurrenceDates.length})` : ''}
 					</button>
@@ -824,7 +824,7 @@
 								<button
 									type="button"
 									on:click={cancelEditingWeekNote}
-									class="bg-gray-600 text-white px-3 py-1.5 rounded-md hover:bg-gray-700 text-xs whitespace-nowrap"
+									class="bg-theme-button-3 text-white px-3 py-1.5 rounded-md hover:opacity-90 text-xs whitespace-nowrap"
 								>
 						Back
 								</button>
@@ -842,7 +842,7 @@
 							id="week-note-search"
 							type="date"
 							bind:value={weekNoteSearchDate}
-							class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm"
+							class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1.5 px-2 text-sm"
 						/>
 						<p class="mt-1 text-xs text-gray-500">
 							Showing {weekNoteSearchDate ? 'matching week' : 'latest 2 week notes'}.

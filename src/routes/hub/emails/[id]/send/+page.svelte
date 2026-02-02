@@ -73,7 +73,7 @@
 {#if newsletter}
 	<div class="space-y-6">
 		<!-- Header Card -->
-		<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 shadow-lg rounded-lg p-6 text-white">
+		<div class="panel-head-theme shadow-lg rounded-lg p-6 text-white">
 			<div class="flex items-center justify-between">
 				<div>
 					<h1 class="text-3xl font-bold mb-2 text-white">Send Email</h1>
@@ -117,7 +117,7 @@
 					{:else}
 						<select 
 							bind:value={selectedListId} 
-							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
+							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4"
 							disabled={sending}
 						>
 							<option value="">-- Select a contact list --</option>
@@ -138,7 +138,7 @@
 					<button
 						on:click={sendNewsletter}
 						disabled={sending || !selectedListId || lists.length === 0}
-						class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center gap-2 transition-colors"
+						class="btn-theme-2 px-[18px] py-2.5 rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center gap-2 transition-colors"
 					>
 						{#if sending}
 							<svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -155,7 +155,7 @@
 					</button>
 					<a 
 						href="/hub/emails/{newsletter.id}" 
-						class="bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700 font-medium inline-flex items-center gap-2 transition-colors"
+						class="btn-theme-3 px-[18px] py-2.5 rounded-md font-medium inline-flex items-center gap-2 transition-colors"
 					>
 						Cancel
 					</a>

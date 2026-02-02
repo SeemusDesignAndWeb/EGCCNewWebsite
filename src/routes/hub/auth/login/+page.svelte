@@ -88,7 +88,7 @@
 						type="email"
 						autocomplete="email"
 						required
-						class="appearance-none rounded-none relative block w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-hub-green-500 focus:border-hub-green-600 focus:z-10"
+						class="appearance-none rounded-none relative block w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-theme-button-2 focus:border-hub-green-600 focus:z-10"
 						placeholder="Email address"
 					/>
 				</div>
@@ -100,7 +100,7 @@
 						type="password"
 						autocomplete="current-password"
 						required
-						class="appearance-none rounded-none relative block w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-hub-green-500 focus:border-hub-green-600 focus:z-10"
+						class="appearance-none rounded-none relative block w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-theme-button-2 focus:border-hub-green-600 focus:z-10"
 						placeholder="Password"
 					/>
 				</div>
@@ -139,7 +139,7 @@
 			<div class="mt-6">
 				<button
 					type="submit"
-					class="group relative w-full flex justify-center py-2.5 sm:py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-hub-green-600 hover:bg-hub-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-hub-green-500"
+					class="group relative w-full flex justify-center py-2.5 sm:py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-hub-green-600 hover:bg-hub-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-button-2"
 				>
 					Sign in
 				</button>

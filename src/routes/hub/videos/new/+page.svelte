@@ -28,10 +28,10 @@
 	<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
 		<h2 class="text-xl sm:text-2xl font-bold text-gray-900">New Video</h2>
 		<div class="flex flex-wrap gap-2">
-			<a href="/hub/videos" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs">
+			<a href="/hub/videos" class="btn-theme-3 px-2.5 py-1.5 rounded-md text-xs">
 				Back
 			</a>
-			<button type="submit" form="video-create-form" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
+			<button type="submit" form="video-create-form" class="btn-theme-2 px-2.5 py-1.5 rounded-md text-xs">
 				<span class="hidden sm:inline">Create Video</span>
 				<span class="sm:hidden">Create</span>
 			</button>
@@ -53,7 +53,7 @@
 				bind:value={formData.embedCode}
 				rows="6"
 				required
-				class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-[18px] py-2.5 font-mono text-sm"
+				class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 px-[18px] py-2.5 font-mono text-sm"
 				placeholder="Paste the embed code from Loom here..."
 			></textarea>
 			<p class="mt-1 text-sm text-gray-500">

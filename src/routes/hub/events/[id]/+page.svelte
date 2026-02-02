@@ -283,7 +283,7 @@
 							href={rotaSignupLink}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 flex items-center gap-1.5 text-xs whitespace-nowrap flex-shrink-0"
+							class="bg-theme-button-1 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 flex items-center gap-1.5 text-xs whitespace-nowrap flex-shrink-0"
 						>
 							<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -295,7 +295,7 @@
 						<a
 							href="/hub/events/{event.id}/export-rotas-pdf"
 							target="_blank"
-							class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
+							class="bg-theme-button-1 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
 						>
 							<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -308,7 +308,7 @@
 							href={publicEventLink}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 flex items-center gap-1.5 text-xs whitespace-nowrap flex-shrink-0"
+							class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 flex items-center gap-1.5 text-xs whitespace-nowrap flex-shrink-0"
 						>
 							<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -322,7 +322,7 @@
 				<div class="flex flex-nowrap gap-2 overflow-x-auto">
 					<a
 						href="/hub/events/calendar"
-						class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 flex items-center gap-1.5 text-xs whitespace-nowrap flex-shrink-0"
+						class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 flex items-center gap-1.5 text-xs whitespace-nowrap flex-shrink-0"
 					>
 						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -333,21 +333,21 @@
 						<button
 							type="submit"
 							form="event-edit-form"
-							class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs whitespace-nowrap flex-shrink-0"
+							class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs whitespace-nowrap flex-shrink-0"
 						>
 							Save Changes
 						</button>
 						<button
 							type="button"
 							on:click={() => editing = false}
-							class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs whitespace-nowrap flex-shrink-0"
+							class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs whitespace-nowrap flex-shrink-0"
 						>
 							Back
 						</button>
 					{:else}
 						<button
 							on:click={() => editing = true}
-							class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs whitespace-nowrap flex-shrink-0"
+							class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs whitespace-nowrap flex-shrink-0"
 						>
 							Edit
 						</button>
@@ -382,7 +382,7 @@
 							/>
 							<div>
 								<label class="block text-xs font-medium text-gray-700 mb-1">Visibility</label>
-								<select name="visibility" bind:value={formData.visibility} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-2 text-sm">
+								<select name="visibility" bind:value={formData.visibility} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1.5 px-2 text-sm">
 									<option value="private">Private (Hub Admins only)</option>
 									<option value="internal">Internal (Church only)</option>
 									<option value="public">Public (Everyone)</option>
@@ -392,7 +392,7 @@
 								<label class="block text-xs font-medium text-gray-700 mb-1">Color</label>
 								<div class="flex items-center gap-1.5">
 									<div class="w-5 h-5 rounded border border-gray-300 flex-shrink-0" style="background-color: {formData.color};"></div>
-									<select name="color" bind:value={formData.color} class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1.5 px-1.5 text-xs">
+									<select name="color" bind:value={formData.color} class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1.5 px-1.5 text-xs">
 										{#each eventColors as colorOption}
 											<option value={colorOption.value}>{colorOption.label}</option>
 										{/each}
@@ -405,7 +405,7 @@
 									id="enableSignup"
 									name="enableSignup"
 									bind:checked={formData.enableSignup}
-									class="h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded"
+									class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
 								/>
 								<label for="enableSignup" class="ml-2 block text-xs text-gray-700">
 									Enable Signup
@@ -417,7 +417,7 @@
 									id="hideFromEmail"
 									name="hideFromEmail"
 									bind:checked={formData.hideFromEmail}
-									class="h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded"
+									class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
 								/>
 								<label for="hideFromEmail" class="ml-2 block text-xs text-gray-700">
 									Hide from email
@@ -527,7 +527,7 @@
 	<div class="bg-white shadow rounded-lg p-3 sm:p-4 mb-4">
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
 			<h3 class="text-base sm:text-lg font-bold text-gray-900">Occurrences</h3>
-			<a href="/hub/events/{event.id}/occurrences/new" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs whitespace-nowrap">
+			<a href="/hub/events/{event.id}/occurrences/new" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs whitespace-nowrap">
 				Add Occurrence
 			</a>
 		</div>
@@ -601,7 +601,7 @@
 		<div class="bg-white shadow rounded-lg p-3 sm:p-4 mb-4">
 			<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
 				<h3 class="text-base sm:text-lg font-bold text-gray-900">Meeting Planners</h3>
-				<a href="/hub/meeting-planners/new?eventId={event.id}" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs whitespace-nowrap">
+				<a href="/hub/meeting-planners/new?eventId={event.id}" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs whitespace-nowrap">
 					<span class="hidden sm:inline">New Meeting Planner</span>
 					<span class="sm:hidden">New Planner</span>
 				</a>
@@ -637,7 +637,7 @@
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
 			<h3 class="text-base sm:text-lg font-bold text-gray-900">Rotas</h3>
 			<div class="flex flex-wrap gap-2">
-				<a href="/hub/rotas/new?eventId={event.id}" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs whitespace-nowrap">
+				<a href="/hub/rotas/new?eventId={event.id}" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs whitespace-nowrap">
 					Add Rota
 				</a>
 			</div>

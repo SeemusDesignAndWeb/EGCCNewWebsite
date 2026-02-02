@@ -23,10 +23,10 @@
 	<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
 		<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Create Weekly Newsletter Template</h2>
 		<div class="flex flex-wrap gap-2">
-			<a href="/hub/emails/templates" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs">
+			<a href="/hub/emails/templates" class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 				Cancel
 			</a>
-			<button type="submit" form="weekly-template-form" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
+			<button type="submit" form="weekly-template-form" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 				<span class="hidden sm:inline">Create Weekly Newsletter Template</span>
 				<span class="sm:hidden">Create</span>
 			</button>

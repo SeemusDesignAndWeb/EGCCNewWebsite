@@ -113,10 +113,10 @@
 	<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
 		<h2 class="text-xl sm:text-2xl font-bold text-gray-900">New Admin</h2>
 		<div class="flex flex-wrap gap-2">
-			<a href="/hub/users" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs">
+			<a href="/hub/users" class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 				Cancel
 			</a>
-			<button type="submit" form="user-create-form" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
+			<button type="submit" form="user-create-form" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 				<span class="hidden sm:inline">Create Admin</span>
 				<span class="sm:hidden">Create</span>
 			</button>
@@ -197,7 +197,7 @@
 								checked={isSuperAdminEmailMatch || hasSuperAdminPermission || formData.permissions.includes(area.value)}
 								disabled={isSuperAdminEmailMatch || hasSuperAdminPermission}
 								on:change={() => !isSuperAdminEmailMatch && !hasSuperAdminPermission && togglePermission(area.value)}
-								class="mt-1 mr-3 h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded"
+								class="mt-1 mr-3 h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
 							/>
 							<div class="flex-1">
 								<div class="text-sm font-semibold text-gray-900">{area.label}</div>
@@ -232,7 +232,7 @@
 							bind:value={formData.password}
 							required
 							placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-							class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
+							class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4 pr-10"
 						/>
 					{:else}
 						<input
@@ -242,7 +242,7 @@
 							bind:value={formData.password}
 							required
 							placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-							class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 pr-10"
+							class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4 pr-10"
 						/>
 					{/if}
 					<button

@@ -208,7 +208,7 @@
 			<h2 class="text-2xl font-bold text-gray-900">Bulk Rota Assignment</h2>
 			<a
 				href="/hub/rotas"
-				class="bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700 flex items-center gap-2"
+				class="bg-theme-button-3 text-white px-[18px] py-2.5 rounded-md hover:opacity-90 flex items-center gap-2"
 			>
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -232,7 +232,7 @@
 					<label class="block text-sm font-medium text-gray-700 mb-1">Event <span class="text-hub-red-500">*</span></label>
 					<select 
 						bind:value={selectedEventId} 
-						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3"
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3"
 					>
 						<option value="">Select an event</option>
 						{#each events as event}
@@ -245,7 +245,7 @@
 					<select 
 						bind:value={selectedRotaId}
 						disabled={!selectedEventId}
-						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 disabled:bg-gray-100"
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 disabled:bg-gray-100"
 					>
 						<option value="">Select a rota</option>
 						{#each filteredRotas as rota}
@@ -272,7 +272,7 @@
 				{#if contactSelectionType === 'list'}
 					<select 
 						bind:value={selectedListId}
-						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3"
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3"
 					>
 						<option value="">Select a list</option>
 						{#each lists as list}
@@ -285,7 +285,7 @@
 							type="text"
 							bind:value={searchTerm}
 							placeholder="Search contacts..."
-							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3"
+							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3"
 						/>
 						<div class="flex justify-between items-center">
 							<span class="text-sm text-gray-600">
@@ -343,7 +343,7 @@
 					<label class="block text-sm font-medium text-gray-700 mb-1">Pattern Type <span class="text-hub-red-500">*</span></label>
 					<select 
 						bind:value={patternType}
-						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3"
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3"
 					>
 						<option value="day-of-month">Day of Month</option>
 						<option value="day-of-week">Day of Week</option>
@@ -356,7 +356,7 @@
 						<label class="block text-sm font-medium text-gray-700 mb-1">Position <span class="text-hub-red-500">*</span></label>
 						<select 
 							bind:value={dayOfMonthPosition}
-							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3"
+							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3"
 						>
 							<option value="beginning">Beginning</option>
 							<option value="middle">Middle</option>
@@ -369,7 +369,7 @@
 							<label class="block text-sm font-medium text-gray-700 mb-1">Day of Week <span class="text-hub-red-500">*</span></label>
 							<select 
 								bind:value={dayOfWeek}
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3"
 							>
 								<option value="monday">Monday</option>
 								<option value="tuesday">Tuesday</option>
@@ -384,7 +384,7 @@
 							<label class="block text-sm font-medium text-gray-700 mb-1">Week of Month <span class="text-hub-red-500">*</span></label>
 							<select 
 								bind:value={weekOfMonth}
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3"
 							>
 								<option value="first">First</option>
 								<option value="second">Second</option>
@@ -405,7 +405,7 @@
 						bind:value={frequency}
 						min="1"
 						placeholder="e.g., 1, 2, 3"
-						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3"
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3"
 					/>
 				</div>
 
@@ -415,7 +415,7 @@
 					<input
 						type="date"
 						bind:value={endDate}
-						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3"
+						class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3"
 					/>
 				</div>
 			</div>
@@ -427,7 +427,7 @@
 		<button
 			on:click={handleSubmit}
 			disabled={submitting || !selectedRotaId || !patternType || !frequency || frequency < 1 || !endDate || (contactSelectionType === 'individual' && selectedContactIds.size === 0) || (contactSelectionType === 'list' && !selectedListId) || (patternType === 'day-of-month' && !dayOfMonthPosition) || (patternType === 'day-of-week' && (!dayOfWeek || !weekOfMonth))}
-			class="bg-hub-green-600 text-white px-6 py-2.5 rounded-md hover:bg-hub-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+			class="bg-theme-button-2 text-white px-6 py-2.5 rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
 		>
 			{#if submitting}
 				<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

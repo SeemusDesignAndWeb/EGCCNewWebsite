@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Public website only: fixed EGCC branding (never overridden by Hub theme) */
+:root {
+	--color-primary: #4BB170;
+	--color-brand: #4A97D2;
+	--color-navbar-bg: #FFFFFF; /* White banner; logo in colour */
+}
+
 @layer base {
 	body {
 		@apply bg-white font-sans antialiased overflow-x-hidden;
@@ -34,6 +41,12 @@
 	a:hover, a:active, a:focus {
 		@apply text-primary outline-none;
 	}
+
+	/* Links styled as buttons (e.g. public CTAs): keep button text colour on hover */
+	a.text-white:hover {
+		color: white;
+		outline: none;
+	}
 }
 
 @layer utilities {
@@ -64,4 +77,3 @@
 		animation: fade-in 1s ease-out;
 	}
 }
-

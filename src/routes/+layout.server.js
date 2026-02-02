@@ -1,8 +1,10 @@
 import { getEvents, getSettings } from '$lib/server/database';
+import { getSettings as getHubSettings } from '$lib/crm/server/settings.js';
 
 export const load = async () => {
 	const allEvents = getEvents();
 	const settings = getSettings();
+	const hubSettings = await getHubSettings();
 	
 	// Get highlighted event (for banner)
 	const highlightedEvents = allEvents.filter(e => e.highlighted && e.published);
@@ -16,7 +18,8 @@ export const load = async () => {
 	
 	return {
 		highlightedEvent,
-		settings
+		settings,
+		theme: hubSettings.theme || null
 	};
 };
 

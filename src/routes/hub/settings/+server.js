@@ -1,35 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import { getAdminFromCookies } from '$lib/crm/server/auth.js';
 import { isSuperAdmin } from '$lib/crm/server/permissions.js';
-import { getSettings, invalidateSettingsCache } from '$lib/crm/server/settings.js';
-import { readFile, writeFile } from 'fs/promises';
-import { existsSync } from 'fs';
-import { join } from 'path';
-import { env } from '$env/dynamic/private';
-
-function getDataDir() {
-	const envDataDir = env.CRM_DATA_DIR;
-	if (envDataDir && envDataDir.trim()) {
-		const trimmed = envDataDir.trim();
-		if (trimmed.startsWith('/')) {
-			return trimmed;
-		}
-		return join(process.cwd(), trimmed);
-	}
-	return join(process.cwd(), 'data');
-}
-
-const DATA_DIR = getDataDir();
-const SETTINGS_FILE = join(DATA_DIR, 'hub_settings.json');
-
-/**
- * Write settings to file
- */
-async function writeSettings(settings) {
-	await writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
-	// Invalidate cache so next read gets fresh data
-	invalidateSettingsCache();
-}
+import { getSettings, writeSettings } from '$lib/crm/server/settings.js';
 
 export async function POST({ request, cookies }) {
 	const admin = await getAdminFromCookies(cookies);
@@ -43,7 +15,7 @@ export async function POST({ request, cookies }) {
 	}
 	
 	const data = await request.json();
-	const { emailRateLimitDelay, calendarColours, calendarColors, meetingPlannerRotas } = data; // Support both for backward compatibility
+	const { emailRateLimitDelay, calendarColours, calendarColors, meetingPlannerRotas, theme: themeUpdate } = data; // Support both for backward compatibility
 	
 	const settings = await getSettings();
 	
@@ -103,6 +75,81 @@ export async function POST({ request, cookies }) {
 		}
 
 		settings.meetingPlannerRotas = meetingPlannerRotas;
+	}
+
+	// Update theme if provided
+	if (themeUpdate !== undefined) {
+		if (typeof themeUpdate !== 'object' || themeUpdate === null) {
+			throw error(400, 'Invalid theme: must be an object');
+		}
+		settings.theme = settings.theme || {};
+		if (themeUpdate.logoPath !== undefined) {
+			settings.theme.logoPath = typeof themeUpdate.logoPath === 'string' ? themeUpdate.logoPath : '';
+		}
+		if (themeUpdate.primaryColor !== undefined) {
+			const v = themeUpdate.primaryColor;
+			if (typeof v !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(v)) {
+				throw error(400, 'Invalid theme.primaryColor: must be a hex colour (e.g. #4BB170)');
+			}
+			settings.theme.primaryColor = v;
+		}
+		if (themeUpdate.brandColor !== undefined) {
+			const v = themeUpdate.brandColor;
+			if (typeof v !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(v)) {
+				throw error(400, 'Invalid theme.brandColor: must be a hex colour (e.g. #4A97D2)');
+			}
+			settings.theme.brandColor = v;
+		}
+		if (themeUpdate.navbarBackgroundColor !== undefined) {
+			const v = themeUpdate.navbarBackgroundColor;
+			if (typeof v !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(v)) {
+				throw error(400, 'Invalid theme.navbarBackgroundColor: must be a hex colour');
+			}
+			settings.theme.navbarBackgroundColor = v;
+		}
+		if (themeUpdate.buttonColors !== undefined) {
+			if (!Array.isArray(themeUpdate.buttonColors) || themeUpdate.buttonColors.length > 5) {
+				throw error(400, 'Invalid theme.buttonColors: must be an array of up to 5 hex colours');
+			}
+			for (const v of themeUpdate.buttonColors) {
+				if (typeof v !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(v)) {
+					throw error(400, 'Invalid theme.buttonColors: each item must be a hex colour');
+				}
+			}
+			settings.theme.buttonColors = themeUpdate.buttonColors.slice(0, 5);
+		}
+		if (themeUpdate.panelHeadColors !== undefined) {
+			if (!Array.isArray(themeUpdate.panelHeadColors) || themeUpdate.panelHeadColors.length > 3) {
+				throw error(400, 'Invalid theme.panelHeadColors: must be an array of up to 3 hex colours');
+			}
+			for (const v of themeUpdate.panelHeadColors) {
+				if (typeof v !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(v)) {
+					throw error(400, 'Invalid theme.panelHeadColors: each item must be a hex colour');
+				}
+			}
+			settings.theme.panelHeadColors = themeUpdate.panelHeadColors.slice(0, 3);
+		}
+		if (themeUpdate.panelBackgroundColor !== undefined) {
+			const v = themeUpdate.panelBackgroundColor;
+			if (typeof v !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(v)) {
+				throw error(400, 'Invalid theme.panelBackgroundColor: must be a hex colour');
+			}
+			settings.theme.panelBackgroundColor = v;
+		}
+		if (themeUpdate.externalPagesLayout !== undefined) {
+			const v = themeUpdate.externalPagesLayout;
+			if (v !== 'integrated' && v !== 'standalone') {
+				throw error(400, 'Invalid theme.externalPagesLayout: must be "integrated" or "standalone"');
+			}
+			settings.theme.externalPagesLayout = v;
+		}
+		if (themeUpdate.publicPagesBranding !== undefined) {
+			const v = themeUpdate.publicPagesBranding;
+			if (v !== 'egcc' && v !== 'hub') {
+				throw error(400, 'Invalid theme.publicPagesBranding: must be "egcc" or "hub"');
+			}
+			settings.theme.publicPagesBranding = v;
+		}
 	}
 	
 	await writeSettings(settings);

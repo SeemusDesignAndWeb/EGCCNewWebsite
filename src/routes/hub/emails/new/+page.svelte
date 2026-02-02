@@ -60,10 +60,10 @@
 	<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
 		<h2 class="text-xl sm:text-2xl font-bold text-gray-900">New Email</h2>
 		<div class="flex flex-wrap gap-2">
-			<a href="/hub/emails" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs">
+			<a href="/hub/emails" class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 				Cancel
 			</a>
-			<button type="submit" form="newsletter-create-form" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
+			<button type="submit" form="newsletter-create-form" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 				<span class="hidden sm:inline">Create Email</span>
 				<span class="sm:hidden">Create</span>
 			</button>
@@ -77,7 +77,7 @@
 			<select
 				bind:value={selectedTemplateId}
 				on:change={handleTemplateChange}
-				class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
+				class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4"
 			>
 				<option value="">-- Select a template --</option>
 				{#each templates as template}

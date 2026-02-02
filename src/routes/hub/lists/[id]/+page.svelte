@@ -184,14 +184,14 @@
 				{#if editing}
 					<button
 						on:click={() => editing = false}
-						class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs"
+						class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Back
 					</button>
 				{:else}
 					<button
 						on:click={() => editing = true}
-						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs"
+						class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Edit
 					</button>
@@ -210,7 +210,7 @@
 				<input type="hidden" name="_csrf" value={csrfToken} />
 				<FormField label="Name" name="name" bind:value={formData.name} required />
 				<FormField label="Description" name="description" type="textarea" rows="3" bind:value={formData.description} />
-				<button type="submit" class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700">
+				<button type="submit" class="bg-theme-button-2 text-white px-[18px] py-2.5 rounded-md hover:opacity-90">
 					Save Changes
 				</button>
 			</form>
@@ -244,7 +244,7 @@
 					selectedContactIds = new Set();
 					searchTerm = '';
 				}}
-				class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700"
+				class="bg-theme-button-2 text-white px-[18px] py-2.5 rounded-md hover:opacity-90"
 			>
 				{showAddContacts ? 'Cancel' : '+ Add Contacts'}
 			</button>
@@ -259,7 +259,7 @@
 						type="text"
 						bind:value={searchTerm}
 						placeholder="Search contacts by name or email..."
-						class="w-full px-[18px] py-2.5 border border-gray-500 rounded-md focus:border-hub-green-500 focus:ring-hub-green-500"
+						class="w-full px-[18px] py-2.5 border border-gray-500 rounded-md focus:border-theme-button-2 focus:ring-theme-button-2"
 					/>
 				</div>
 				
@@ -283,7 +283,7 @@
 													selectedContactIds = new Set();
 												}
 											}}
-											class="rounded border-gray-300 text-hub-green-600 focus:ring-hub-green-500"
+											class="rounded border-gray-300 text-hub-green-600 focus:ring-theme-button-2"
 										/>
 									</th>
 									<th class="px-[18px] py-2.5 text-left text-xs font-medium text-gray-500 uppercase">First Name</th>
@@ -299,7 +299,7 @@
 												type="checkbox"
 												checked={selectedContactIds.has(contact.id)}
 												on:change={() => toggleContactSelection(contact.id)}
-												class="rounded border-gray-300 text-hub-green-600 focus:ring-hub-green-500"
+												class="rounded border-gray-300 text-hub-green-600 focus:ring-theme-button-2"
 											/>
 										</td>
 										<td class="px-[18px] py-2.5 text-sm text-gray-900">{contact.firstName || '-'}</td>
@@ -318,7 +318,7 @@
 						<button
 							on:click={handleAddContacts}
 							disabled={selectedContactIds.size === 0}
-							class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+							class="bg-theme-button-2 text-white px-[18px] py-2.5 rounded-md hover:opacity-90 disabled:bg-gray-300 disabled:cursor-not-allowed"
 						>
 							Add Selected Contacts
 						</button>

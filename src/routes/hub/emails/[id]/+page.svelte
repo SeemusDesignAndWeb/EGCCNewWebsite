@@ -179,13 +179,13 @@
 {#if newsletter}
 	<div class="space-y-6">
 		<!-- Header Card -->
-		<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 shadow-lg rounded-lg p-6 text-white">
+		<div class="panel-head-theme shadow-lg rounded-lg p-6 text-white">
 			<div class="flex justify-between items-start mb-4">
 				<div class="flex-1">
 					<h1 class="text-3xl font-bold mb-2 text-white">{newsletter.subject || 'Untitled Email'}</h1>
 				</div>
 				<div class="flex flex-col items-end gap-2">
-					<a href="/hub/emails/{newsletter.id}/send" class="bg-hub-blue-500 hover:bg-hub-blue-600 text-white px-4 py-2.5 rounded-md transition-colors text-base font-semibold shadow-md flex items-center gap-1.5">
+					<a href="/hub/emails/{newsletter.id}/send" class="btn-theme-1 px-4 py-2.5 rounded-md transition-colors text-base font-semibold shadow-md flex items-center gap-1.5">
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 						</svg>
@@ -198,7 +198,7 @@
 					<button
 						type="submit"
 						form="newsletter-form"
-						class="bg-hub-green-600 hover:bg-hub-green-700 text-white px-2.5 py-1.5.5 sm:px-4 sm:py-2 rounded-md transition-colors text-xs font-semibold shadow-md flex items-center gap-1.5"
+						class="btn-theme-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-md transition-colors text-xs font-semibold shadow-md flex items-center gap-1.5"
 					>
 						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -209,7 +209,7 @@
 					<button
 						type="button"
 						on:click={() => showSaveTemplateModal = true}
-						class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5.5 sm:px-4 sm:py-2 rounded-md transition-colors text-xs font-semibold shadow-md flex items-center gap-1.5"
+						class="btn-theme-1 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-md transition-colors text-xs font-semibold shadow-md flex items-center gap-1.5"
 					>
 						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
@@ -217,7 +217,7 @@
 						<span class="hidden sm:inline">Save as Template</span>
 						<span class="sm:hidden">Template</span>
 					</button>
-					<a href="/hub/emails/{newsletter.id}/preview" class="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1.5.5 sm:px-4 sm:py-2 rounded-md transition-colors text-xs font-semibold shadow-md flex items-center gap-1.5">
+					<a href="/hub/emails/{newsletter.id}/preview" class="btn-theme-4 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-md transition-colors text-xs font-semibold shadow-md flex items-center gap-1.5">
 						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -236,7 +236,7 @@
 					<button
 						type="button"
 						on:click={() => goto('/hub/emails')}
-						class="bg-gray-600 hover:bg-gray-700 text-white px-2.5 py-1.5.5 sm:px-4 sm:py-2 rounded-md transition-colors text-xs font-semibold shadow-md flex items-center gap-1.5"
+						class="btn-theme-3 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-md transition-colors text-xs font-semibold shadow-md flex items-center gap-1.5"
 					>
 						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -265,7 +265,7 @@
 					<select
 						bind:value={selectedTemplateId}
 						on:change={handleTemplateChange}
-						class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
+						class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4"
 					>
 						<option value="">-- Select a template --</option>
 						{#each templates as template}
@@ -348,7 +348,7 @@
 				<input
 					type="text"
 					bind:value={templateName}
-					class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
+					class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4"
 					placeholder="Enter template name"
 				/>
 			</div>
@@ -357,7 +357,7 @@
 				<textarea
 					bind:value={templateDescription}
 					rows="3"
-					class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
+					class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4"
 					placeholder="Optional description"
 				></textarea>
 			</div>
@@ -365,14 +365,14 @@
 				<button
 					type="button"
 					on:click={() => { showSaveTemplateModal = false; templateName = ''; templateDescription = ''; }}
-					class="bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700"
+					class="btn-theme-3 px-[18px] py-2.5 rounded-md"
 				>
 					Back
 				</button>
 				<button
 					type="button"
 					on:click={handleSaveAsTemplate}
-					class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700"
+					class="btn-theme-2 px-[18px] py-2.5 rounded-md"
 				>
 					Save Template
 				</button>

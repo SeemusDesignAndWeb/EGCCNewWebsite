@@ -68,7 +68,7 @@
 <div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 	<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Members</h2>
 	<div class="flex flex-wrap gap-2">
-		<a href="/hub/contacts" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 inline-flex items-center gap-1.5 text-xs">
+		<a href="/hub/contacts" class="btn-theme-3 px-2.5 py-1.5 rounded-md inline-flex items-center gap-1.5 text-xs">
 			<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
 			</svg>
@@ -85,11 +85,11 @@
 				type="text"
 				bind:value={searchInput}
 				placeholder="Search members by name or email..."
-				class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-blue-500 focus:ring-hub-blue-500 px-[18px] py-2.5"
+				class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-theme-button-1 focus:ring-theme-button-1 px-[18px] py-2.5"
 			/>
 			<button
 				type="submit"
-				class="bg-hub-blue-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-blue-700"
+				class="btn-theme-1 px-[18px] py-2.5 rounded-md"
 			>
 				Search
 			</button>

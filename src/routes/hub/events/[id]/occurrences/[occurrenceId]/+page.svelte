@@ -282,21 +282,21 @@
 					<button
 						type="submit"
 						form="occurrence-edit-form"
-						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs"
+						class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Save Changes
 					</button>
 					<button
 						type="button"
 						on:click={() => editing = false}
-						class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs"
+						class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Back
 					</button>
 				{:else}
 					<a
 						href="/hub/events/{event.id}"
-						class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs"
+						class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Back
 					</a>
@@ -305,7 +305,7 @@
 							href={publicOccurrenceLink}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 flex items-center gap-1.5 text-xs whitespace-nowrap"
+							class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 flex items-center gap-1.5 text-xs whitespace-nowrap"
 						>
 							<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -315,7 +315,7 @@
 					{/if}
 					<button
 						on:click={() => editing = true}
-						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs"
+						class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Edit
 					</button>
@@ -346,7 +346,7 @@
 								name="allDay"
 								bind:checked={formData.allDay}
 								on:change={handleAllDayToggle}
-								class="h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded"
+								class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
 							/>
 							<label for="allDay" class="ml-2 block text-sm text-gray-700">
 								All Day Event
@@ -588,7 +588,7 @@
 								<ul class="space-y-1">
 									{#each rota.assigneesForOcc as assignee}
 										<li class="text-sm text-gray-600 flex items-center gap-2">
-											<span class="w-2 h-2 bg-hub-green-600 rounded-full"></span>
+											<span class="w-2 h-2 bg-theme-button-2 rounded-full"></span>
 											<span>{assignee.name}</span>
 										</li>
 									{/each}

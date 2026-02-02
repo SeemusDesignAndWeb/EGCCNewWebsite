@@ -58,7 +58,7 @@
 									bind:value={passwordData.newPassword}
 									required
 									placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-hub-green-500 py-2 px-4 pr-10"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-theme-button-2 py-2 px-4 pr-10"
 								/>
 							{:else}
 								<input
@@ -68,7 +68,7 @@
 									bind:value={passwordData.newPassword}
 									required
 									placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-hub-green-500 py-2 px-4 pr-10"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-theme-button-2 py-2 px-4 pr-10"
 								/>
 							{/if}
 							<button
@@ -106,7 +106,7 @@
 									bind:value={passwordData.confirmPassword}
 									required
 									placeholder="Confirm new password"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-hub-green-500 py-2 px-4 pr-10"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-theme-button-2 py-2 px-4 pr-10"
 								/>
 							{:else}
 								<input
@@ -116,7 +116,7 @@
 									bind:value={passwordData.confirmPassword}
 									required
 									placeholder="Confirm new password"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-hub-green-500 py-2 px-4 pr-10"
+									class="w-full rounded-md border-gray-300 shadow-sm focus:border-hub-green-600 focus:ring-theme-button-2 py-2 px-4 pr-10"
 								/>
 							{/if}
 							<button
@@ -142,7 +142,7 @@
 				<div class="mt-6">
 					<button
 						type="submit"
-						class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-hub-green-600 hover:bg-hub-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-hub-green-500"
+						class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-hub-green-600 hover:bg-hub-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-button-2"
 					>
 						Reset Password
 					</button>

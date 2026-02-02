@@ -95,21 +95,21 @@
 					<button
 						type="submit"
 						form="member-edit-form"
-						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs"
+						class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Save Changes
 					</button>
 					<button
 						type="button"
 						on:click={() => editing = false}
-						class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs"
+						class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Back
 					</button>
 				{:else}
 					<a
 						href="/hub/contacts/{member.id}"
-						class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 inline-flex items-center gap-1.5 text-xs"
+						class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 inline-flex items-center gap-1.5 text-xs"
 					>
 						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -118,13 +118,13 @@
 					</a>
 					<button
 						on:click={() => editing = true}
-						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs"
+						class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Edit
 					</button>
 					<a
 						href="/hub/members"
-						class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 inline-flex items-center gap-1.5 text-xs"
+						class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 inline-flex items-center gap-1.5 text-xs"
 					>
 						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -149,7 +149,7 @@
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 					<!-- Getting to Know You -->
 					<div class="bg-white border-2 border-hub-blue-200 rounded-lg shadow-md overflow-hidden">
-						<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 px-[18px] py-2.5">
+						<div class="panel-head-theme px-[18px] py-2.5">
 							<h3 class="text-lg font-semibold text-white">Getting to Know You</h3>
 						</div>
 						<div class="p-6 space-y-4">
@@ -157,7 +157,7 @@
 								<FormField label="Title" name="title" bind:value={formData.title} placeholder="Mr, Mrs, Miss" />
 								<div>
 									<label class="block text-sm font-medium text-gray-700 mb-1">Marital Status</label>
-									<select name="maritalStatus" bind:value={formData.maritalStatus} class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm">
+									<select name="maritalStatus" bind:value={formData.maritalStatus} class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm">
 										<option value="">Select</option>
 										<option value="single">Single</option>
 										<option value="married">Married</option>
@@ -312,7 +312,7 @@
 								{/if}
 								<div>
 									<label class="block text-sm font-medium text-gray-700 mb-1">Elder Meeting Availability</label>
-									<select name="elderMeetingAvailability" bind:value={formData.elderMeetingAvailability} class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm">
+									<select name="elderMeetingAvailability" bind:value={formData.elderMeetingAvailability} class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm">
 										<option value="">Select</option>
 										<option value="anytime">Anytime</option>
 										<option value="morning">Morning</option>
@@ -325,7 +325,7 @@
 
 						<!-- Membership Reflections -->
 						<div class="bg-white border-2 border-hub-blue-200 rounded-lg shadow-md overflow-hidden">
-							<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 px-[18px] py-2.5">
+							<div class="panel-head-theme px-[18px] py-2.5">
 								<h3 class="text-lg font-semibold text-white">Membership Reflections</h3>
 							</div>
 							<div class="p-6">
@@ -369,7 +369,7 @@
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				<!-- Contact Information Panel -->
 				<div class="bg-white border-2 border-hub-blue-200 rounded-lg shadow-md overflow-hidden">
-					<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 px-[18px] py-2.5">
+					<div class="panel-head-theme px-[18px] py-2.5">
 						<h3 class="text-lg font-semibold text-white">Contact Information</h3>
 					</div>
 					<div class="p-6">
@@ -403,7 +403,7 @@
 				<!-- Getting to Know You Panel -->
 				{#if memberData && (memberData.title || memberData.dateOfBirth || memberData.placeOfBirth || memberData.maritalStatus || memberData.spouseName || memberData.childrenNamesAndAges)}
 					<div class="bg-white border-2 border-hub-blue-200 rounded-lg shadow-md overflow-hidden">
-						<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 px-[18px] py-2.5">
+						<div class="panel-head-theme px-[18px] py-2.5">
 							<h3 class="text-lg font-semibold text-white">Getting to Know You</h3>
 						</div>
 						<div class="p-6">
@@ -579,7 +579,7 @@
 					<!-- Membership Reflections Panel -->
 					{#if memberData && memberData.membershipReflections}
 						<div class="bg-white border-2 border-hub-blue-200 rounded-lg shadow-md overflow-hidden">
-							<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 px-[18px] py-2.5">
+							<div class="panel-head-theme px-[18px] py-2.5">
 								<h3 class="text-lg font-semibold text-white">Membership Reflections</h3>
 							</div>
 							<div class="p-6">

@@ -129,7 +129,7 @@
 	<div class="flex flex-wrap gap-2">
 		<button 
 			on:click={toggleFullscreen}
-			class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 flex items-center gap-1.5 text-xs sm:text-sm"
+			class="bg-theme-button-1 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 flex items-center gap-1.5 text-xs sm:text-sm"
 			title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
 		>
 			{#if isFullscreen}
@@ -146,10 +146,10 @@
 				<span class="sm:hidden">Full</span>
 			{/if}
 		</button>
-		<a href="/hub/meeting-planners" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs sm:text-sm whitespace-nowrap">
+		<a href="/hub/meeting-planners" class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs sm:text-sm whitespace-nowrap">
 			Back to List
 		</a>
-		<a href="/hub/meeting-planners/new" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs sm:text-sm whitespace-nowrap">
+		<a href="/hub/meeting-planners/new" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs sm:text-sm whitespace-nowrap">
 			<span class="hidden sm:inline">New Meeting Planner</span>
 			<span class="sm:hidden">New</span>
 		</a>
@@ -160,7 +160,7 @@
 <div class="block md:hidden space-y-3">
 	{#each meetingPlanners as mp}
 		<div 
-			class="bg-white shadow rounded-lg p-3 border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+			class="bg-white shadow rounded-lg p-3 border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
 			on:click={() => goto(`/hub/meeting-planners/${mp.id}`)}
 			role="button"
 			tabindex="0"

@@ -91,7 +91,7 @@
 						<div class="mt-6 space-y-3">
 							<a
 								href="/hub/auth/resend-verification?email={encodeURIComponent(email)}"
-								class="block w-full bg-hub-blue-600 text-white px-6 py-2 rounded-md hover:bg-hub-blue-700 transition-colors font-medium text-center"
+								class="block w-full bg-theme-button-1 text-white px-6 py-2 rounded-md hover:opacity-90 transition-colors font-medium text-center"
 							>
 								Request New Verification Email
 							</a>

@@ -679,7 +679,7 @@
 				{#if signupLink && (rota.visibility || 'public') === 'public'}
 					<button
 						on:click={copySignupLink}
-						class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 flex items-center gap-2 text-xs"
+						class="bg-theme-button-1 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 flex items-center gap-2 text-xs"
 					>
 						{#if linkCopied}
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -697,7 +697,7 @@
 						href={signupLink}
 						target="_blank"
 						rel="noopener noreferrer"
-						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 flex items-center gap-2 text-xs"
+						class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 flex items-center gap-2 text-xs"
 					>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -709,14 +709,14 @@
 					<button
 						type="submit"
 						form="rota-edit-form"
-						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs"
+						class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Save Changes
 					</button>
 					<button
 						type="button"
 						on:click={() => editing = false}
-						class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs"
+						class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Back
 					</button>
@@ -724,7 +724,7 @@
 					<a
 						href="/hub/rotas/{rota.id}/export-pdf"
 						target="_blank"
-						class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs flex items-center gap-2"
+						class="bg-theme-button-1 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs flex items-center gap-2"
 					>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -733,7 +733,7 @@
 					</a>
 					<button
 						on:click={() => editing = true}
-						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs"
+						class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs"
 					>
 						Edit
 					</button>
@@ -762,7 +762,7 @@
 						</div>
 						<div>
 							<label for="visibility-select" class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
-							<select id="visibility-select" name="visibility" bind:value={formData.visibility} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm">
+							<select id="visibility-select" name="visibility" bind:value={formData.visibility} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm">
 								<option value="public">Public</option>
 								<option value="internal">Internal</option>
 							</select>
@@ -778,7 +778,7 @@
 									on:change={(e) => {
 										formData.ownerId = e.target.value || '';
 									}}
-									class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+									class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
 								>
 									<option value="">No owner</option>
 									{#each filteredOwnerContacts as contact (contact.id)}
@@ -793,7 +793,7 @@
 									type="text"
 									bind:value={ownerSearchTerm}
 									placeholder="Search..."
-									class="w-32 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-2 text-sm"
+									class="w-32 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-2 text-sm"
 									title="Search owner by name or email"
 								/>
 							</div>
@@ -862,14 +862,14 @@
 								<button
 									type="button"
 									on:click={() => { showAddHelpFile = true; helpFileType = 'link'; }}
-									class="flex-1 bg-hub-blue-600 text-white px-3 py-2 rounded-md hover:bg-hub-blue-700 text-sm"
+									class="flex-1 bg-theme-button-1 text-white px-3 py-2 rounded-md hover:opacity-90 text-sm"
 								>
 									Add Link
 								</button>
 								<button
 									type="button"
 									on:click={() => { showAddHelpFile = true; helpFileType = 'file'; }}
-									class="flex-1 bg-hub-green-600 text-white px-3 py-2 rounded-md hover:bg-hub-green-700 text-sm"
+									class="flex-1 bg-theme-button-2 text-white px-3 py-2 rounded-md hover:opacity-90 text-sm"
 								>
 									Upload PDF
 								</button>
@@ -980,7 +980,7 @@
 											selectedContactIds = new Set();
 											selectedListId = '';
 										}}
-										class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded text-xs hover:bg-hub-green-700"
+										class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded text-xs hover:opacity-90"
 										title="Add assignees to this occurrence"
 									>
 										+ Add
@@ -1093,7 +1093,7 @@
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 items-end">
 						<div>
 							<label for="list-filter" class="block text-sm font-medium text-gray-700 mb-1 text-xs">Filter by List</label>
-							<select id="list-filter" bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm">
+							<select id="list-filter" bind:value={selectedListId} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm">
 								<option value="">All Contacts</option>
 								{#each lists as list}
 									<option value={list.id}>{list.name}</option>
@@ -1107,7 +1107,7 @@
 								type="text"
 								bind:value={searchTerm}
 								placeholder="Search contacts..."
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-4 text-sm"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4 text-sm"
 							/>
 						</div>
 					</div>
@@ -1119,13 +1119,13 @@
 								type="text"
 								bind:value={guestName}
 								placeholder="Guest Name *"
-								class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+								class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
 							/>
 							<button
 								type="button"
 								on:click={handleAddGuest}
 								disabled={!guestName}
-								class="bg-hub-blue-600 text-white px-4 py-2 rounded-md hover:bg-hub-blue-700 disabled:opacity-50 text-sm whitespace-nowrap"
+								class="bg-theme-button-1 text-white px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50 text-sm whitespace-nowrap"
 							>
 								Add Guest
 							</button>
@@ -1187,14 +1187,14 @@
 							selectedContactIds = new Set(); 
 							selectedListId = '';
 						}}
-						class="bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700"
+						class="bg-theme-button-3 text-white px-[18px] py-2.5 rounded-md hover:opacity-90"
 					>
 						Back
 					</button>
 					<button
 						on:click={handleAddAssignees}
 						disabled={selectedContactIds.size === 0}
-						class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700 disabled:opacity-50"
+						class="bg-theme-button-2 text-white px-[18px] py-2.5 rounded-md hover:opacity-90 disabled:opacity-50"
 					>
 						Add Selected ({selectedContactIds.size})
 					</button>
@@ -1220,7 +1220,7 @@
 								type="url"
 								bind:value={helpFileUrl}
 								placeholder="https://example.com/document.pdf"
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
 							/>
 						</div>
 						<div>
@@ -1230,7 +1230,7 @@
 								type="text"
 								bind:value={helpFileTitle}
 								placeholder="Document Title"
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
 							/>
 						</div>
 					</div>
@@ -1251,7 +1251,7 @@
 										}
 									}
 								}}
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
 							/>
 							<p class="mt-1 text-xs text-gray-500">Maximum file size: 10MB</p>
 						</div>
@@ -1262,7 +1262,7 @@
 								type="text"
 								bind:value={helpFileTitle}
 								placeholder="Document Title"
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
 							/>
 							<p class="mt-1 text-xs text-gray-500">If not provided, the filename will be used</p>
 						</div>
@@ -1273,7 +1273,7 @@
 					<button
 						type="button"
 						on:click={() => { showAddHelpFile = false; helpFileUrl = ''; helpFileTitle = ''; helpFileFile = null; }}
-						class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 text-sm"
+						class="bg-theme-button-3 text-white px-4 py-2 rounded-md hover:opacity-90 text-sm"
 					>
 						Cancel
 					</button>
@@ -1281,7 +1281,7 @@
 						type="button"
 						on:click={handleAddHelpFile}
 						disabled={helpFileUploading || (helpFileType === 'link' ? (!helpFileUrl || !helpFileTitle) : !helpFileFile)}
-						class="bg-hub-green-600 text-white px-4 py-2 rounded-md hover:bg-hub-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+						class="bg-theme-button-2 text-white px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
 					>
 						{#if helpFileUploading}
 							Uploading...

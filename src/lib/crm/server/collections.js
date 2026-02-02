@@ -1,9 +1,10 @@
 /**
  * CRM collection names. Used for init scripts, migration, and ensure-db.
- * Admins and sessions stay in file store for resilience when DB is unavailable.
+ * Admins, sessions, and audit_logs stay in file store so login and audit
+ * work when the database is unreachable (e.g. postgres.railway.internal not resolvable).
  */
 
-export const FILE_ONLY_COLLECTIONS = ['admins', 'sessions'];
+export const FILE_ONLY_COLLECTIONS = ['admins', 'sessions', 'audit_logs'];
 
 export const ALL_COLLECTIONS = [
 	'admins',
@@ -18,6 +19,7 @@ export const ALL_COLLECTIONS = [
 	'events',
 	'forms',
 	'holidays',
+	'hub_settings',
 	'lists',
 	'loom_videos',
 	'meeting_planners',

@@ -47,7 +47,7 @@
 {#if newsletter}
 	<div class="space-y-6">
 		<!-- Header Card -->
-		<div class="bg-gradient-to-r from-hub-blue-500 to-hub-blue-600 shadow-lg rounded-lg p-6 text-white">
+		<div class="panel-head-theme shadow-lg rounded-lg p-6 text-white">
 			<div class="flex justify-between items-start mb-4">
 				<div class="flex-1">
 					<h1 class="text-3xl font-bold mb-2 text-white">{newsletter.subject || 'Untitled Email'}</h1>
@@ -112,7 +112,7 @@
 						id="contact-selector"
 						on:change={handleContactChange}
 						value={selectedContact?.id || ''}
-						class="flex-1 max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-hub-blue-500 focus:border-hub-blue-500 text-sm"
+						class="flex-1 max-w-md px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-theme-button-1 focus:border-theme-button-1 text-sm"
 					>
 						<option value="">-- Select a user to preview --</option>
 						{#each contacts as contact}
@@ -151,7 +151,7 @@
 		<!-- Action Bar -->
 		<div class="bg-white shadow rounded-lg p-4">
 			<div class="flex justify-between items-center">
-				<a href="/hub/emails/{newsletter.id}" class="inline-flex items-center gap-2 text-hub-blue-600 hover:text-hub-blue-800 font-medium transition-colors">
+				<a href="/hub/emails/{newsletter.id}" class="inline-flex items-center gap-2 text-theme-button-1 hover:opacity-90 font-medium transition-colors">
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
 					</svg>
@@ -168,11 +168,11 @@
 						</svg>
 						Export PDF
 					</a>
-					<a href="/hub/emails/{newsletter.id}" class="bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700 transition-colors font-medium">
+					<a href="/hub/emails/{newsletter.id}" class="btn-theme-2 px-[18px] py-2.5 rounded-md transition-colors font-medium">
 						Edit Email
 					</a>
 					{#if newsletter.status === 'draft' || !newsletter.status}
-						<a href="/hub/emails/{newsletter.id}/send" class="bg-hub-blue-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-blue-700 transition-colors font-medium">
+						<a href="/hub/emails/{newsletter.id}/send" class="btn-theme-1 px-[18px] py-2.5 rounded-md transition-colors font-medium">
 							Send Email
 						</a>
 					{/if}

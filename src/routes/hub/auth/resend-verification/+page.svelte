@@ -48,7 +48,7 @@
 					autocomplete="email"
 					required
 					value={email}
-					class="appearance-none relative block w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-hub-green-500 focus:border-hub-green-600"
+					class="appearance-none relative block w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-theme-button-2 focus:border-hub-green-600"
 					placeholder="your.email@example.com"
 				/>
 			</div>
@@ -68,7 +68,7 @@
 			<div class="mt-6">
 				<button
 					type="submit"
-					class="group relative w-full flex justify-center py-2.5 sm:py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-hub-green-600 hover:bg-hub-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-hub-green-500"
+					class="group relative w-full flex justify-center py-2.5 sm:py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-hub-green-600 hover:bg-hub-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-button-2"
 				>
 					Send Verification Email
 				</button>

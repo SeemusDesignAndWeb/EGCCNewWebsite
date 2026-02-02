@@ -116,10 +116,10 @@
 	<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
 		<h2 class="text-xl sm:text-2xl font-bold text-gray-900">New Form</h2>
 		<div class="flex flex-wrap gap-2">
-			<a href="/hub/forms" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs">
+			<a href="/hub/forms" class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
 				Cancel
 			</a>
-			<button type="submit" form="form-create-form" disabled={fields.length === 0} class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 disabled:opacity-50 text-xs">
+			<button type="submit" form="form-create-form" disabled={fields.length === 0} class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 disabled:opacity-50 text-xs">
 				<span class="hidden sm:inline">Create Form</span>
 				<span class="sm:hidden">Create</span>
 			</button>
@@ -169,7 +169,7 @@
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Field Type</label>
-					<select bind:value={fieldForm.type} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4">
+					<select bind:value={fieldForm.type} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4">
 						{#each fieldTypes as type}
 							<option value={type.value}>{type.label}</option>
 						{/each}
@@ -177,15 +177,15 @@
 				</div>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Field Label</label>
-					<input type="text" bind:value={fieldForm.label} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4" />
+					<input type="text" bind:value={fieldForm.label} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4" />
 				</div>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Field Name (ID)</label>
-					<input type="text" bind:value={fieldForm.name} placeholder="e.g. child_name" class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4" />
+					<input type="text" bind:value={fieldForm.name} placeholder="e.g. child_name" class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4" />
 				</div>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 mb-1">Placeholder</label>
-					<input type="text" bind:value={fieldForm.placeholder} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4" />
+					<input type="text" bind:value={fieldForm.placeholder} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4" />
 				</div>
 			</div>
 			<div class="mt-4">
@@ -203,10 +203,10 @@
 							type="text"
 							bind:value={optionInput}
 							placeholder="Add option"
-							class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-3 px-4"
+							class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4"
 							on:keydown={(e) => e.key === 'Enter' && (e.preventDefault(), addOption())}
 						/>
-						<button type="button" on:click={addOption} class="bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700">
+						<button type="button" on:click={addOption} class="bg-theme-button-3 text-white px-[18px] py-2.5 rounded-md hover:opacity-90">
 							Add
 						</button>
 					</div>
@@ -221,11 +221,11 @@
 				</div>
 			{/if}
 			
-			<button type="button" on:click={addField} class="mt-4 bg-hub-green-600 text-white px-[18px] py-2.5 rounded-md hover:bg-hub-green-700">
+			<button type="button" on:click={addField} class="mt-4 bg-theme-button-2 text-white px-[18px] py-2.5 rounded-md hover:opacity-90">
 				{editingField !== null ? 'Update Field' : 'Add Field'}
 			</button>
 			{#if editingField !== null}
-				<button type="button" on:click={() => { editingField = null; fieldForm = { type: 'text', label: '', name: '', required: false, placeholder: '', options: [] }; }} class="mt-4 ml-2 bg-gray-600 text-white px-[18px] py-2.5 rounded-md hover:bg-gray-700">
+				<button type="button" on:click={() => { editingField = null; fieldForm = { type: 'text', label: '', name: '', required: false, placeholder: '', options: [] }; }} class="mt-4 ml-2 bg-theme-button-3 text-white px-[18px] py-2.5 rounded-md hover:opacity-90">
 					Cancel
 				</button>
 			{/if}

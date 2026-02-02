@@ -1,47 +1,26 @@
 /**
  * Settings Management
- * Reads and manages Hub settings from file storage
+ * Reads and writes Hub settings via the store facade (file store or database).
+ * File store: data/hub_settings.ndjson (one record id='default').
+ * Database: crm_records table, collection='hub_settings', id='default'.
+ * Migrates from legacy hub_settings.json to hub_settings.ndjson on first read when in file mode.
  */
 
 import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { env } from '$env/dynamic/private';
+import { readCollection, writeCollection, getDataDir } from './fileStore.js';
 
-function getDataDir() {
-	const envDataDir = env.CRM_DATA_DIR;
-	if (envDataDir && envDataDir.trim()) {
-		const trimmed = envDataDir.trim();
-		if (trimmed.startsWith('/')) {
-			return trimmed;
-		}
-		return join(process.cwd(), trimmed);
-	}
-	return join(process.cwd(), 'data');
-}
+const HUB_SETTINGS_COLLECTION = 'hub_settings';
+const DEFAULT_RECORD_ID = 'default';
 
-const DATA_DIR = getDataDir();
-const SETTINGS_FILE = join(DATA_DIR, 'hub_settings.json');
-
-// Cache settings to avoid reading file on every request
+// Cache settings to avoid reading store on every request
 let settingsCache = null;
 let cacheTimestamp = 0;
 const CACHE_TTL = 5000; // 5 seconds cache
 
-/**
- * Read settings from file (with caching)
- * @returns {Promise<object>} Settings object
- */
-export async function getSettings() {
-	const now = Date.now();
-	
-	// Return cached settings if still valid
-	if (settingsCache && (now - cacheTimestamp) < CACHE_TTL) {
-		return settingsCache;
-	}
-	
-	// Default settings
-	const defaultCalendarColours = [
+function getDefaultCalendarColours() {
+	return [
 		{ value: '#9333ea', label: 'Purple' },
 		{ value: '#3b82f6', label: 'Blue' },
 		{ value: '#10b981', label: 'Green' },
@@ -53,48 +32,160 @@ export async function getSettings() {
 		{ value: '#14b8a6', label: 'Teal' },
 		{ value: '#f59e0b', label: 'Amber' }
 	];
+}
 
-	const defaultMeetingPlannerRotas = [
+function getDefaultMeetingPlannerRotas() {
+	return [
 		{ role: 'Meeting Leader', capacity: 1 },
 		{ role: 'Worship Leader and Team', capacity: 8 },
 		{ role: 'Speaker', capacity: 1 },
 		{ role: 'Call to Worship', capacity: 1 }
 	];
-	
-	const defaultSettings = {
-		emailRateLimitDelay: 500, // Default: 500ms (2 requests per second)
-		calendarColours: defaultCalendarColours,
-		meetingPlannerRotas: defaultMeetingPlannerRotas
+}
+
+function getDefaultTheme() {
+	return {
+		logoPath: '',
+		primaryColor: '#4BB170',
+		brandColor: '#4A97D2',
+		navbarBackgroundColor: '#4A97D2',
+		buttonColors: ['#4A97D2', '#4BB170', '#3B79A8', '#3C8E5A', '#E6A324'],
+		panelHeadColors: ['#4A97D2', '#3B79A8', '#2C5B7E'],
+		panelBackgroundColor: '#E8F2F9', // Lighter shade of blue for all panels
+		externalPagesLayout: 'integrated', // 'integrated' | 'standalone'
+		publicPagesBranding: 'egcc' // 'egcc' | 'hub' - public website uses EGCC branding or Hub theme
 	};
-	
-	if (!existsSync(SETTINGS_FILE)) {
-		settingsCache = defaultSettings;
-		cacheTimestamp = now;
-		return settingsCache;
-	}
-	
+}
+
+const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
+function ensureHex(val, fallback) {
+	return typeof val === 'string' && HEX_COLOR.test(val) ? val : fallback;
+}
+function ensureColorArray(arr, defaults) {
+	if (!Array.isArray(arr)) return defaults;
+	return defaults.map((d, i) => ensureHex(arr[i], d));
+}
+
+function getDefaultSettings() {
+	return {
+		emailRateLimitDelay: 500,
+		calendarColours: getDefaultCalendarColours(),
+		meetingPlannerRotas: getDefaultMeetingPlannerRotas(),
+		theme: getDefaultTheme()
+	};
+}
+
+/**
+ * Merge raw record from store with defaults (validate and fill missing fields).
+ */
+function mergeWithDefaults(record) {
+	const defaultSettings = getDefaultSettings();
+	const defaultTheme = getDefaultTheme();
+	const colours = record.calendarColours ?? record.calendarColors;
+	const dt = defaultTheme;
+	const t = record.theme && typeof record.theme === 'object' ? record.theme : {};
+	const layout = t.externalPagesLayout === 'standalone' ? 'standalone' : 'integrated';
+	const publicBranding = t.publicPagesBranding === 'hub' ? 'hub' : 'egcc';
+	const theme = {
+		logoPath: typeof t.logoPath === 'string' ? t.logoPath : dt.logoPath,
+		primaryColor: ensureHex(t.primaryColor, dt.primaryColor),
+		brandColor: ensureHex(t.brandColor, dt.brandColor),
+		navbarBackgroundColor: ensureHex(t.navbarBackgroundColor, dt.navbarBackgroundColor),
+		buttonColors: ensureColorArray(t.buttonColors, dt.buttonColors),
+		panelHeadColors: ensureColorArray(t.panelHeadColors, dt.panelHeadColors),
+		panelBackgroundColor: ensureHex(t.panelBackgroundColor, dt.panelBackgroundColor),
+		externalPagesLayout: layout,
+		publicPagesBranding: publicBranding
+	};
+	return {
+		emailRateLimitDelay: record.emailRateLimitDelay ?? defaultSettings.emailRateLimitDelay,
+		calendarColours: Array.isArray(colours) && colours.length > 0 ? colours : defaultSettings.calendarColours,
+		meetingPlannerRotas: Array.isArray(record.meetingPlannerRotas)
+			? record.meetingPlannerRotas
+			: defaultSettings.meetingPlannerRotas,
+		theme
+	};
+}
+
+/**
+ * Migrate legacy hub_settings.json into the store (file or database).
+ * Runs when no hub_settings record exists; reads from data/hub_settings.json if present.
+ */
+async function migrateFromLegacyJsonIfNeeded() {
+	const dataDir = getDataDir();
+	const jsonPath = join(dataDir, 'hub_settings.json');
+	if (!existsSync(jsonPath)) return null;
 	try {
-		const content = await readFile(SETTINGS_FILE, 'utf8');
-		const settings = JSON.parse(content);
-		// Support both old 'calendarColors' and new 'calendarColours' for backward compatibility
-		const colours = settings.calendarColours || settings.calendarColors;
-		settingsCache = {
-			emailRateLimitDelay: settings.emailRateLimitDelay || defaultSettings.emailRateLimitDelay,
-			calendarColours: Array.isArray(colours) && colours.length > 0
-				? colours
-				: defaultSettings.calendarColours,
-			meetingPlannerRotas: Array.isArray(settings.meetingPlannerRotas)
-				? settings.meetingPlannerRotas
-				: defaultSettings.meetingPlannerRotas
+		const content = await readFile(jsonPath, 'utf8');
+		const parsed = JSON.parse(content);
+		const now = new Date().toISOString();
+		const record = {
+			id: DEFAULT_RECORD_ID,
+			...parsed,
+			createdAt: now,
+			updatedAt: now
 		};
-		cacheTimestamp = now;
+		await writeCollection(HUB_SETTINGS_COLLECTION, [record]);
+		return record;
+	} catch (err) {
+		console.error('[Settings] Migration from hub_settings.json failed:', err);
+		return null;
+	}
+}
+
+/**
+ * Read settings from store (with caching).
+ * @returns {Promise<object>} Settings object
+ */
+export async function getSettings() {
+	const now = Date.now();
+	if (settingsCache && (now - cacheTimestamp) < CACHE_TTL) {
 		return settingsCache;
-	} catch (error) {
-		console.error('[Settings] Error reading settings:', error);
+	}
+
+	const defaultSettings = getDefaultSettings();
+	let records = await readCollection(HUB_SETTINGS_COLLECTION);
+	let record = records.find((r) => r.id === DEFAULT_RECORD_ID);
+
+	if (!record) {
+		record = await migrateFromLegacyJsonIfNeeded();
+	}
+	// Seed store with current default theme/colours so they are persisted in database/filestore
+	if (!record) {
+		await writeSettings(defaultSettings);
+		records = await readCollection(HUB_SETTINGS_COLLECTION);
+		record = records.find((r) => r.id === DEFAULT_RECORD_ID);
+	}
+	if (!record) {
 		settingsCache = defaultSettings;
 		cacheTimestamp = now;
 		return settingsCache;
 	}
+
+	settingsCache = mergeWithDefaults(record);
+	cacheTimestamp = now;
+	return settingsCache;
+}
+
+/**
+ * Write full settings to store. Invalidates cache after write.
+ * @param {object} settings - Full settings object (emailRateLimitDelay, calendarColours, meetingPlannerRotas, theme)
+ */
+export async function writeSettings(settings) {
+	const records = await readCollection(HUB_SETTINGS_COLLECTION);
+	const existing = records.find((r) => r.id === DEFAULT_RECORD_ID);
+	const now = new Date().toISOString();
+	const record = {
+		id: DEFAULT_RECORD_ID,
+		emailRateLimitDelay: settings.emailRateLimitDelay,
+		calendarColours: settings.calendarColours,
+		meetingPlannerRotas: settings.meetingPlannerRotas,
+		theme: settings.theme,
+		createdAt: existing?.createdAt ?? now,
+		updatedAt: now
+	};
+	await writeCollection(HUB_SETTINGS_COLLECTION, [record]);
+	invalidateSettingsCache();
 }
 
 /**

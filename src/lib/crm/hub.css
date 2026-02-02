@@ -1,0 +1,189 @@
+/**
+ * Hub-only styles: theme variables, buttons, panel heads.
+ * Loaded only in Hub layout. Public website uses app.css only.
+ */
+
+/* Panel head classes - fallback color */
+.panel-head-theme {
+	background-color: #4A97D2 !important;
+}
+.panel-head-theme-3 {
+	background-color: #4A97D2 !important;
+}
+
+/* Theme panel head background classes */
+.bg-theme-panel-head-1 {
+	background-color: var(--color-panel-head-1, #4A97D2) !important;
+}
+.bg-theme-panel-head-2 {
+	background-color: var(--color-panel-head-2, #3B79A8) !important;
+}
+.bg-theme-panel-head-3 {
+	background-color: var(--color-panel-head-3, #2C5B7E) !important;
+}
+
+/* Theme button background classes */
+.bg-theme-button-1 {
+	background-color: var(--color-button-1, #4A97D2) !important;
+}
+.bg-theme-button-2 {
+	background-color: var(--color-button-2, #4BB170) !important;
+}
+.bg-theme-button-3 {
+	background-color: var(--color-button-3, #3B79A8) !important;
+}
+.bg-theme-button-4 {
+	background-color: var(--color-button-4, #3C8E5A) !important;
+}
+.bg-theme-button-5 {
+	background-color: var(--color-button-5, #E6A324) !important;
+}
+
+/* Standardized Hub button classes */
+.btn-theme-1 {
+	background-color: var(--color-button-1, #4A97D2);
+	border: 1px solid var(--color-button-1, #4A97D2);
+	color: white;
+	transition: all 0.2s;
+}
+.btn-theme-1:hover {
+	background-color: color-mix(in srgb, var(--color-button-1, #4A97D2) 90%, black);
+	border-color: color-mix(in srgb, var(--color-button-1, #4A97D2) 90%, black);
+	color: white;
+}
+.btn-theme-1:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-button-1, #4A97D2);
+}
+
+.btn-theme-2 {
+	background-color: var(--color-button-2, #4BB170);
+	border: 1px solid var(--color-button-2, #4BB170);
+	color: white;
+	transition: all 0.2s;
+}
+.btn-theme-2:hover {
+	background-color: color-mix(in srgb, var(--color-button-2, #4BB170) 90%, black);
+	border-color: color-mix(in srgb, var(--color-button-2, #4BB170) 90%, black);
+	color: white;
+}
+.btn-theme-2:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-button-2, #4BB170);
+}
+
+.btn-theme-3 {
+	background-color: var(--color-button-3, #3B79A8);
+	border: 1px solid var(--color-button-3, #3B79A8);
+	color: white;
+	transition: all 0.2s;
+}
+.btn-theme-3:hover {
+	background-color: color-mix(in srgb, var(--color-button-3, #3B79A8) 90%, black);
+	border-color: color-mix(in srgb, var(--color-button-3, #3B79A8) 90%, black);
+	color: white;
+}
+.btn-theme-3:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-button-3, #3B79A8);
+}
+
+.btn-theme-4 {
+	background-color: var(--color-button-4, #3C8E5A);
+	border: 1px solid var(--color-button-4, #3C8E5A);
+	color: white;
+	transition: all 0.2s;
+}
+.btn-theme-4:hover {
+	background-color: color-mix(in srgb, var(--color-button-4, #3C8E5A) 90%, black);
+	border-color: color-mix(in srgb, var(--color-button-4, #3C8E5A) 90%, black);
+	color: white;
+}
+.btn-theme-4:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-button-4, #3C8E5A);
+}
+
+.btn-theme-5 {
+	background-color: var(--color-button-5, #E6A324);
+	border: 1px solid var(--color-button-5, #E6A324);
+	color: white;
+	transition: all 0.2s;
+}
+.btn-theme-5:hover {
+	background-color: color-mix(in srgb, var(--color-button-5, #E6A324) 90%, black);
+	border-color: color-mix(in srgb, var(--color-button-5, #E6A324) 90%, black);
+	color: white;
+}
+.btn-theme-5:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-button-5, #E6A324);
+}
+
+/* Light button variant */
+.btn-theme-light-1 {
+	background-color: white;
+	border: 1px solid var(--color-button-1, #4A97D2);
+	color: var(--color-button-1, #4A97D2);
+	transition: all 0.2s;
+}
+.btn-theme-light-1:hover {
+	background-color: var(--color-button-1, #4A97D2);
+	border-color: var(--color-button-1, #4A97D2);
+	color: white;
+}
+.btn-theme-light-1:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-button-1, #4A97D2);
+}
+
+.btn-theme-light-2 {
+	background-color: white;
+	border: 1px solid var(--color-button-2, #4BB170);
+	color: var(--color-button-2, #4BB170);
+	transition: all 0.2s;
+}
+.btn-theme-light-2:hover {
+	background-color: var(--color-button-2, #4BB170);
+	border-color: var(--color-button-2, #4BB170);
+	color: white;
+}
+.btn-theme-light-2:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-button-2, #4BB170);
+}
+
+.btn-theme-light-3 {
+	background-color: white;
+	border: 1px solid var(--color-button-3, #3B79A8);
+	color: var(--color-button-3, #3B79A8);
+	transition: all 0.2s;
+}
+.btn-theme-light-3:hover {
+	background-color: var(--color-button-3, #3B79A8);
+	border-color: var(--color-button-3, #3B79A8);
+	color: white;
+}
+.btn-theme-light-3:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px white, 0 0 0 4px var(--color-button-3, #3B79A8);
+}
+
+/* Panel background (Hub only) */
+.bg-theme-panel {
+	background-color: var(--color-panel-bg, #E8F2F9) !important;
+}
+
+/* Links styled as Hub buttons: keep white text on hover (Hub only) */
+a.btn-theme-1:hover,
+a.btn-theme-2:hover,
+a.btn-theme-3:hover,
+a.btn-theme-4:hover,
+a.btn-theme-5:hover,
+a.btn-theme-light-1:hover,
+a.btn-theme-light-2:hover,
+a.btn-theme-light-3:hover,
+a[class*="btn-theme"]:hover {
+	color: white;
+	outline: none;
+}

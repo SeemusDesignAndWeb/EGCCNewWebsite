@@ -128,16 +128,16 @@
 <div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
 	<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Rotas</h2>
 	<div class="flex flex-wrap gap-2">
-		<a href="/view-rotas" target="_blank" class="bg-purple-600 text-white px-2.5 py-1.5 rounded-md hover:bg-purple-700 text-xs">
+		<a href="/view-rotas" target="_blank" class="btn-theme-4 px-2.5 py-1.5 rounded-md text-xs">
 			View Your Rotas
 		</a>
-		<a href="/hub/rotas/invite" class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs">
+		<a href="/hub/rotas/invite" class="btn-theme-1 px-2.5 py-1.5 rounded-md text-xs">
 			Bulk Invite
 		</a>
-		<a href="/hub/rotas/bulk-assign" class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs">
+		<a href="/hub/rotas/bulk-assign" class="btn-theme-1 px-2.5 py-1.5 rounded-md text-xs">
 			Bulk Assign
 		</a>
-		<a href="/hub/rotas/new" class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs">
+		<a href="/hub/rotas/new" class="btn-theme-2 px-2.5 py-1.5 rounded-md text-xs">
 			New Rota
 		</a>
 	</div>
@@ -149,9 +149,9 @@
 			type="text"
 			bind:value={searchInput}
 			placeholder="Search rotas..."
-			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 px-[18px] py-2.5"
+			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 px-[18px] py-2.5"
 		/>
-		<button type="submit" class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs">
+		<button type="submit" class="btn-theme-3 px-2.5 py-1.5 rounded-md text-xs">
 			Search
 		</button>
 	</form>

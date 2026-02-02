@@ -661,7 +661,7 @@
 			<div class="flex flex-wrap gap-2 w-full sm:w-auto">
 				<a
 					href="/hub/meeting-planners"
-					class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs sm:text-sm flex items-center gap-1 flex-1 sm:flex-none justify-center"
+					class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs sm:text-sm flex items-center gap-1 flex-1 sm:flex-none justify-center"
 				>
 					<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -671,7 +671,7 @@
 				<button
 					type="submit"
 					form="meeting-planner-edit-form"
-					class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs sm:text-sm flex-1 sm:flex-none"
+					class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs sm:text-sm flex-1 sm:flex-none"
 				>
 					<span class="hidden sm:inline">Save Changes</span>
 					<span class="sm:hidden">Save</span>
@@ -714,7 +714,7 @@
 								name="communionHappening"
 								value="on"
 								bind:checked={formData.communionHappening}
-								class="h-4 w-4 text-hub-green-600 focus:ring-hub-green-500 border-gray-300 rounded"
+								class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
 							/>
 							<label for="communionHappening" class="ml-2 block text-xs text-gray-700">
 								Communion happening
@@ -727,7 +727,7 @@
 								id="speakerTopic"
 								name="speakerTopic"
 								bind:value={formData.speakerTopic}
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
 								placeholder="Enter speaker topic"
 							/>
 						</div>
@@ -739,7 +739,7 @@
 								name="speakerSeries"
 								bind:value={formData.speakerSeries}
 								list="speakerSeriesList"
-								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-2 px-3 text-sm"
+								class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
 								placeholder="Enter or select a series"
 							/>
 							<datalist id="speakerSeriesList">
@@ -838,7 +838,7 @@
 											selectedContactIds[rotaKey] = new Set();
 											selectedListId[rotaKey] = '';
 										}}
-										class="w-full bg-hub-green-600 text-white px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-md hover:bg-hub-green-700 text-xs transition-colors"
+										class="w-full bg-theme-button-2 text-white px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-md hover:opacity-90 text-xs transition-colors"
 									>
 										+ Add Assignees
 									</button>
@@ -854,7 +854,7 @@
 												<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 items-end">
 													<div>
 														<label class="block text-[10px] font-medium text-gray-700 mb-0.5">Filter by List</label>
-														<select bind:value={selectedListId[rotaKey]} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1 px-2 text-xs">
+														<select bind:value={selectedListId[rotaKey]} class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1 px-2 text-xs">
 															<option value="">All Contacts</option>
 															{#each lists as list}
 																<option value={list.id}>{list.name}</option>
@@ -867,7 +867,7 @@
 															type="text"
 															bind:value={searchTerm[rotaKey]}
 															placeholder="Search..."
-															class="w-full rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1 px-2 text-xs"
+															class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1 px-2 text-xs"
 														/>
 													</div>
 												</div>
@@ -879,13 +879,13 @@
 															type="text"
 															bind:value={guestName[rotaKey]}
 															placeholder="Guest Name *"
-															class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-hub-green-500 focus:ring-hub-green-500 py-1 px-2 text-xs"
+															class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1 px-2 text-xs"
 														/>
 														<button
 															type="button"
 															on:click={() => handleAddGuest(rotaKey)}
 															disabled={!guestName[rotaKey]}
-															class="bg-hub-blue-600 text-white px-3 py-1 rounded-md hover:bg-hub-blue-700 disabled:opacity-50 text-[10px] whitespace-nowrap"
+															class="bg-theme-button-1 text-white px-3 py-1 rounded-md hover:opacity-90 disabled:opacity-50 text-[10px] whitespace-nowrap"
 														>
 															Add Guest
 														</button>
@@ -945,14 +945,14 @@
 														selectedContactIds[rotaKey] = new Set(); 
 														selectedListId[rotaKey] = '';
 													}}
-													class="bg-gray-600 text-white px-2.5 py-1.5 rounded-md hover:bg-gray-700 text-xs sm:text-sm w-full sm:w-auto"
+													class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs sm:text-sm w-full sm:w-auto"
 												>
 													Back
 												</button>
 												<button
 													on:click={() => handleAddAssignees(rotaKey)}
 													disabled={!selectedContactIds[rotaKey] || selectedContactIds[rotaKey].size === 0 || (eventOccurrences.length > 0 && !selectedOccurrenceId[rotaKey])}
-													class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 disabled:opacity-50 text-xs sm:text-sm w-full sm:w-auto"
+													class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 disabled:opacity-50 text-xs sm:text-sm w-full sm:w-auto"
 												>
 													Add Selected ({selectedContactIds[rotaKey]?.size || 0})
 												</button>
