@@ -203,13 +203,13 @@
 				uploadError = data.error || `Upload failed (${res.status})`;
 				return;
 			}
-			const written = (data.results?.written || []).reduce((n, w) => n + (w.count || 0), 0);
-			const numCollections = (data.results?.written || []).length;
 			if (data.results?.errors?.length) {
-				uploadError = data.results.errors.map((e) => `${e.collection}: ${e.error}`).join('; ');
+				uploadError = data.results.errors
+					.map((e) => (e.source || 'website') + ': ' + e.error)
+					.join('; ');
 			}
-			if (numCollections > 0) {
-				uploadSuccess = `Uploaded ${numCollections} collections (${written} records).`;
+			if (data.results?.written?.length) {
+				uploadSuccess = 'EGCC website content uploaded (pages, events, hero slides, contact, services, etc.).';
 				notifications.success(uploadSuccess);
 			}
 		} catch (err) {
@@ -486,7 +486,7 @@
 		<div class="bg-white p-6 rounded-lg shadow">
 			<h2 class="text-2xl font-bold mb-2">Production / Development data</h2>
 			<p class="text-sm text-gray-600 mb-4">
-				Download all website content (contacts, events, emails, rotas, Hub settings, etc.) as a JSON file from this site, then upload it on another site (e.g. download on Production, upload on Development). Admins and sessions are not included.
+				Download and upload <strong>EGCC website content only</strong> (pages, events, hero slides, contact, services, team, home, settings) — not HUB data. Use to sync content between environments (e.g. Production → Development).
 			</p>
 			<div class="flex flex-wrap gap-6 items-end">
 				<div>

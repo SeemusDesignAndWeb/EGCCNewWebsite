@@ -1,28 +1,24 @@
 import { error } from '@sveltejs/kit';
 import { isAuthenticated } from '$lib/server/auth';
-import { readCollection } from '$lib/crm/server/fileStore.js';
-import { COLLECTIONS_FOR_DB } from '$lib/crm/server/collections.js';
+import { readDatabase } from '$lib/server/database.js';
 
 /**
  * GET /admin/settings/api/download-data
- * Admin only. Returns all website content (CRM collections except admins/sessions/audit_logs)
- * as a single JSON file for backup or for uploading to another environment (e.g. dev).
+ * Admin only. Returns EGCC website content only (pages, events, hero slides, contact, services,
+ * team, home, settings, etc.) from database.json — not HUB/CRM data.
+ * Use for backup or for uploading to another environment (e.g. dev).
  */
 export async function GET({ cookies }) {
 	if (!isAuthenticated(cookies)) throw error(401, 'Unauthorized');
 
-	const payload = { exportedAt: new Date().toISOString(), collections: {} };
+	const payload = { exportedAt: new Date().toISOString(), websiteContent: null };
 
-	for (const collection of COLLECTIONS_FOR_DB) {
-		try {
-			const records = await readCollection(collection);
-			payload.collections[collection] = records;
-		} catch (err) {
-			console.error(`[download-data] ${collection}:`, err);
-			payload.collections[collection] = [];
-			payload.errors = payload.errors || [];
-			payload.errors.push({ collection, error: err.message });
-		}
+	try {
+		payload.websiteContent = readDatabase();
+	} catch (err) {
+		console.error('[download-data] websiteContent:', err);
+		payload.errors = payload.errors || [];
+		payload.errors.push({ source: 'websiteContent', error: err.message });
 	}
 
 	const filename = `egcc-content-${new Date().toISOString().slice(0, 10)}.json`;

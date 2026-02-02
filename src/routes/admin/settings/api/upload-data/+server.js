@@ -1,15 +1,12 @@
 import { json, error } from '@sveltejs/kit';
 import { isAuthenticated } from '$lib/server/auth';
-import { writeCollection } from '$lib/crm/server/fileStore.js';
-import { COLLECTIONS_FOR_DB } from '$lib/crm/server/collections.js';
-
-const ALLOWED_COLLECTIONS = new Set(COLLECTIONS_FOR_DB);
+import { writeDatabase } from '$lib/server/database.js';
 
 /**
  * POST /admin/settings/api/upload-data
- * Admin only. Accepts JSON body: { collections: { contacts: [...], events: [...], ... } }.
- * Writes each allowed collection to the current store (file or database).
- * Use this on the development site to load data downloaded from production.
+ * Admin only. Accepts JSON body with websiteContent: EGCC website data (pages, events, hero slides,
+ * contact, services, team, home, settings, etc.) — written to database.json. HUB data is not accepted.
+ * Use on the development site to load data downloaded from production.
  */
 export async function POST({ request, cookies }) {
 	if (!isAuthenticated(cookies)) throw error(401, 'Unauthorized');
@@ -21,32 +18,21 @@ export async function POST({ request, cookies }) {
 		return json({ success: false, error: 'Invalid JSON body' }, { status: 400 });
 	}
 
-	const collections = body?.collections;
-	if (!collections || typeof collections !== 'object') {
+	const websiteContent = body?.websiteContent;
+	if (websiteContent == null || typeof websiteContent !== 'object') {
 		return json(
-			{ success: false, error: 'Body must be { collections: { <name>: [...], ... } }' },
+			{ success: false, error: 'Body must be { websiteContent: { ... } } from an EGCC admin download' },
 			{ status: 400 }
 		);
 	}
 
 	const results = { written: [], errors: [] };
-
-	for (const [name, records] of Object.entries(collections)) {
-		if (!ALLOWED_COLLECTIONS.has(name)) {
-			results.errors.push({ collection: name, error: 'Collection not allowed for upload' });
-			continue;
-		}
-		if (!Array.isArray(records)) {
-			results.errors.push({ collection: name, error: 'Each collection must be an array' });
-			continue;
-		}
-		try {
-			await writeCollection(name, records);
-			results.written.push({ collection: name, count: records.length });
-		} catch (err) {
-			console.error(`[upload-data] ${name}:`, err);
-			results.errors.push({ collection: name, error: err.message });
-		}
+	try {
+		writeDatabase(websiteContent);
+		results.written.push({ source: 'websiteContent', description: 'EGCC website pages, events, hero slides, contact, services, etc.' });
+	} catch (err) {
+		console.error('[upload-data] websiteContent:', err);
+		results.errors.push({ source: 'websiteContent', error: err.message });
 	}
 
 	return json({
