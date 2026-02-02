@@ -315,6 +315,21 @@ export async function POST({ request }) {
 - Ensure no extra spaces or quotes in variable values
 - Restart service after adding new variables
 
+### Cloudinary "Invalid Signature" on Image Upload (Railway)
+If image upload fails with **Invalid Signature** and a string like `overwrite=0&public_id=egcc/...&timestamp=...`:
+
+1. **Check credentials in Railway**  
+   In Railway → your service → Variables, ensure:
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` are set.
+   - Values match **exactly** what’s in [Cloudinary Console → API Keys](https://console.cloudinary.com/settings/api-keys) (same account).
+   - You’re using the **API Secret** (not the API Key) for `CLOUDINARY_API_SECRET`.
+
+2. **No extra characters**  
+   When pasting into Railway, avoid trailing newlines or spaces. The app trims values; if your secret was copied with a newline, re-paste it as a single line and save.
+
+3. **Redeploy**  
+   After changing any Cloudinary variable, redeploy the service so the new env is loaded.
+
 ## Summary
 
 This setup provides:

@@ -6,9 +6,13 @@ import { env } from '$env/dynamic/private';
  * Called on each upload to ensure we have the latest config
  */
 function configureCloudinary() {
-	const cloudName = env.CLOUDINARY_CLOUD_NAME || 'dl8kjhwjs';
-	const apiKey = env.CLOUDINARY_API_KEY;
-	const apiSecret = env.CLOUDINARY_API_SECRET;
+	// Trim all credentials – Railway and some env loaders can add trailing newlines/spaces, which break signature verification
+	const rawCloudName = env.CLOUDINARY_CLOUD_NAME || 'dl8kjhwjs';
+	const rawApiKey = env.CLOUDINARY_API_KEY;
+	const rawApiSecret = env.CLOUDINARY_API_SECRET;
+	const cloudName = typeof rawCloudName === 'string' ? rawCloudName.trim() : '';
+	const apiKey = typeof rawApiKey === 'string' ? rawApiKey.trim() : '';
+	const apiSecret = typeof rawApiSecret === 'string' ? rawApiSecret.trim() : '';
 
 	if (!apiKey || !apiSecret) {
 		throw new Error('Cloudinary API credentials are missing. Please set CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET environment variables.');
