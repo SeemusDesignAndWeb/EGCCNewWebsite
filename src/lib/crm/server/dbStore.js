@@ -19,7 +19,23 @@ function getPool() {
 	if (!pool) {
 		const url = env.DATABASE_URL;
 		if (!url) throw new Error('DATABASE_URL is required when using database store');
-		pool = new Pool({ connectionString: url });
+		// Catch placeholder or wrong host (e.g. "base" from a template or unexpanded variable)
+		try {
+			const parsed = new URL(url.replace(/^postgresql:\/\//, 'https://'));
+			if (parsed.hostname === 'base' || parsed.hostname === 'localhost' && url.includes('base')) {
+				throw new Error(
+					'DATABASE_URL has host "base" or looks like a placeholder. Set DATABASE_URL to your real Postgres URL: on Railway use the Postgres service Variables (Connect → Copy URL); locally use e.g. postgresql://user@localhost:5432/dbname'
+				);
+			}
+		} catch (e) {
+			if (e.message.includes('DATABASE_URL')) throw e;
+		}
+		// Railway public URL and other external Postgres need SSL; internal (postgres.railway.internal) does not
+		const isInternal = url.includes('railway.internal');
+		pool = new Pool({
+			connectionString: url,
+			...(isInternal ? {} : { ssl: { rejectUnauthorized: false } })
+		});
 	}
 	return pool;
 }

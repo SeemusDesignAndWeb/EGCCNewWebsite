@@ -313,6 +313,7 @@
 
 	// Data store: migrate and switch
 	let migrating = false;
+	let copyingToFiles = false;
 	let switching = false;
 
 	async function migrateToDatabase() {
@@ -359,6 +360,39 @@
 			notifications.error(err.message || 'Migration failed');
 		} finally {
 			migrating = false;
+		}
+	}
+
+	async function copyDatabaseToFiles() {
+		copyingToFiles = true;
+		try {
+			const res = await fetch('/hub/settings/api/copy-database-to-files', {
+				method: 'POST',
+				credentials: 'include'
+			});
+			const data = await res.json().catch(() => ({}));
+			if (!res.ok) {
+				notifications.error(data.error || 'Copy to files failed');
+				return;
+			}
+			const { results } = data;
+			const total = (results?.copied || []).reduce((n, r) => n + (r.count || 0), 0);
+			const numCollections = (results?.copied || []).length;
+			const backupCount = (results?.backedUp || []).length;
+			if (results?.errors?.length) {
+				const errMsg = results.errors.map((e) => `${e.collection}: ${e.error}`).join('; ');
+				notifications.error(`Copy had errors: ${errMsg}`);
+			}
+			notifications.success(
+				numCollections
+					? `Backed up ${backupCount} file(s), copied ${numCollections} collections (${total} records) to NDJSON files.`
+					: 'No database data to copy (or database unavailable).'
+			);
+			await invalidateAll();
+		} catch (err) {
+			notifications.error(err.message || 'Copy to files failed');
+		} finally {
+			copyingToFiles = false;
 		}
 	}
 
@@ -786,6 +820,9 @@
 			<p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-4">
 				<strong>Using database:</strong> Click &quot;Copy file data to database&quot; then the app will switch to the database automatically. Or click &quot;Switch to database&quot; to use the DB without copying. If you set <code class="bg-white px-1 rounded">DATA_STORE=database</code> in <code class="bg-white px-1 rounded">.env</code>, restart the app for it to take effect.
 			</p>
+			<p class="text-sm text-gray-600 mb-4">
+				<strong>Copy data to files:</strong> When using the database, this backs up existing NDJSON files to <code class="bg-gray-100 px-1 rounded">data/backup/&lt;timestamp&gt;</code>, then overwrites NDJSON files with the current database contents.
+			</p>
 			<div class="space-y-4">
 				<div class="p-4 bg-gray-50 border border-gray-200 rounded-md">
 					<p class="text-sm font-medium text-gray-700">Current mode:</p>
@@ -800,6 +837,14 @@
 						class="px-4 py-2 bg-hub-blue-500 text-white rounded-md hover:bg-hub-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-hub-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
 						{migrating ? 'Copying...' : 'Copy file data to database'}
+					</button>
+					<button
+						on:click={() => copyDatabaseToFiles()}
+						disabled={copyingToFiles || storeMode === 'file'}
+						class="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+						title="Backs up existing NDJSON files, then copies database data into NDJSON files. Only available when using database."
+					>
+						{copyingToFiles ? 'Copying...' : 'Copy data to files'}
 					</button>
 					<button
 						on:click={() => setStoreMode('database')}

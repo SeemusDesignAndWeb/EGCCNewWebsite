@@ -82,10 +82,26 @@ async function main() {
 		console.warn('[ensure-db-on-deploy] DATA_STORE=database but DATABASE_URL not set, skipping.');
 		process.exit(0);
 	}
+	// Reject placeholder host "base" (e.g. from an unsubstituted template)
+	try {
+		const parsed = new URL(url.replace(/^postgres(ql)?:\/\//, 'https://'));
+		if (parsed.hostname === 'base') {
+			console.error(
+				'[ensure-db-on-deploy] DATABASE_URL has host "base" (placeholder). Set DATABASE_URL to your real Postgres URL: on Railway use Postgres service → Variables → Connect → copy URL.'
+			);
+			process.exit(1);
+		}
+	} catch (e) {
+		if (e.message && e.message.includes('DATABASE_URL')) throw e;
+	}
 
+	const isInternal = url.includes('railway.internal');
 	let client;
 	try {
-		client = new pg.Client({ connectionString: url });
+		client = new pg.Client({
+			connectionString: url,
+			...(isInternal ? {} : { ssl: { rejectUnauthorized: false } })
+		});
 		await client.connect();
 	} catch (err) {
 		console.error('[ensure-db-on-deploy] Could not connect to database:', err.message);
