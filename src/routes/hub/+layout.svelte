@@ -11,7 +11,7 @@
 		return typeof val === 'string' && val.trim() && /^#[0-9A-Fa-f]{6}$/.test(val.trim()) ? val.trim() : fallback;
 	}
 
-	// Inject Hub theme CSS variables when in Hub (overrides app.css public defaults)
+	// Hub theme: set CSS variables on document (client-side only; avoids PostCSS preprocessing issues)
 	$: if (typeof document !== 'undefined' && theme) {
 		const root = document.documentElement;
 		root.style.setProperty('--color-primary', getColor(theme.primaryColor, '#4BB170'));
@@ -38,12 +38,6 @@
 		root.style.setProperty('--color-panel-bg', getColor(theme.panelBackgroundColor, '#E8F2F9'));
 	}
 </script>
-
-<svelte:head>
-	{#if hubThemeStyle}
-		{@html `<style id="hub-theme-vars">${hubThemeStyle}</style>`}
-	{/if}
-</svelte:head>
 
 <CrmShell {admin} {theme}>
 	<slot />
