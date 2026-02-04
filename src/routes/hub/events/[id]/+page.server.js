@@ -146,6 +146,7 @@ export const actions = {
 				visibility: ['public', 'private', 'internal'].includes(data.get('visibility')) ? data.get('visibility') : 'private',
 				enableSignup: data.get('enableSignup') === 'on' || data.get('enableSignup') === 'true',
 				hideFromEmail: data.get('hideFromEmail') === 'on' || data.get('hideFromEmail') === 'true',
+				showDietaryRequirements: data.get('showDietaryRequirements') === 'on' || data.get('showDietaryRequirements') === 'true',
 				maxSpaces: data.get('maxSpaces') ? parseInt(data.get('maxSpaces')) : null,
 				color: data.get('color') || existingEvent.color || '#9333ea',
 				listIds: listIds,

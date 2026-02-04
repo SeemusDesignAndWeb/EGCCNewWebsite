@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 import { env } from '$env/dynamic/private';
 import { readCollection, findById, update, findMany } from './fileStore.js';
-import { ensureUnsubscribeToken } from './tokens.js';
+import { ensureUnsubscribeToken, ensureEventToken } from './tokens.js';
 import { rateLimitedSend } from './emailRateLimiter.js';
 
 const resend = new Resend(env.RESEND_API_KEY);
@@ -211,6 +211,8 @@ export async function getUpcomingRotas(contactId, event) {
 	const baseUrl = getBaseUrl(event);
 
 	const upcoming = [];
+	/** @type {Map<string, { token: string }>} */
+	const eventTokenCache = new Map();
 
 	// Check each rota to see if contact is assigned to specific occurrences
 	for (const rota of rotas) {
@@ -304,11 +306,20 @@ export async function getUpcomingRotas(contactId, event) {
 					!t.used
 				);
 
+				// Ensure event token for public "who's on the rotas" page link
+				let eventToken = eventTokenCache.get(eventData.id);
+				if (!eventToken) {
+					eventToken = await ensureEventToken(eventData.id);
+					eventTokenCache.set(eventData.id, eventToken);
+				}
+				const eventRotaViewUrl = `${baseUrl}/event/${eventToken.token}?occurrenceId=${occurrence.id}#rotas`;
+
 				upcoming.push({
 					rota,
 					event: eventData,
 					occurrence,
-					signupUrl: tokenData ? `${baseUrl}/signup/rota/${tokenData.token}` : null
+					signupUrl: tokenData ? `${baseUrl}/signup/rota/${tokenData.token}` : null,
+					eventRotaViewUrl
 				});
 			}
 		}
@@ -365,8 +376,9 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 			if (upcomingRotas.length === 0) {
 				text += 'You have no upcoming rotas in the next 14 days.';
 			} else {
+				text += '(Click the rota name to view event information and other volunteers)\n\n';
 				for (const item of upcomingRotas) {
-					const { rota, event: eventData, occurrence, signupUrl } = item;
+					const { rota, event: eventData, occurrence, signupUrl, eventRotaViewUrl } = item;
 					const dateStr = new Date(occurrence.startsAt).toLocaleDateString('en-GB', {
 						weekday: 'long',
 						year: 'numeric',
@@ -377,6 +389,9 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 					});
 
 					text += `\n- ${eventData.title} - ${rota.role}\n  ${dateStr}`;
+					if (eventRotaViewUrl) {
+						text += `\n  See who's on the rotas: ${eventRotaViewUrl}`;
+					}
 					if (signupUrl) {
 						text += `\n  Sign up: ${signupUrl}`;
 					}
@@ -397,8 +412,9 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 				if (upcomingRotas.length === 0) {
 					html += '<p style="color: #333; font-size: 14px;">You have no upcoming rotas in the next 14 days.</p>';
 				} else {
+					html += '<p class="rota-description" style="color: #6b7280; font-size: 12px; font-style: italic; margin: 0 0 12px 0;">Click the rota name to view event information and other volunteers</p>';
 					for (const item of upcomingRotas) {
-						const { rota, event: eventData, occurrence, signupUrl } = item;
+						const { rota, event: eventData, occurrence, signupUrl, eventRotaViewUrl } = item;
 						const dateStr = new Date(occurrence.startsAt).toLocaleDateString('en-GB', {
 							weekday: 'long',
 							year: 'numeric',
@@ -408,14 +424,22 @@ export async function personalizeContent(content, contact, upcomingRotas = [], u
 							minute: '2-digit'
 						});
 
-						// Format: Event Title (bold) - Role (bold) - Date/Time - Location (all on same line, same size)
-						// Get location from occurrence first, fallback to event location
+						// Event title and rota name link to public page showing who's on the rotas for this event (brand blue)
+						const linkStyle = 'color: #4A97D2; font-weight: 600; text-decoration: underline;';
+						const eventLink = eventRotaViewUrl
+							? `<a href="${eventRotaViewUrl}" style="${linkStyle}">${eventData.title}</a>`
+							: `<strong>${eventData.title}</strong>`;
+						const roleLink = eventRotaViewUrl
+							? `<a href="${eventRotaViewUrl}" style="${linkStyle}">${rota.role}</a>`
+							: `<strong>${rota.role}</strong>`;
+
+						// Format: Event Title (link) - Role (link) - Date/Time - Location
 						const location = occurrence.location || eventData.location || '';
-						let line = `<strong>${eventData.title}</strong> - <strong>${rota.role}</strong> - ${dateStr}`;
+						let line = `${eventLink} - ${roleLink} - ${dateStr}`;
 						if (location) {
 							line += ` - ${location}`;
 						}
-						
+
 						html += '<div style="margin-bottom: 8px;">';
 						html += `<p style="margin: 0 0 5px 0; color: #333; font-size: 14px;">${line}</p>`;
 						if (signupUrl) {
@@ -1562,7 +1586,7 @@ Visit our website: ${baseUrl}
  * @param {object} event - SvelteKit event object (for base URL)
  * @returns {Promise<object>} Resend response
  */
-export async function sendEventSignupConfirmation({ to, name, event, occurrence, guestCount = 0 }, svelteEvent) {
+export async function sendEventSignupConfirmation({ to, name, event, occurrence, guestCount = 0, dietaryRequirements }, svelteEvent) {
 	const baseUrl = getBaseUrl(svelteEvent);
 	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
@@ -1643,6 +1667,12 @@ export async function sendEventSignupConfirmation({ to, name, event, occurrence,
 									: `You + ${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} (${totalAttendees} total)`}
 							</td>
 						</tr>
+						${dietaryRequirements ? `
+						<tr>
+							<td style="padding: 6px 0; font-weight: 600; color: #666; font-size: 13px;">Dietary:</td>
+							<td style="padding: 6px 0; color: #333; font-size: 13px;">${dietaryRequirements.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
+						</tr>
+						` : ''}
 					</table>
 				</div>
 				
@@ -1674,6 +1704,7 @@ ${location ? `Location: ${location}` : ''}
 Attendees: ${totalAttendees === 1 
 		? 'Just you' 
 		: `You + ${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} (${totalAttendees} total)`}
+${dietaryRequirements ? `Dietary requirements: ${dietaryRequirements}\n` : ''}
 
 We look forward to seeing you there!
 

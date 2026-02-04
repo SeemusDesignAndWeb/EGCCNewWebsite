@@ -645,11 +645,11 @@
 				<h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Meeting Planner</h2>
 				<div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 text-base sm:text-xl text-gray-600">
 					<div>
-						<a href="/hub/events/{event.id}" class="text-hub-green-600 hover:text-hub-green-700 underline font-bold break-words">
+						<a href="/hub/events/{event.id}" class="text-hub-blue-600 hover:text-hub-blue-700 underline font-bold break-words">
 							{event?.title || 'Unknown'}
 						</a>
 					</div>
-					<div class="text-xs">
+					<div class="text-base sm:text-xl">
 						{#if occurrence}
 							{formatDateWithOrdinal(occurrence.startsAt)}
 						{:else}
@@ -872,25 +872,28 @@
 													</div>
 												</div>
 
-												<div class="mt-3 pt-3 border-t border-gray-200">
-													<label class="block text-[10px] font-medium text-gray-700 mb-1.5">Add Guest (not in contacts)</label>
-													<div class="flex flex-col sm:flex-row gap-2">
-														<input
-															type="text"
-															bind:value={guestName[rotaKey]}
-															placeholder="Guest Name *"
-															class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1 px-2 text-xs"
-														/>
-														<button
-															type="button"
-															on:click={() => handleAddGuest(rotaKey)}
-															disabled={!guestName[rotaKey]}
-															class="bg-theme-button-1 text-white px-3 py-1 rounded-md hover:opacity-90 disabled:opacity-50 text-[10px] whitespace-nowrap"
-														>
-															Add Guest
-														</button>
+												<!-- Guest option only in Hub admin (hidden on public signup pages if form is reused) -->
+												{#if $page.url.pathname.startsWith('/hub/')}
+													<div class="mt-3 pt-3 border-t border-gray-200">
+														<label class="block text-[10px] font-medium text-gray-700 mb-1.5">Add Guest (not in contacts)</label>
+														<div class="flex flex-col sm:flex-row gap-2">
+															<input
+																type="text"
+																bind:value={guestName[rotaKey]}
+																placeholder="Guest Name *"
+																class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-1 px-2 text-xs"
+															/>
+															<button
+																type="button"
+																on:click={() => handleAddGuest(rotaKey)}
+																disabled={!guestName[rotaKey]}
+																class="bg-theme-button-1 text-white px-3 py-1 rounded-md hover:opacity-90 disabled:opacity-50 text-[10px] whitespace-nowrap"
+															>
+																Add Guest
+															</button>
+														</div>
 													</div>
-												</div>
+												{/if}
 											</div>
 
 											<div class="flex-1 overflow-y-auto p-3 sm:p-4">

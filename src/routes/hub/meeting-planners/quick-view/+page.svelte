@@ -173,7 +173,7 @@
 		>
 			<div class="mb-2 pb-2 border-b border-gray-200">
 				<div class="font-semibold text-sm text-gray-900 mb-1">{mp.eventName}</div>
-				<div class="text-xs text-gray-600">{formatDateWithOrdinal(mp.occurrenceDate)}</div>
+				<div class="text-sm text-gray-600">{formatDateWithOrdinal(mp.occurrenceDate)}</div>
 			</div>
 			<div class="space-y-2 text-xs">
 				<div>

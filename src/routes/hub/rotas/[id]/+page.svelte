@@ -1112,25 +1112,28 @@
 						</div>
 					</div>
 					
-					<div class="mt-4 pt-4 border-t border-gray-200">
-						<label class="block text-sm font-medium text-gray-700 mb-2">Add Guest (not in contacts)</label>
-						<div class="flex flex-col sm:flex-row gap-2">
-							<input
-								type="text"
-								bind:value={guestName}
-								placeholder="Guest Name *"
-								class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
-							/>
-							<button
-								type="button"
-								on:click={handleAddGuest}
-								disabled={!guestName}
-								class="bg-theme-button-1 text-white px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50 text-sm whitespace-nowrap"
-							>
-								Add Guest
-							</button>
+					<!-- Guest option only in Hub admin (hidden on any public signup pages if form is reused) -->
+					{#if $page.url.pathname.startsWith('/hub/')}
+						<div class="mt-4 pt-4 border-t border-gray-200">
+							<label class="block text-sm font-medium text-gray-700 mb-2">Add Guest (not in contacts)</label>
+							<div class="flex flex-col sm:flex-row gap-2">
+								<input
+									type="text"
+									bind:value={guestName}
+									placeholder="Guest Name *"
+									class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-3 text-sm"
+								/>
+								<button
+									type="button"
+									on:click={handleAddGuest}
+									disabled={!guestName}
+									class="bg-theme-button-1 text-white px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50 text-sm whitespace-nowrap"
+								>
+									Add Guest
+								</button>
+							</div>
 						</div>
-					</div>
+					{/if}
 				</div>
 
 				<!-- Scrollable content area -->

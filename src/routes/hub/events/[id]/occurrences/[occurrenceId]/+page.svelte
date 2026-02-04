@@ -493,6 +493,9 @@
 								<th class="px-[18px] py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
 								<th class="px-[18px] py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guests</th>
 								<th class="px-[18px] py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Attendees</th>
+								{#if event?.showDietaryRequirements}
+									<th class="px-[18px] py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dietary</th>
+								{/if}
 								<th class="px-[18px] py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Signed Up</th>
 								<th class="px-[18px] py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
 							</tr>
@@ -517,6 +520,11 @@
 									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
 										{(signup.guestCount || 0) + 1}
 									</td>
+									{#if event?.showDietaryRequirements}
+										<td class="px-6 py-4 text-sm text-gray-600 max-w-[200px]">
+											{signup.dietaryRequirements || '—'}
+										</td>
+									{/if}
 									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 										{signup.createdAt ? formatDateTimeUK(signup.createdAt) : '-'}
 									</td>
@@ -541,6 +549,9 @@
 								<td class="px-[18px] py-2.5 text-sm font-bold text-gray-900">
 									{signups.reduce((sum, s) => sum + (s.guestCount || 0) + 1, 0)}
 								</td>
+								{#if event?.showDietaryRequirements}
+									<td class="px-[18px] py-2.5"></td>
+								{/if}
 								<td class="px-[18px] py-2.5"></td>
 								<td class="px-[18px] py-2.5"></td>
 							</tr>

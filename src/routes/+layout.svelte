@@ -17,15 +17,22 @@
 		return typeof val === 'string' && val.trim() && /^#[0-9A-Fa-f]{6}$/.test(val.trim()) ? val.trim() : fallback;
 	}
 
-	// Theme from Hub settings. When "Hub branding" is selected for public pages, use theme on public site too.
-	$: theme = data?.theme || null;
-	// Use theme in Hub/admin; on public pages use theme only when Hub branding is selected.
-	$: effectiveTheme = hideWebsiteElements ? theme : (theme?.publicPagesBranding === 'hub' ? theme : null);
+	// Route-derived flags (defined first so theme logic can use them)
+	$: isAdminArea = $page.url.pathname.startsWith('/admin');
+	$: isHubArea = $page.url.pathname.startsWith('/hub');
+	$: hideWebsiteElements = isAdminArea || isHubArea;
+	// External = public hub pages: signup, event token, forms, unsubscribe, view-rotas (theme applies only here when Hub branding is on)
+	$: isExternalPage = $page.url.pathname.startsWith('/signup') || $page.url.pathname.startsWith('/event/') || $page.url.pathname.startsWith('/forms') || $page.url.pathname.startsWith('/unsubscribe') || $page.url.pathname.startsWith('/view-rotas');
 
-	// When Hub branding is selected for public pages, apply theme CSS variables so Navbar/StandaloneHeader show theme colours (client-side only). When EGCC, reset navbar so public site uses default.
-	$: if (typeof document !== 'undefined' && theme) {
+	// Theme from Hub settings. Only applied in Hub/admin and on public hub pages. Main website (/, /church, /events, etc.) never uses Hub theme.
+	$: theme = data?.theme || null;
+	// Hub/admin: always use theme. Main website: never use theme. External (public hub) pages: use theme only when Hub branding is selected.
+	$: effectiveTheme = hideWebsiteElements ? theme : (isExternalPage && theme?.publicPagesBranding === 'hub' ? theme : null);
+
+	// Apply theme CSS variables only on external (public hub) pages when Hub branding is on. Main website: never touch theme vars (keeps app.css defaults).
+	$: if (typeof document !== 'undefined') {
 		const root = document.documentElement;
-		if (theme.publicPagesBranding === 'hub') {
+		if (isExternalPage && theme?.publicPagesBranding === 'hub') {
 			root.style.setProperty('--color-primary', getColor(theme.primaryColor, '#4BB170'));
 			root.style.setProperty('--color-brand', getColor(theme.brandColor, '#4A97D2'));
 			const navbarBg = theme.navbarBackgroundColor;
@@ -49,6 +56,7 @@
 			root.style.setProperty('--color-panel-head-3', getColor(theme.panelHeadColors?.[2], '#2C5B7E'));
 			root.style.setProperty('--color-panel-bg', getColor(theme.panelBackgroundColor, '#E8F2F9'));
 		} else {
+			// Main website or EGCC branding: ensure navbar uses public site default (white)
 			root.style.setProperty('--color-navbar-bg', '#FFFFFF');
 		}
 	}
@@ -59,13 +67,8 @@
 	// Don't show navbar, banner, or preloader in admin or HUB areas
 	// But DO show navbar for public signup pages (rota, event, and member signups)
 	// Don't show banner on signup pages or sundays page
-	$: isAdminArea = $page.url.pathname.startsWith('/admin');
-	$: isHubArea = $page.url.pathname.startsWith('/hub');
 	$: isSignupPage = $page.url.pathname.startsWith('/signup/rota') || $page.url.pathname.startsWith('/signup/event') || $page.url.pathname.startsWith('/signup/member');
 	$: isSundaysPage = $page.url.pathname === '/sundays';
-	$: hideWebsiteElements = isAdminArea || isHubArea;
-	// External pages: signup, event token, forms, unsubscribe, view-rotas (can use standalone header)
-	$: isExternalPage = $page.url.pathname.startsWith('/signup') || $page.url.pathname.startsWith('/event/') || $page.url.pathname.startsWith('/forms') || $page.url.pathname.startsWith('/unsubscribe') || $page.url.pathname.startsWith('/view-rotas');
 	$: useStandaloneHeader = theme?.externalPagesLayout === 'standalone' && isExternalPage;
 	$: showWebsiteNavbar = !hideWebsiteElements || isSignupPage;
 	$: showStandaloneHeader = showWebsiteNavbar && useStandaloneHeader;

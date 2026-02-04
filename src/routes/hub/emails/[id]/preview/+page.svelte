@@ -209,6 +209,18 @@
 	:global(.newsletter-preview p) {
 		color: #1f2937;
 	}
+
+	/* Rota description under "Your Rotas:" - grey, small, italic (ensure visible in preview) */
+	:global(.newsletter-preview p.rota-description) {
+		color: #6b7280 !important;
+		font-size: 12px !important;
+		font-style: italic !important;
+	}
+
+	/* Text links (not buttons) in email preview: brand blue */
+	:global(.newsletter-preview a[href]:not([style*='background'])) {
+		color: #4A97D2 !important;
+	}
 	
 	:global(.newsletter-preview span) {
 		color: #1f2937;

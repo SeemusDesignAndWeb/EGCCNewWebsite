@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import { getEventTokenByToken, getOccurrenceTokenByToken } from '$lib/crm/server/tokens.js';
 import { findById, findMany, readCollection } from '$lib/crm/server/fileStore.js';
 import { getCsrfToken } from '$lib/crm/server/auth.js';
+import { filterUpcomingOccurrences } from '$lib/crm/utils/occurrenceFilters.js';
 
 // Simple in-memory rate limiting (in production, use Redis or similar)
 const rateLimitMap = new Map();
@@ -68,7 +69,15 @@ function sanitizeName(name) {
 	return sanitized.trim().substring(0, 200);
 }
 
-export async function load({ params, cookies }) {
+// Sanitize free-text field (dietary requirements, etc.)
+function sanitizeFreeText(text) {
+	if (!text || typeof text !== 'string') return '';
+	let sanitized = text.replace(/<[^>]*>/g, '');
+	sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+	return sanitized.trim().substring(0, 500);
+}
+
+export async function load({ params, cookies, url }) {
 	// Try to get occurrence token first, then event token
 	let token = await getOccurrenceTokenByToken(params.token);
 	let occurrenceId = null;
@@ -116,8 +125,67 @@ export async function load({ params, cookies }) {
 		? allOccurrencesWithSignups.filter(o => o.id === occurrenceId)
 		: allOccurrencesWithSignups;
 
+	// Load all rotas for this event (public, internal, church — for "Who's on the rotas" section)
+	const allRotas = await findMany('rotas', r => r.eventId === event.id);
+	const upcomingOccurrences = filterUpcomingOccurrences(allOccurrences);
+	const contacts = await readCollection('contacts');
+
+	const rotasWithAssignees = allRotas.map(rota => {
+		const assignees = rota.assignees || [];
+		const assigneesByOcc = {};
+		upcomingOccurrences.forEach(occ => {
+			assigneesByOcc[occ.id] = assignees.filter(a => {
+				if (typeof a === 'string') return rota.occurrenceId === occ.id;
+				if (a && typeof a === 'object') {
+					const aOccId = a.occurrenceId ?? rota.occurrenceId;
+					return aOccId === occ.id;
+				}
+				return false;
+			}).map(a => {
+				if (typeof a === 'string') {
+					const contact = contacts.find(c => c.id === a);
+					return {
+						id: contact?.id,
+						name: contact ? `${(contact.firstName || '').trim()} ${(contact.lastName || '').trim()}`.trim() || contact.email : 'Unknown',
+						email: contact?.email || ''
+					};
+				}
+				if (a && typeof a === 'object' && a.contactId) {
+					if (typeof a.contactId === 'string') {
+						const contact = contacts.find(c => c.id === a.contactId);
+						return {
+							id: contact?.id,
+							name: contact ? `${(contact.firstName || '').trim()} ${(contact.lastName || '').trim()}`.trim() || contact.email : (a.name || 'Unknown'),
+							email: contact?.email || a.email || ''
+						};
+					}
+					return {
+						id: null,
+						name: a.contactId?.name || a.name || 'Unknown',
+						email: a.contactId?.email || a.email || ''
+					};
+				}
+				return { id: null, name: a?.name || 'Unknown', email: a?.email || '' };
+			});
+		});
+		return { ...rota, assigneesByOcc };
+	});
+
+	// When coming from rota email link: ?occurrenceId=xxx#rotas — show only that date's assignees
+	const rotaViewOccurrenceId = url.searchParams.get('occurrenceId') || null;
+
 	const csrfToken = getCsrfToken(cookies) || '';
-	return { token, event, occurrences: occurrencesWithSignups, allOccurrences: allOccurrencesWithSignups, occurrenceId, csrfToken };
+	return {
+		token,
+		event,
+		occurrences: occurrencesWithSignups,
+		allOccurrences: allOccurrencesWithSignups,
+		occurrenceId,
+		rotas: rotasWithAssignees,
+		upcomingOccurrencesForRotas: upcomingOccurrences,
+		rotaViewOccurrenceId,
+		csrfToken
+	};
 }
 
 export const actions = {
@@ -162,6 +230,8 @@ export const actions = {
 			let name = data.get('name') || '';
 			const email = data.get('email') || '';
 			let guestCount = parseInt(data.get('guestCount') || '0', 10);
+			const dietaryRequirementsRaw = data.get('dietaryRequirements') || '';
+			const dietaryRequirements = event.showDietaryRequirements ? sanitizeFreeText(dietaryRequirementsRaw) : '';
 
 			if (!occurrenceId) {
 				return fail(400, { error: 'Please select a date' });
@@ -229,7 +299,8 @@ export const actions = {
 				occurrenceId: occurrenceId,
 				name: name, // Already sanitized
 				email: email.trim().toLowerCase(),
-				guestCount: guestCount
+				guestCount: guestCount,
+				dietaryRequirements: dietaryRequirements || undefined
 			});
 
 			// Send confirmation email
@@ -239,7 +310,8 @@ export const actions = {
 					name: name,
 					event: event,
 					occurrence: occurrence,
-					guestCount: guestCount || 0
+					guestCount: guestCount || 0,
+					dietaryRequirements: dietaryRequirements || undefined
 				}, { url: url });
 			} catch (emailError) {
 				console.error('Failed to send confirmation email:', emailError);

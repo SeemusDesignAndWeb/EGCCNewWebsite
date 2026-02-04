@@ -37,6 +37,7 @@ export const actions = {
 				visibility: ['public', 'private', 'internal'].includes(data.get('visibility')) ? data.get('visibility') : 'private',
 				enableSignup: data.get('enableSignup') === 'on' || data.get('enableSignup') === 'true',
 				hideFromEmail: data.get('hideFromEmail') === 'on' || data.get('hideFromEmail') === 'true',
+				showDietaryRequirements: data.get('showDietaryRequirements') === 'on' || data.get('showDietaryRequirements') === 'true',
 				color: data.get('color') || '#9333ea',
 				listIds: listIds,
 				// Recurrence fields

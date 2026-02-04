@@ -86,6 +86,7 @@
 		visibility: 'private',
 		enableSignup: false,
 		hideFromEmail: false,
+		showDietaryRequirements: false,
 		maxSpaces: '',
 		color: '#9333ea'
 	};
@@ -98,6 +99,7 @@
 			visibility: event.visibility || 'private',
 			enableSignup: event.enableSignup || false,
 			hideFromEmail: event.hideFromEmail || false,
+			showDietaryRequirements: event.showDietaryRequirements || false,
 			maxSpaces: event.maxSpaces ? event.maxSpaces.toString() : '',
 			color: event.color || '#9333ea'
 		};
@@ -423,6 +425,20 @@
 									Hide from email
 								</label>
 							</div>
+							{#if formData.enableSignup}
+								<div class="flex items-center">
+									<input
+										type="checkbox"
+										id="showDietaryRequirements"
+										name="showDietaryRequirements"
+										bind:checked={formData.showDietaryRequirements}
+										class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
+									/>
+									<label for="showDietaryRequirements" class="ml-2 block text-xs text-gray-700">
+										Show "Any dietary requirements?" field on signup
+									</label>
+								</div>
+							{/if}
 							<div>
 								<MultiSelect
 									label="Email Lists"
@@ -469,6 +485,12 @@
 							<dt class="text-xs font-medium text-gray-500 uppercase">Signup</dt>
 							<dd class="mt-1 text-sm text-gray-900">{event.enableSignup ? 'Yes' : 'No'}</dd>
 						</div>
+						{#if event.enableSignup}
+							<div>
+								<dt class="text-xs font-medium text-gray-500 uppercase">Dietary field</dt>
+								<dd class="mt-1 text-sm text-gray-900">{event.showDietaryRequirements ? 'Yes' : 'No'}</dd>
+							</div>
+						{/if}
 						<div>
 							<dt class="text-xs font-medium text-gray-500 uppercase">Color</dt>
 							<dd class="mt-1 flex items-center gap-1.5">

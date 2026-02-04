@@ -9,13 +9,22 @@
 	$: occurrences = $page.data?.occurrences || [];
 	$: allOccurrences = $page.data?.allOccurrences || [];
 	$: occurrenceId = $page.data?.occurrenceId;
+	$: rotas = $page.data?.rotas || [];
+	$: upcomingOccurrencesForRotas = $page.data?.upcomingOccurrencesForRotas || [];
+	$: rotaViewOccurrenceId = $page.data?.rotaViewOccurrenceId || null;
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
+
+	function getAssigneesForRotaOccurrence(rota, occId) {
+		if (!rota.assigneesByOcc) return [];
+		return rota.assigneesByOcc[occId] || [];
+	}
 
 	let selectedOccurrenceId = occurrenceId || '';
 	let name = '';
 	let email = '';
 	let guestCount = 0;
+	let dietaryRequirements = '';
 
 	// If occurrenceId is set, use it as default
 	$: if (occurrenceId && !selectedOccurrenceId) {
@@ -30,6 +39,7 @@
 				name = '';
 				email = '';
 				guestCount = 0;
+				dietaryRequirements = '';
 				if (!occurrenceId) {
 					selectedOccurrenceId = '';
 				}
@@ -85,6 +95,68 @@
 							</p>
 						{/if}
 					</div>
+
+					<!-- Who's on the rotas: only when linked from email (?occurrenceId=...) -->
+					{#if rotas.length > 0 && rotaViewOccurrenceId}
+						{@const singleDateOccurrence = rotaViewOccurrenceId
+							? (upcomingOccurrencesForRotas.find(occ => occ.id === rotaViewOccurrenceId) || allOccurrences.find(occ => occ.id === rotaViewOccurrenceId))
+							: null}
+						<div id="rotas" class="bg-white shadow rounded-lg p-6 scroll-mt-6">
+							{#if singleDateOccurrence}
+								<h2 class="text-xl font-bold text-gray-900 mb-1">Who's on the rotas</h2>
+								<p class="text-sm text-gray-600 mb-4">
+									{formatDate(singleDateOccurrence.startsAt)} at {formatTime(singleDateOccurrence.startsAt)}
+								</p>
+								<div class="space-y-4">
+									{#each rotas as rota}
+										{@const appliesToThisDate = !rota.occurrenceId || rota.occurrenceId === singleDateOccurrence.id}
+										{#if appliesToThisDate}
+											{@const assignees = getAssigneesForRotaOccurrence(rota, singleDateOccurrence.id)}
+											<div class="border-l-4 border-l-brand-blue border border-gray-200 rounded-r-lg p-4">
+												<h3 class="text-lg font-semibold text-gray-900 mb-1">{rota.role}</h3>
+												{#if assignees.length > 0}
+													<p class="text-sm text-gray-700">{assignees.map(a => a.name).join(', ')}</p>
+												{:else}
+													<p class="text-sm text-gray-400 italic">No one assigned yet</p>
+												{/if}
+											</div>
+										{/if}
+									{/each}
+								</div>
+							{:else}
+								<h2 class="text-xl font-bold text-gray-900 mb-4">Who's on the rotas</h2>
+								<p class="text-sm text-gray-600 mb-4">Everyone serving at upcoming dates for this event.</p>
+								<div class="space-y-6">
+									{#each rotas as rota}
+										{@const rotaOccurrences = rota.occurrenceId
+											? upcomingOccurrencesForRotas.filter(occ => occ.id === rota.occurrenceId)
+											: upcomingOccurrencesForRotas}
+										<div class="border-l-4 border-l-brand-blue border border-gray-200 rounded-r-lg p-4">
+											<h3 class="text-lg font-semibold text-gray-900 mb-3">{rota.role}</h3>
+											{#if rotaOccurrences.length === 0}
+												<p class="text-sm text-gray-500">No upcoming dates.</p>
+											{:else}
+												<ul class="space-y-3">
+													{#each rotaOccurrences as occ}
+														{@const assignees = getAssigneesForRotaOccurrence(rota, occ.id)}
+														<li class="text-sm">
+															<span class="font-medium text-gray-700">{formatDate(occ.startsAt)}</span>
+															<span class="text-gray-500"> at {formatTime(occ.startsAt)}</span>
+															{#if assignees.length > 0}
+																<span class="text-gray-700"> — {assignees.map(a => a.name).join(', ')}</span>
+															{:else}
+																<span class="text-gray-400 italic"> — No one assigned yet</span>
+															{/if}
+														</li>
+													{/each}
+												</ul>
+											{/if}
+										</div>
+									{/each}
+								</div>
+							{/if}
+						</div>
+					{/if}
 				</div>
 
 				<!-- Right Side: Signup Form -->
@@ -204,6 +276,22 @@
 							/>
 							<p class="mt-1 text-sm text-gray-500">Just enter number of guests, no need to include yourself.</p>
 						</div>
+
+						{#if event.showDietaryRequirements}
+							<div class="mb-4">
+								<label for="dietaryRequirements" class="block text-sm font-medium text-gray-700 mb-1">
+									Any dietary requirements?
+								</label>
+								<textarea
+									id="dietaryRequirements"
+									name="dietaryRequirements"
+									bind:value={dietaryRequirements}
+									rows="2"
+									placeholder="e.g. vegetarian, gluten-free, allergies..."
+									class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 py-2 px-3"
+								></textarea>
+							</div>
+						{/if}
 
 						<button
 							type="submit"

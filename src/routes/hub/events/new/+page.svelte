@@ -54,6 +54,7 @@
 		visibility: 'private',
 		enableSignup: false,
 		hideFromEmail: false,
+		showDietaryRequirements: false,
 		color: '#9333ea',
 		repeatType: 'none',
 		repeatInterval: 1,
@@ -167,6 +168,20 @@
 						Hide from email
 					</label>
 				</div>
+				{#if formData.enableSignup}
+					<div class="flex items-center">
+						<input
+							type="checkbox"
+							id="showDietaryRequirements"
+							name="showDietaryRequirements"
+							bind:checked={formData.showDietaryRequirements}
+							class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
+						/>
+						<label for="showDietaryRequirements" class="ml-2 block text-sm text-gray-700">
+							Show "Any dietary requirements?" field on signup
+						</label>
+					</div>
+				{/if}
 				<div>
 					<MultiSelect
 						label="Email Lists"
