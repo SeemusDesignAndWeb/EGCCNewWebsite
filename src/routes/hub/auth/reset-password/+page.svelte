@@ -7,6 +7,8 @@
 	$: email = $page.data?.email;
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
+	$: theme = $page.data?.theme ?? null;
+	$: loginLogoSrc = (theme?.loginLogoPath && theme.loginLogoPath.trim()) || (theme?.logoPath && theme.logoPath.trim()) || '/images/onnuma-logo.png';
 	
 	// Show notifications from form results
 	$: if (formResult?.error) {
@@ -26,9 +28,9 @@
 	<div class="max-w-md w-full space-y-8">
 		<div class="text-center">
 			<img
-				src="/images/egcc-color.png"
+				src={loginLogoSrc}
 				alt="Eltham Green Community Church"
-				class="h-16 w-auto mx-auto mb-4"
+				class="w-auto max-w-full max-h-[130px] object-contain mx-auto mb-4"
 			/>
 			<h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
 				Reset Password

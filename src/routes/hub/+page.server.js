@@ -1,7 +1,9 @@
+import { env } from '$env/dynamic/private';
 import { readCollection } from '$lib/crm/server/fileStore.js';
 import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ locals }) {
+	const emailModuleEnabled = !!env.RESEND_API_KEY;
 	const organisationId = await getCurrentOrganisationId();
 
 	const [contactsRaw, listsRaw, emailsRaw, eventsRaw, rotasRaw, formsRaw, emailStatsRaw] = await Promise.all([
@@ -63,6 +65,7 @@ export async function load({ locals }) {
 
 	return {
 		admin: locals.admin || null,
+		emailModuleEnabled,
 		stats: {
 			contacts: contacts.length,
 			lists: lists.length,

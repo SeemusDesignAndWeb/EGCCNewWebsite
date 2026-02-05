@@ -17,6 +17,7 @@
 	const defaultButtonColors = ['#4A97D2', '#4BB170', '#3B79A8', '#3C8E5A', '#E6A324'];
 	const defaultPanelHeadColors = ['#4A97D2', '#3B79A8', '#2C5B7E'];
 	let themeLogoPath = settings?.theme?.logoPath ?? '';
+	let themeLoginLogoPath = settings?.theme?.loginLogoPath ?? '';
 	let themePrimaryColor = settings?.theme?.primaryColor ?? '#4BB170';
 	let themeBrandColor = settings?.theme?.brandColor ?? '#4A97D2';
 	let themeNavbarBackgroundColor = settings?.theme?.navbarBackgroundColor ?? '#4A97D2';
@@ -50,14 +51,16 @@
 	let showAddRota = false;
 	let newRota = { role: '' };
 
-	// Theme logo image browser
+	// Theme logo image browser ('navbar' | 'login')
+	let logoPickerMode = 'navbar';
 	let showImageBrowser = false;
 	let browseImages = [];
 	let browseImagesLoading = false;
 	let browseImagesUploading = false;
 	let browseImagesUploadError = '';
 	
-	async function openImageBrowser() {
+	async function openImageBrowser(mode = 'navbar') {
+		logoPickerMode = mode;
 		showImageBrowser = true;
 		browseImagesUploadError = '';
 		browseImagesLoading = true;
@@ -78,7 +81,11 @@
 		browseImagesUploadError = '';
 	}
 	function selectImageForLogo(path) {
-		themeLogoPath = path || '';
+		if (logoPickerMode === 'login') {
+			themeLoginLogoPath = path || '';
+		} else {
+			themeLogoPath = path || '';
+		}
 		closeImageBrowser();
 	}
 	async function uploadImageForLogo(event) {
@@ -95,7 +102,12 @@
 				const result = await response.json();
 				if (result.image) {
 					browseImages = [result.image, ...browseImages];
-					themeLogoPath = result.image.path;
+					const path = result.image.path;
+					if (logoPickerMode === 'login') {
+						themeLoginLogoPath = path;
+					} else {
+						themeLogoPath = path;
+					}
 					closeImageBrowser();
 				}
 			} else {
@@ -120,6 +132,7 @@
 		meetingPlannerRotas = JSON.parse(JSON.stringify(settings.meetingPlannerRotas || []));
 		if (settings.theme) {
 			themeLogoPath = settings.theme.logoPath ?? '';
+			themeLoginLogoPath = settings.theme.loginLogoPath ?? '';
 			themePrimaryColor = settings.theme.primaryColor ?? '#4BB170';
 			themeBrandColor = settings.theme.brandColor ?? '#4A97D2';
 			themeNavbarBackgroundColor = settings.theme.navbarBackgroundColor ?? '#4A97D2';
@@ -238,6 +251,7 @@
 					body: JSON.stringify({
 						theme: {
 							logoPath: themeLogoPath.trim(),
+							loginLogoPath: themeLoginLogoPath.trim(),
 							primaryColor: themePrimaryColor,
 							brandColor: themeBrandColor,
 							navbarBackgroundColor: themeNavbarBackgroundColor,
@@ -696,7 +710,7 @@
 			</p>
 			<div class="space-y-4 max-w-xl">
 				<div>
-					<label for="theme-logo-path" class="block text-sm font-medium text-gray-700 mb-1">Logo path or URL</label>
+					<label for="theme-logo-path" class="block text-sm font-medium text-gray-700 mb-1">Navbar logo (path or URL)</label>
 					<div class="flex gap-2">
 						<input
 							id="theme-logo-path"
@@ -707,13 +721,33 @@
 						/>
 						<button
 							type="button"
-							on:click={openImageBrowser}
+							on:click={() => openImageBrowser('navbar')}
 							class="px-3 py-2 text-sm font-medium btn-theme-light-1 rounded-md whitespace-nowrap"
 						>
 							Select from library
 						</button>
 					</div>
-					<p class="mt-1 text-xs text-gray-500">Select from the main images library above, or enter a path/URL (e.g. /images/logo.png). Leave empty for default logo.</p>
+					<p class="mt-1 text-xs text-gray-500">Logo shown in the Hub navbar and on external pages. Leave empty for default.</p>
+				</div>
+				<div>
+					<label for="theme-login-logo-path" class="block text-sm font-medium text-gray-700 mb-1">Login screen logo (path or URL)</label>
+					<div class="flex gap-2">
+						<input
+							id="theme-login-logo-path"
+							type="text"
+							bind:value={themeLoginLogoPath}
+							placeholder="/images/egcc-color.png"
+							class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-theme-button-1 focus:border-theme-button-1"
+						/>
+						<button
+							type="button"
+							on:click={() => openImageBrowser('login')}
+							class="px-3 py-2 text-sm font-medium btn-theme-light-1 rounded-md whitespace-nowrap"
+						>
+							Select from library
+						</button>
+					</div>
+					<p class="mt-1 text-xs text-gray-500">Logo shown on the Hub login screen only. Leave empty to use the navbar logo or default.</p>
 				</div>
 				<div>
 					<label for="theme-primary-color" class="block text-sm font-medium text-gray-700 mb-1">Primary colour (green)</label>
@@ -1296,7 +1330,7 @@
 					on:click|stopPropagation
 				>
 					<div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-						<h3 class="text-lg font-semibold text-gray-900">Select from images library</h3>
+						<h3 class="text-lg font-semibold text-gray-900">{logoPickerMode === 'login' ? 'Select logo for login screen' : 'Select logo for navbar'}</h3>
 						<button
 							type="button"
 							on:click={closeImageBrowser}

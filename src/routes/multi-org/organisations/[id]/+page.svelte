@@ -1,6 +1,7 @@
 <script>
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
+	import { notifications } from '$lib/crm/stores/notifications.js';
 
 	export let data;
 	$: base = data?.multiOrgBasePath ?? '/multi-org';
@@ -28,16 +29,24 @@
 
 <div class="max-w-5xl">
 	<div class="mb-6">
-		<a href="{base}/organisations" class="text-sm font-medium text-cyan-600 hover:text-cyan-700 mb-2 inline-flex items-center gap-1">← Organisations</a>
 		<h1 class="text-2xl font-bold text-slate-800">{organisation?.name ?? 'Organisation'}</h1>
 	</div>
 
-	<form method="POST" action="?/save" use:enhance>
+	<form method="POST" action="?/save" use:enhance={() => {
+		return async ({ result }) => {
+			if (result.type === 'redirect') {
+				notifications.success('Organisation saved.');
+			}
+			if (result.type === 'failure' && result.data?.errors) {
+				notifications.error('Please fix the errors and try again.');
+			}
+		};
+	}}>
 		<!-- Buttons at top -->
 		<div class="mb-6 flex gap-3">
 			<button
 				type="submit"
-				class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 transition-all"
+				class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-white bg-[#EB9486] hover:bg-[#e08070] transition-all"
 			>
 				Save changes
 			</button>
@@ -62,7 +71,7 @@
 					type="text"
 					required
 					value={values.name ?? ''}
-					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none sm:text-sm"
+					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-[#EB9486] focus:ring-2 focus:ring-[#EB9486]/30 focus:outline-none sm:text-sm"
 				/>
 				{#if errors.name}
 					<p class="mt-1.5 text-sm text-red-600">{errors.name}</p>
@@ -74,7 +83,7 @@
 					id="address"
 					name="address"
 					rows="2"
-					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none sm:text-sm"
+					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-[#EB9486] focus:ring-2 focus:ring-[#EB9486]/30 focus:outline-none sm:text-sm"
 				>{values.address ?? ''}</textarea>
 			</div>
 			<div>
@@ -84,7 +93,7 @@
 					name="telephone"
 					type="tel"
 					value={values.telephone ?? ''}
-					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none sm:text-sm"
+					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-[#EB9486] focus:ring-2 focus:ring-[#EB9486]/30 focus:outline-none sm:text-sm"
 				/>
 			</div>
 			<div>
@@ -94,7 +103,7 @@
 					name="email"
 					type="email"
 					value={values.email ?? ''}
-					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none sm:text-sm"
+					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-[#EB9486] focus:ring-2 focus:ring-[#EB9486]/30 focus:outline-none sm:text-sm"
 				/>
 				{#if errors.email}
 					<p class="mt-1.5 text-sm text-red-600">{errors.email}</p>
@@ -107,7 +116,7 @@
 					name="contactName"
 					type="text"
 					value={values.contactName ?? ''}
-					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none sm:text-sm"
+					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-[#EB9486] focus:ring-2 focus:ring-[#EB9486]/30 focus:outline-none sm:text-sm"
 				/>
 			</div>
 		</div>
@@ -123,7 +132,7 @@
 					type="text"
 					placeholder="hub.yourchurch.org"
 					value={values.hubDomain ?? ''}
-					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none sm:text-sm"
+					class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-[#EB9486] focus:ring-2 focus:ring-[#EB9486]/30 focus:outline-none sm:text-sm"
 				/>
 				<p class="mt-1 text-xs text-slate-500">Optional. e.g. hub.egcc.co.uk — point this host at your app (e.g. on Railway) so this org has its own Hub login URL. Must be unique.</p>
 				{#if errors.hubDomain}
@@ -134,7 +143,7 @@
 				<div>
 					<a
 						href="{base}/organisations/{organisation?.id}/super-admin"
-						class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 transition-all"
+						class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-white bg-[#EB9486] hover:bg-[#e08070] transition-all"
 					>
 						Set Hub super admin
 					</a>
@@ -154,7 +163,7 @@
 							name="areaPermissions"
 							value={area.value}
 							checked={values.areaPermissions && values.areaPermissions.includes(area.value)}
-							class="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+							class="rounded border-slate-300 text-[#EB9486] focus:ring-[#EB9486]"
 						/>
 						<span class="text-sm text-slate-700">{area.label}</span>
 					</label>

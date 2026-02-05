@@ -90,7 +90,7 @@
 					<div class="flex items-center gap-4">
 						<a href="/hub" class="flex items-center gap-2">
 							<img
-								src={theme?.logoPath?.trim() || '/images/egcc-logo.png'}
+								src={theme?.logoPath?.trim() || '/images/OnNuma-Icon.png'}
 								alt="EGCC"
 								class="h-8 w-auto"
 							/>

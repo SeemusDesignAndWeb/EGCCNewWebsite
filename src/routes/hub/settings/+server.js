@@ -86,6 +86,9 @@ export async function POST({ request, cookies }) {
 		if (themeUpdate.logoPath !== undefined) {
 			settings.theme.logoPath = typeof themeUpdate.logoPath === 'string' ? themeUpdate.logoPath : '';
 		}
+		if (themeUpdate.loginLogoPath !== undefined) {
+			settings.theme.loginLogoPath = typeof themeUpdate.loginLogoPath === 'string' ? themeUpdate.loginLogoPath : '';
+		}
 		if (themeUpdate.primaryColor !== undefined) {
 			const v = themeUpdate.primaryColor;
 			if (typeof v !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(v)) {

@@ -55,6 +55,8 @@
 	}
 
 	$: orgFromDomain = $page.data?.hubOrganisationFromDomain;
+	$: theme = $page.data?.theme ?? null;
+	$: loginLogoSrc = (theme?.loginLogoPath && theme.loginLogoPath.trim()) || (theme?.logoPath && theme.logoPath.trim()) || '/images/onnuma-logo.png';
 
 	onMount(() => {
 		document.addEventListener('keydown', handleEscapeKey);
@@ -68,9 +70,9 @@
 	<div class="max-w-md w-full space-y-6 sm:space-y-8">
 		<div class="text-center">
 			<img
-				src="/images/egcc-color.png"
+				src={loginLogoSrc}
 				alt={orgFromDomain?.name ?? 'Eltham Green Community Church'}
-				class="h-16 w-auto max-w-full object-contain mx-auto mb-4"
+				class="w-auto max-w-full max-h-[130px] object-contain mx-auto mb-4"
 			/>
 			<h2 class="mt-6 text-center text-2xl sm:text-3xl font-extrabold text-gray-900">
 				Sign in to The HUB

@@ -144,8 +144,8 @@
 	<slot />
 </div>
 
-<!-- Global Notification Popups -->
-<NotificationPopup />
+<!-- Global Notification Popups (MultiOrg uses OnNuma theme colours) -->
+<NotificationPopup useMultiOrgTheme={isMultiOrgArea} />
 
 <!-- Global Dialog/Confirm -->
 <ConfirmDialog />

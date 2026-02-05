@@ -47,6 +47,7 @@ function getDefaultMeetingPlannerRotas() {
 function getDefaultTheme() {
 	return {
 		logoPath: '',
+		loginLogoPath: '',
 		primaryColor: '#4BB170',
 		brandColor: '#4A97D2',
 		navbarBackgroundColor: '#4A97D2',
@@ -89,6 +90,7 @@ function mergeWithDefaults(record) {
 	const publicBranding = t.publicPagesBranding === 'hub' ? 'hub' : 'egcc';
 	const theme = {
 		logoPath: typeof t.logoPath === 'string' ? t.logoPath : dt.logoPath,
+		loginLogoPath: typeof t.loginLogoPath === 'string' ? t.loginLogoPath : dt.loginLogoPath,
 		primaryColor: ensureHex(t.primaryColor, dt.primaryColor),
 		brandColor: ensureHex(t.brandColor, dt.brandColor),
 		navbarBackgroundColor: ensureHex(t.navbarBackgroundColor, dt.navbarBackgroundColor),
