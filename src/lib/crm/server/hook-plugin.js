@@ -73,6 +73,13 @@ export async function crmHandle({ event, resolve }) {
 		return resolve(event);
 	}
 
+	// When host is an organisation's hub domain (e.g. egcc.onnuma.com), send root/main-site paths straight to hub login.
+	const host = url.host || request.headers.get('host') || '';
+	const orgFromHost = await resolveOrganisationFromHost(host);
+	if (orgFromHost && !pathname.startsWith('/hub') && !pathname.startsWith('/signup/')) {
+		throw redirect(302, '/hub/auth/login');
+	}
+
 	// Only handle /hub and public signup routes
 	if (!pathname.startsWith('/hub') && !pathname.startsWith('/signup/')) {
 		return resolve(event);
@@ -80,8 +87,7 @@ export async function crmHandle({ event, resolve }) {
 
 	// Resolve organisation from request host when using custom hub domain (e.g. hub.egcc.co.uk).
 	// When set, org is fixed for this request; getCurrentOrganisationId() will use it.
-	const host = url.host || request.headers.get('host') || '';
-	const orgFromHost = await resolveOrganisationFromHost(host);
+	// (host and orgFromHost already resolved above for hub-domain redirect.)
 	if (orgFromHost) {
 		event.locals.hubOrganisationFromHost = orgFromHost.id;
 		event.locals.hubOrganisationFromDomain = { id: orgFromHost.id, name: orgFromHost.name };
