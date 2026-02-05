@@ -272,6 +272,7 @@
 				{:else}
 					<ul class="space-y-3">
 						{#each latestNewsletters as newsletter}
+							{#if newsletter}
 							<li class="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
 								<a 
 									href="/hub/emails/{newsletter.id}" 
@@ -290,6 +291,7 @@
 									</div>
 								</a>
 							</li>
+							{/if}
 						{/each}
 					</ul>
 				{/if}
@@ -315,6 +317,7 @@
 			{:else}
 				<ul class="space-y-3">
 					{#each latestRotas as rota}
+						{#if rota}
 						<li class="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
 							<a 
 								href="/hub/rotas/{rota.id}" 
@@ -333,6 +336,7 @@
 								</div>
 							</a>
 						</li>
+						{/if}
 					{/each}
 				</ul>
 			{/if}
@@ -358,6 +362,7 @@
 			{:else}
 				<ul class="space-y-3">
 					{#each latestEvents as event}
+						{#if event}
 						<li class="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
 							<a 
 								href="/hub/events/{event.id}" 
@@ -378,6 +383,7 @@
 								</div>
 							</a>
 						</li>
+						{/if}
 					{/each}
 				</ul>
 			{/if}

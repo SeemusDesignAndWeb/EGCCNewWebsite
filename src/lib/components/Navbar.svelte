@@ -21,9 +21,9 @@
 		'media': '/media'
 	};
 
-	// Get navigation label for a page
+	// Get navigation label for a page (guard against undefined page from API)
 	function getNavigationLabel(page) {
-		return page.navigationLabel || page.title || 'Page';
+		return page?.navigationLabel || page?.title || 'Page';
 	}
 
 	// Get route for a page

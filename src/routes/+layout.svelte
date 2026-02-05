@@ -108,7 +108,7 @@
 
 		// Check if banner should be shown
 		// Only show if there's a highlighted event and latest message popup is not enabled
-		if (data.highlightedEvent && !data.settings?.showLatestMessagePopup) {
+		if (data?.highlightedEvent && !data.settings?.showLatestMessagePopup) {
 			setTimeout(() => {
 				showHighlightBanner = true;
 			}, 300);

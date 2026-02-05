@@ -8,8 +8,9 @@ export async function load({ locals }) {
 	if (!multiOrgAdmin) {
 		return { organisations: [], multiOrgAdmin: null, currentHubOrganisationId: null };
 	}
-	const organisations = await readCollection('organisations');
-	organisations.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+	const raw = await readCollection('organisations');
+	const organisations = (Array.isArray(raw) ? raw : []).filter(Boolean);
+	organisations.sort((a, b) => ((a && a.name) || '').localeCompare((b && b.name) || ''));
 	const currentHubOrganisationId = await getCurrentOrganisationId();
 	return {
 		organisations,

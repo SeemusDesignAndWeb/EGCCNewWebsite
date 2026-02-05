@@ -62,31 +62,31 @@
 				</div>
 				<div class="flex-1 min-w-0">
 					<h3 id="dialog-title" class="text-lg font-semibold text-gray-900 mb-2">
-						{dialogData.title}
+						{dialogData?.title ?? 'Dialog'}
 					</h3>
 					<p class="text-sm text-gray-600 mb-4 whitespace-pre-line">
-						{dialogData.message}
+						{dialogData?.message ?? ''}
 					</p>
 					<div class="flex gap-2 justify-end">
-						{#if dialogData.type === 'confirm'}
+						{#if dialogData?.type === 'confirm'}
 							<button
 								on:click={handleCancel}
 								class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors font-medium"
 							>
-								{dialogData.cancelText}
+								{dialogData?.cancelText ?? 'Cancel'}
 							</button>
 							<button
 								on:click={handleConfirm}
 								class="px-4 py-2 bg-brand-green text-white rounded-md hover:bg-primary-dark transition-colors font-medium"
 							>
-								{dialogData.confirmText}
+								{dialogData?.confirmText ?? 'OK'}
 							</button>
 						{:else}
 							<button
 								on:click={handleClose}
 								class="px-4 py-2 bg-brand-green text-white rounded-md hover:bg-primary-dark transition-colors font-medium"
 							>
-								{dialogData.buttonText}
+								{dialogData?.buttonText ?? 'OK'}
 							</button>
 						{/if}
 					</div>

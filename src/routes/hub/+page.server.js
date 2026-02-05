@@ -24,8 +24,13 @@ export async function load({ locals }) {
 	const forms = organisationId ? filterByOrganisation(formsRaw, organisationId) : formsRaw;
 	const emailStats = organisationId ? filterByOrganisation(emailStatsRaw, organisationId) : emailStatsRaw;
 
+	// Filter out any null/undefined entries from collections (e.g. malformed data on Railway)
+	const validEmails = emails.filter(Boolean);
+	const validRotas = rotas.filter(Boolean);
+	const validEvents = events.filter(Boolean);
+
 	// Get latest 3 emails (sorted by updatedAt or createdAt, most recent first)
-	const latestNewsletters = [...emails]
+	const latestNewsletters = [...validEmails]
 		.sort((a, b) => {
 			const dateA = new Date(a.updatedAt || a.createdAt || 0);
 			const dateB = new Date(b.updatedAt || b.createdAt || 0);
@@ -34,7 +39,7 @@ export async function load({ locals }) {
 		.slice(0, 3);
 
 	// Get latest 5 rotas (sorted by updatedAt or createdAt, most recent first)
-	const latestRotas = [...rotas]
+	const latestRotas = [...validRotas]
 		.sort((a, b) => {
 			const dateA = new Date(a.updatedAt || a.createdAt || 0);
 			const dateB = new Date(b.updatedAt || b.createdAt || 0);
@@ -43,7 +48,7 @@ export async function load({ locals }) {
 		.slice(0, 5);
 
 	// Get latest 5 events (sorted by updatedAt or createdAt, most recent first)
-	const latestEvents = [...events]
+	const latestEvents = [...validEvents]
 		.sort((a, b) => {
 			const dateA = new Date(a.updatedAt || a.createdAt || 0);
 			const dateB = new Date(b.updatedAt || b.createdAt || 0);
@@ -52,7 +57,7 @@ export async function load({ locals }) {
 		.slice(0, 5);
 
 	// Enrich rotas with event titles
-	const eventsMap = new Map(events.map(e => [e.id, e]));
+	const eventsMap = new Map(validEvents.map(e => [e.id, e]));
 	const enrichedRotas = latestRotas.map(rota => ({
 		...rota,
 		eventTitle: eventsMap.get(rota.eventId)?.title || 'Unknown Event'

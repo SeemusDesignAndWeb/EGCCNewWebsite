@@ -64,7 +64,7 @@
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-slate-100">
-				{#each organisations as org}
+				{#each organisations.filter(Boolean) as org (org?.id ?? org?.name)}
 					<tr class="hover:bg-slate-50/50 transition-colors">
 						<td class="px-5 py-4 text-sm font-medium text-slate-900">
 							<span class="inline-flex items-center gap-2">
