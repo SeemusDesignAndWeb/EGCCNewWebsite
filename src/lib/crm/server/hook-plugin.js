@@ -7,7 +7,7 @@ import {
 	setMultiOrgCsrfToken,
 	getMultiOrgCsrfToken
 } from './multiOrgAuth.js';
-import { resolveOrganisationFromHost } from './hubDomain.js';
+import { resolveOrganisationFromHost, getMultiOrgPublicPath } from './hubDomain.js';
 import { runWithOrganisation } from './requestOrg.js';
 
 /**
@@ -44,7 +44,8 @@ export async function crmHandle({ event, resolve }) {
 		}
 		const multiOrgAdmin = await getMultiOrgAdminFromCookies(cookies);
 		if (!multiOrgAdmin) {
-			throw redirect(302, '/multi-org/auth/login');
+			const loginPath = getMultiOrgPublicPath('/multi-org/auth/login', !!event.locals.multiOrgAdminDomain);
+			throw redirect(302, loginPath);
 		}
 		event.locals.multiOrgAdmin = multiOrgAdmin;
 		if (request.method === 'GET') {

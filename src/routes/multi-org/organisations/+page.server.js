@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { readCollection } from '$lib/crm/server/fileStore.js';
 import { setCurrentOrganisationId, getCurrentOrganisationId } from '$lib/crm/server/settings.js';
+import { getMultiOrgPublicPath } from '$lib/crm/server/hubDomain.js';
 
 export async function load({ locals }) {
 	const multiOrgAdmin = locals.multiOrgAdmin;
@@ -28,6 +29,6 @@ export const actions = {
 			return { error: 'Organisation ID required' };
 		}
 		await setCurrentOrganisationId(organisationId);
-		throw redirect(302, '/multi-org/organisations?hub_set=1');
+		throw redirect(302, getMultiOrgPublicPath('/multi-org/organisations?hub_set=1', !!locals.multiOrgAdminDomain));
 	}
 };

@@ -3,6 +3,7 @@
 
 	export let data;
 	$: multiOrgAdmin = data?.multiOrgAdmin || null;
+	$: base = data?.multiOrgBasePath ?? '/multi-org';
 	$: pathname = $page.url.pathname;
 	$: isOrganisations = pathname.startsWith('/multi-org/organisations');
 </script>
@@ -27,7 +28,7 @@
 					<div class="flex items-center gap-2 text-sm text-cyan-100">
 						<span class="hidden sm:inline">{multiOrgAdmin.name || multiOrgAdmin.email}</span>
 						<a
-							href="/multi-org/auth/logout"
+							href="{base}/auth/logout"
 							class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 font-medium transition-colors"
 						>
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
@@ -42,7 +43,7 @@
 			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div class="flex gap-1 h-12">
 					<a
-						href="/multi-org/organisations"
+						href="{base}/organisations"
 						class="inline-flex items-center px-4 text-sm font-medium rounded-lg transition-colors {isOrganisations ? 'bg-cyan-50 text-cyan-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}"
 					>
 						<svg class="w-4 h-4 mr-2 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>

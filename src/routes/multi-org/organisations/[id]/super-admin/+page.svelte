@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 
 	export let data;
+	$: base = data?.multiOrgBasePath ?? '/multi-org';
 	$: organisation = data?.organisation;
 	$: currentEmail = data?.currentHubSuperAdminEmail;
 	$: currentName = data?.currentHubSuperAdminName;
@@ -15,7 +16,7 @@
 </svelte:head>
 
 <div class="max-w-xl">
-	<a href="/multi-org/organisations/{organisation?.id}" class="text-sm font-medium text-cyan-600 hover:text-cyan-700 mb-4 inline-flex items-center gap-1">← Back to organisation</a>
+	<a href="{base}/organisations/{organisation?.id}" class="text-sm font-medium text-cyan-600 hover:text-cyan-700 mb-4 inline-flex items-center gap-1">← Back to organisation</a>
 	<h1 class="text-2xl font-bold text-slate-800 mb-2">Hub super admin</h1>
 	<p class="text-slate-500 mb-8">
 		Set the super admin for the Hub organisation. This user will have full access to the Hub (all areas and user management).
@@ -80,7 +81,7 @@
 				Set Hub super admin
 			</button>
 			<a
-				href="/multi-org/organisations/{organisation?.id}"
+				href="{base}/organisations/{organisation?.id}"
 				class="inline-flex items-center px-5 py-2.5 rounded-xl font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors"
 			>
 				Back

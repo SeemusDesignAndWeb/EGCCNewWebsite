@@ -3,6 +3,7 @@
 	import { getOrganisationHubAreas } from '$lib/crm/server/permissions.js';
 
 	export let data;
+	$: base = data?.multiOrgBasePath ?? '/multi-org';
 	$: organisations = data?.organisations || [];
 	$: multiOrgAdmin = data?.multiOrgAdmin || null;
 	$: currentHubOrganisationId = data?.currentHubOrganisationId ?? null;
@@ -31,7 +32,7 @@
 		<p class="mt-1 text-sm text-slate-500">Create and manage organisations and their Hub access.</p>
 	</div>
 	<a
-		href="/multi-org/organisations/new"
+		href="{base}/organisations/new"
 		class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 transition-all"
 	>
 		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
@@ -46,7 +47,7 @@
 		</div>
 		<p class="text-slate-600 font-medium">No organisations yet</p>
 		<p class="mt-1 text-sm text-slate-500">Create your first organisation to get started.</p>
-		<a href="/multi-org/organisations/new" class="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-cyan-600 bg-cyan-50 hover:bg-cyan-100 transition-colors">
+		<a href="{base}/organisations/new" class="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-cyan-600 bg-cyan-50 hover:bg-cyan-100 transition-colors">
 			Create organisation
 		</a>
 	</div>
@@ -72,7 +73,7 @@
 										<path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
 									</svg>
 								{/if}
-								<a href="/multi-org/organisations/{org.id}" class="text-cyan-600 hover:text-cyan-700 hover:underline">{org.name || '—'}</a>
+								<a href="{base}/organisations/{org.id}" class="text-cyan-600 hover:text-cyan-700 hover:underline">{org.name || '—'}</a>
 							</span>
 						</td>
 						<td class="px-5 py-4 text-sm text-slate-600">{org.contactName || '—'}</td>
@@ -83,7 +84,7 @@
 								<input type="hidden" name="organisationId" value={org.id} />
 								<button type="submit" class="font-medium text-cyan-600 hover:text-cyan-700">Set as Hub</button>
 							</form>
-							<a href="/multi-org/organisations/{org.id}" class="font-medium text-cyan-600 hover:text-cyan-700">Edit</a>
+							<a href="{base}/organisations/{org.id}" class="font-medium text-cyan-600 hover:text-cyan-700">Edit</a>
 						</td>
 					</tr>
 				{/each}

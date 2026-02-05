@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 
 	export let data;
+	$: base = data?.multiOrgBasePath ?? '/multi-org';
 	$: form = $page.form;
 	$: organisation = data?.organisation;
 	$: hubAreas = data?.hubAreas || [];
@@ -27,7 +28,7 @@
 
 <div class="max-w-5xl">
 	<div class="mb-6">
-		<a href="/multi-org/organisations" class="text-sm font-medium text-cyan-600 hover:text-cyan-700 mb-2 inline-flex items-center gap-1">← Organisations</a>
+		<a href="{base}/organisations" class="text-sm font-medium text-cyan-600 hover:text-cyan-700 mb-2 inline-flex items-center gap-1">← Organisations</a>
 		<h1 class="text-2xl font-bold text-slate-800">{organisation?.name ?? 'Organisation'}</h1>
 	</div>
 
@@ -41,7 +42,7 @@
 				Save changes
 			</button>
 			<a
-				href="/multi-org/organisations"
+				href="{base}/organisations"
 				class="inline-flex items-center px-5 py-2.5 rounded-xl font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors"
 			>
 				Back
@@ -132,7 +133,7 @@
 			{#if canSetSuperAdmin}
 				<div>
 					<a
-						href="/multi-org/organisations/{organisation?.id}/super-admin"
+						href="{base}/organisations/{organisation?.id}/super-admin"
 						class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-white bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 transition-all"
 					>
 						Set Hub super admin

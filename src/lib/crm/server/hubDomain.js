@@ -68,3 +68,31 @@ export function invalidateHubDomainCache() {
 	orgsCache = null;
 	orgsCacheTime = 0;
 }
+
+// --- Multi-org admin subdomain (e.g. admin.onnuma.com → /multi-org at root) ---
+
+const MULTI_ORG_ADMIN_DOMAIN = process.env.MULTI_ORG_ADMIN_DOMAIN || '';
+
+/**
+ * Whether the request host is the dedicated Multi-org admin domain (e.g. admin.onnuma.com).
+ * When true, multi-org is served at / so that admin.onnuma.com/ = dashboard, admin.onnuma.com/auth/login = login.
+ */
+export function isMultiOrgAdminDomain(host) {
+	if (!MULTI_ORG_ADMIN_DOMAIN) return false;
+	return normaliseHost(host) === normaliseHost(MULTI_ORG_ADMIN_DOMAIN);
+}
+
+/**
+ * Path for redirects and links: when on the admin subdomain, use /auth/login not /multi-org/auth/login.
+ * @param {string} internalPath - Internal path (e.g. '/multi-org/auth/login' or '/multi-org/organisations')
+ * @param {boolean} isAdminDomain - From event.locals.multiOrgAdminDomain
+ * @returns {string} Path to use in Location header or href
+ */
+export function getMultiOrgPublicPath(internalPath, isAdminDomain) {
+	if (!internalPath) return isAdminDomain ? '/' : '/multi-org';
+	if (isAdminDomain) {
+		const p = (internalPath.replace(/^\/multi-org\/?/, '') || '').trim();
+		return p.startsWith('/') ? p : '/' + p || '/';
+	}
+	return internalPath.startsWith('/multi-org') ? internalPath : '/multi-org' + (internalPath.startsWith('/') ? internalPath : '/' + internalPath);
+}

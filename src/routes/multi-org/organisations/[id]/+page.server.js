@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { findById, update, readCollection } from '$lib/crm/server/fileStore.js';
 import { getOrganisationHubAreas } from '$lib/crm/server/permissions.js';
-import { isValidHubDomain, normaliseHost, invalidateHubDomainCache } from '$lib/crm/server/hubDomain.js';
+import { isValidHubDomain, normaliseHost, invalidateHubDomainCache, getMultiOrgPublicPath } from '$lib/crm/server/hubDomain.js';
 
 const VALID_AREAS = new Set(getOrganisationHubAreas().map((a) => a.value));
 
@@ -39,12 +39,13 @@ async function isHubDomainTaken(normalisedDomain, excludeOrgId) {
 
 export async function load({ params, locals }) {
 	const multiOrgAdmin = locals.multiOrgAdmin;
+	const base = (path) => getMultiOrgPublicPath(path, !!locals.multiOrgAdminDomain);
 	if (!multiOrgAdmin) {
-		throw redirect(302, '/multi-org/auth/login');
+		throw redirect(302, base('/multi-org/auth/login'));
 	}
 	const org = await findById('organisations', params.id);
 	if (!org) {
-		throw redirect(302, '/multi-org/organisations');
+		throw redirect(302, base('/multi-org/organisations'));
 	}
 	return {
 		organisation: org,
@@ -99,6 +100,6 @@ export const actions = {
 		});
 		invalidateHubDomainCache();
 
-		throw redirect(302, '/multi-org/organisations/' + params.id);
+		throw redirect(302, getMultiOrgPublicPath('/multi-org/organisations/' + params.id, !!locals.multiOrgAdminDomain));
 	}
 };

@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { getMultiOrgPublicPath } from '$lib/crm/server/hubDomain.js';
 import {
 	authenticateMultiOrgAdmin,
 	createMultiOrgSession,
@@ -13,7 +14,7 @@ export async function load({ cookies }) {
 }
 
 export const actions = {
-	login: async ({ request, cookies }) => {
+	login: async ({ request, cookies, locals }) => {
 		const data = await request.formData();
 		const email = data.get('email');
 		const password = data.get('password');
@@ -35,6 +36,6 @@ export const actions = {
 		const session = await createMultiOrgSession(admin.id);
 		setMultiOrgSessionCookie(cookies, session.id, process.env.NODE_ENV === 'production');
 
-		throw redirect(302, '/multi-org/organisations');
+		throw redirect(302, getMultiOrgPublicPath('/multi-org/organisations', !!locals.multiOrgAdminDomain));
 	}
 };

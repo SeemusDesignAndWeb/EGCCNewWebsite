@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { create, readCollection } from '$lib/crm/server/fileStore.js';
-import { invalidateHubDomainCache } from '$lib/crm/server/hubDomain.js';
+import { invalidateHubDomainCache, getMultiOrgPublicPath } from '$lib/crm/server/hubDomain.js';
 import { getOrganisationHubAreas } from '$lib/crm/server/permissions.js';
 import { isValidHubDomain, normaliseHost } from '$lib/crm/server/hubDomain.js';
 
@@ -40,7 +40,7 @@ async function isHubDomainTaken(normalisedDomain, excludeOrgId) {
 
 export async function load({ locals }) {
 	if (!locals.multiOrgAdmin) {
-		throw redirect(302, '/multi-org/auth/login');
+		throw redirect(302, getMultiOrgPublicPath('/multi-org/auth/login', !!locals.multiOrgAdminDomain));
 	}
 	return {
 		multiOrgAdmin: locals.multiOrgAdmin,
@@ -88,6 +88,6 @@ export const actions = {
 		});
 
 		invalidateHubDomainCache();
-		throw redirect(302, '/multi-org/organisations/' + org.id);
+		throw redirect(302, getMultiOrgPublicPath('/multi-org/organisations/' + org.id, !!locals.multiOrgAdminDomain));
 	}
 };

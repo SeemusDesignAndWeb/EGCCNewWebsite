@@ -2,6 +2,28 @@
 
 Each organisation can have its own Hub URL (e.g. `https://hub.egcc.co.uk`). Users visit that URL to log in and use the Hub; the app resolves the organisation from the request host and scopes all data to that org.
 
+## Multi-org admin subdomain (e.g. admin.onnuma.com)
+
+You can serve the **Multi-org** area (organisation management) on its own subdomain so that `admin.yourdomain.com` shows the Multi-org dashboard at the root, without `/multi-org` in the URL.
+
+1. **Set the domain in env**  
+   Add to `.env` (and your host’s env, e.g. Railway):
+   ```bash
+   MULTI_ORG_ADMIN_DOMAIN=admin.onnuma.com
+   ```
+   Use the hostname only (no `https://` or port). For local testing you can use e.g. `admin.onnuma.local` and add it to `/etc/hosts`.
+
+2. **DNS**  
+   Point the subdomain (e.g. `admin.onnuma.com`) at your app. For Railway, add it as a custom domain in the project; the app will receive requests with `Host: admin.onnuma.com`.
+
+3. **Behaviour**  
+   When a request’s host matches `MULTI_ORG_ADMIN_DOMAIN`:
+   - `admin.onnuma.com/` → Multi-org dashboard (same as `/multi-org`)
+   - `admin.onnuma.com/auth/login` → Multi-org login
+   - `admin.onnuma.com/organisations` → Organisations list  
+   All links and redirects stay on the admin subdomain (e.g. `/auth/logout`, `/organisations/new`).  
+   The main site (e.g. `onnuma.com`) stays unchanged and can host the front-facing website.
+
 ## Where to set the Hub domain in MultiOrg
 
 1. Log in to **MultiOrg** at `/multi-org` (e.g. `http://localhost:5173/multi-org`).
@@ -89,7 +111,8 @@ To test custom hub domains on your Mac without DNS or Railway:
 
 ## Files
 
-- `src/lib/crm/server/hubDomain.js` – host normalisation, `hubDomain` validation, resolve org from host.
+- `src/lib/crm/server/hubDomain.js` – host normalisation, `hubDomain` validation, resolve org from host; `MULTI_ORG_ADMIN_DOMAIN` check and `getMultiOrgPublicPath()` for admin subdomain.
 - `src/lib/crm/server/requestOrg.js` – request-scoped org (AsyncLocalStorage) so `getCurrentOrganisationId()` uses the domain’s org.
-- `src/lib/crm/server/hook-plugin.js` – for `/hub` and `/signup`, resolves org from host and runs the request in that org context.
+- `src/hooks.server.js` – `multiOrgAdminDomainHandle`: when host is `MULTI_ORG_ADMIN_DOMAIN`, rewrites `/` and `/auth/*`, `/organisations/*` to `/multi-org/*`.
+- `src/lib/crm/server/hook-plugin.js` – for `/hub` and `/signup`, resolves org from host; for `/multi-org`, uses public path for redirects when on admin subdomain.
 - Organisation `hubDomain` is stored in `data/organisations.ndjson` and edited in MultiOrg (organisation create/edit).

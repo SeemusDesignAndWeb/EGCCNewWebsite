@@ -1,5 +1,8 @@
 <script>
 	import { page } from '$app/stores';
+
+	export let data;
+	$: base = data?.multiOrgBasePath ?? '/multi-org';
 </script>
 
 <svelte:head>
@@ -30,7 +33,7 @@
 				If you don’t have terminal access, ask another MultiOrg super admin to run this for you or to create a new admin for you.
 			</p>
 			<a
-				href="/multi-org/auth/login"
+				href="{base}/auth/login"
 				class="mt-6 block w-full text-center py-3 px-4 rounded-xl font-semibold text-cyan-600 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition-colors"
 			>
 				← Back to sign in

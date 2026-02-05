@@ -2,6 +2,8 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 
+	export let data;
+	$: base = data?.multiOrgBasePath ?? '/multi-org';
 	let error = '';
 	$: if ($page.form?.error) {
 		error = $page.form.error;
@@ -60,7 +62,7 @@
 					</div>
 				{/if}
 				<div class="mt-3 text-center">
-					<a href="/multi-org/auth/forgot-password" class="text-sm font-medium text-cyan-600 hover:text-cyan-700">
+					<a href="{base}/auth/forgot-password" class="text-sm font-medium text-cyan-600 hover:text-cyan-700">
 						Forgot password?
 					</a>
 				</div>

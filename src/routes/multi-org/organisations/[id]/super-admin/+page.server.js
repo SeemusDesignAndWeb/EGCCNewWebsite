@@ -3,6 +3,7 @@ import { findById } from '$lib/crm/server/fileStore.js';
 import { getAdminByEmail, createAdmin, updateAdminPassword } from '$lib/crm/server/auth.js';
 import { update } from '$lib/crm/server/fileStore.js';
 import { setHubSuperAdminEmail, getHubSuperAdminEmail } from '$lib/crm/server/settings.js';
+import { getMultiOrgPublicPath } from '$lib/crm/server/hubDomain.js';
 
 /** All Hub area permissions for super admin (same as permissions.js HUB_AREAS minus SUPER_ADMIN) */
 const FULL_PERMISSIONS = [
@@ -20,12 +21,13 @@ const FULL_PERMISSIONS = [
 
 export async function load({ params, locals }) {
 	const multiOrgAdmin = locals.multiOrgAdmin;
+	const base = (path) => getMultiOrgPublicPath(path, !!locals.multiOrgAdminDomain);
 	if (!multiOrgAdmin || multiOrgAdmin.role !== 'super_admin') {
-		throw redirect(302, '/multi-org/organisations');
+		throw redirect(302, base('/multi-org/organisations'));
 	}
 	const org = await findById('organisations', params.id);
 	if (!org) {
-		throw redirect(302, '/multi-org/organisations/' + params.id);
+		throw redirect(302, base('/multi-org/organisations/' + params.id));
 	}
 	// This organisation's Hub super admin (per-org)
 	const currentHubSuperAdminEmail = org.hubSuperAdminEmail || (await getHubSuperAdminEmail());
@@ -104,6 +106,6 @@ export const actions = {
 			updatedAt: new Date().toISOString()
 		});
 
-		throw redirect(302, '/multi-org/organisations/' + params.id + '?super_admin=set');
+		throw redirect(302, getMultiOrgPublicPath('/multi-org/organisations/' + params.id + '?super_admin=set', !!locals.multiOrgAdminDomain));
 	}
 };
