@@ -31,10 +31,21 @@ export async function crmHandle({ event, resolve }) {
 		'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; frame-src 'self' https://www.google.com https://maps.google.com https://www.loom.com;"
 	});
 
-	// MultiOrg area: separate login and session
-	if (pathname.startsWith('/multi-org')) {
-		if (pathname.startsWith('/multi-org/auth/login') || pathname === '/multi-org/auth/logout' || pathname === '/multi-org/auth/forgot-password') {
-			if (request.method === 'GET' && pathname.startsWith('/multi-org/auth/login')) {
+	// MultiOrg area: separate login and session.
+	// On admin subdomain the path is /auth/* or /organisations (reroute only changes matched route, not event.url).
+	const isMultiOrgPath =
+		pathname.startsWith('/multi-org') ||
+		(!!event.locals.multiOrgAdminDomain &&
+			(pathname === '/' || pathname.startsWith('/auth') || pathname.startsWith('/organisations')));
+	const isMultiOrgPublicAuth =
+		pathname.startsWith('/multi-org/auth/login') ||
+		pathname.startsWith('/multi-org/auth/logout') ||
+		pathname.startsWith('/multi-org/auth/forgot-password') ||
+		(!!event.locals.multiOrgAdminDomain &&
+			(pathname.startsWith('/auth/login') || pathname === '/auth/logout' || pathname.startsWith('/auth/forgot-password')));
+	if (isMultiOrgPath) {
+		if (isMultiOrgPublicAuth) {
+			if (request.method === 'GET' && (pathname.startsWith('/multi-org/auth/login') || pathname.startsWith('/auth/login'))) {
 				if (!getMultiOrgCsrfToken(cookies)) {
 					const token = generateMultiOrgCsrfToken();
 					setMultiOrgCsrfToken(cookies, token, isProduction);

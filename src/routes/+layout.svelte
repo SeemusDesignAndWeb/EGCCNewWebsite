@@ -21,7 +21,9 @@
 	$: isAdminArea = $page.url.pathname.startsWith('/admin');
 	$: isHubArea = $page.url.pathname.startsWith('/hub');
 	$: isMultiOrgArea = $page.url.pathname.startsWith('/multi-org');
-	$: hideWebsiteElements = isAdminArea || isHubArea || isMultiOrgArea;
+	// On admin subdomain path is /auth/* or /organisations, so we also hide website UI via data from server
+	$: multiOrgAdminDomain = data?.multiOrgAdminDomain ?? false;
+	$: hideWebsiteElements = isAdminArea || isHubArea || isMultiOrgArea || multiOrgAdminDomain;
 	// External = public hub pages: signup, event token, forms, unsubscribe, view-rotas (theme applies only here when Hub branding is on)
 	$: isExternalPage = $page.url.pathname.startsWith('/signup') || $page.url.pathname.startsWith('/event/') || $page.url.pathname.startsWith('/forms') || $page.url.pathname.startsWith('/unsubscribe') || $page.url.pathname.startsWith('/view-rotas');
 
