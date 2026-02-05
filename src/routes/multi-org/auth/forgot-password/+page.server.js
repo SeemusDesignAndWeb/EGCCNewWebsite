@@ -8,31 +8,39 @@ export async function load() {
 
 export const actions = {
 	default: async ({ request, url, locals }) => {
-		const formData = await request.formData();
-		const email = (formData.get('email') || '').toString().trim().toLowerCase();
-		if (!email) {
-			return fail(400, { error: 'Please enter your email address.' });
-		}
-
-		const result = await requestMultiOrgPasswordReset(email);
-		// Always show the same message to avoid email enumeration
 		const message =
 			'If an account exists for that email, we\'ve sent a password reset link. Check your inbox and spam folder.';
 
-		if (result) {
-			const adminSubdomain = !!locals.multiOrgAdminDomain;
-			const eventLike = { url, adminSubdomain };
-			try {
-				await sendMultiOrgPasswordResetEmail(
-					{ to: result.email, name: result.name || result.email, resetToken: result.passwordResetToken },
-					eventLike
-				);
-			} catch (err) {
-				console.error('MultiOrg password reset email error:', err);
-				return fail(500, { error: 'We couldn\'t send the reset email. Please try again later.', message });
+		try {
+			const formData = await request.formData();
+			const email = (formData.get('email') || '').toString().trim().toLowerCase();
+			if (!email) {
+				return fail(400, { error: 'Please enter your email address.' });
 			}
-		}
 
-		return { success: true, message };
+			const result = await requestMultiOrgPasswordReset(email);
+
+			if (result) {
+				const adminSubdomain = !!locals.multiOrgAdminDomain;
+				const eventLike = { url, adminSubdomain };
+				try {
+					await sendMultiOrgPasswordResetEmail(
+						{ to: result.email, name: result.name || result.email, resetToken: result.passwordResetToken },
+						eventLike
+					);
+				} catch (err) {
+					console.error('MultiOrg password reset email error:', err);
+					return fail(500, { error: 'We couldn\'t send the reset email. Please try again later.', message });
+				}
+			}
+
+			return { success: true, message };
+		} catch (err) {
+			console.error('MultiOrg forgot-password error:', err);
+			return fail(500, {
+				error: 'Something went wrong. Please try again later.',
+				message
+			});
+		}
 	}
 };

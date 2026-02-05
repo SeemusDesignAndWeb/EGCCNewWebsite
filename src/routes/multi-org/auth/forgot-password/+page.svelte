@@ -3,12 +3,12 @@
 	import { page } from '$app/stores';
 
 	export let data;
-	export let form;
 
 	$: base = data?.multiOrgBasePath ?? '/multi-org';
-	$: error = form?.error ?? '';
-	$: success = form?.success ?? false;
-	$: message = form?.message ?? (success ? 'If an account exists for that email, we\'ve sent a password reset link. Check your inbox and spam folder.' : '');
+	$: formResult = $page.form;
+	$: error = formResult?.error ?? '';
+	$: success = formResult?.success ?? false;
+	$: message = formResult?.message ?? (success ? 'If an account exists for that email, we\'ve sent a password reset link. Check your inbox and spam folder.' : '');
 </script>
 
 <svelte:head>
@@ -35,7 +35,11 @@
 					← Back to sign in
 				</a>
 			{:else}
-				<form method="POST" action="?/default" use:enhance={() => ({ result: (r) => r })}>
+				<form method="POST" action="?/default" use:enhance={() => {
+	return async ({ result, update }) => {
+		await update();
+	};
+}}>
 					{#if error}
 						<div class="rounded-xl bg-red-50 border border-red-200 p-3 mb-4 text-red-700 text-sm">
 							{error}
