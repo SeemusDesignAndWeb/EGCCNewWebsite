@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { formatDateUK } from '$lib/crm/utils/dateFormat.js';
 	import { onMount } from 'svelte';
-	import { hasRouteAccess } from '$lib/crm/server/permissions.js';
+	import { hasRouteAccess } from '$lib/crm/permissions.js';
 	
 	$: admin = $page.data?.admin || null;
 	$: stats = $page.data?.stats || {};

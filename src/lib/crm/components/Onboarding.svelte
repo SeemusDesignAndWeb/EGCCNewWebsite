@@ -1,5 +1,5 @@
 <script>
-	import { hasRouteAccess } from '$lib/crm/server/permissions.js';
+	import { hasRouteAccess } from '$lib/crm/permissions.js';
 	import { invalidateAll } from '$app/navigation';
 
 	export let showOnboarding = false;

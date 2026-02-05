@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { hasRouteAccess, isSuperAdmin } from '$lib/crm/server/permissions.js';
+	import { hasRouteAccess, isSuperAdmin } from '$lib/crm/permissions.js';
 	
 	export let admin = null;
 	/** @type {{ logoPath?: string; primaryColor?: string; brandColor?: string } | null} */

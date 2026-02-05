@@ -6,7 +6,7 @@
 	import { formatDateUK, formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
 	import { notifications } from '$lib/crm/stores/notifications.js';
 	import { dialog } from '$lib/crm/stores/notifications.js';
-	import { isSuperAdmin, HUB_AREAS } from '$lib/crm/server/permissions.js';
+	import { isSuperAdmin, HUB_AREAS } from '$lib/crm/permissions.js';
 
 	$: admin = $page.data?.admin; // The admin being viewed/edited
 	$: csrfToken = $page.data?.csrfToken || '';

@@ -1,0 +1,253 @@
+/**
+ * Shared permissions logic (client- and server-safe).
+ * Used by hub components to avoid importing from server/ and prevent bundle chunk ordering issues.
+ * Server code should still import from $lib/crm/server/permissions.js which re-exports this.
+ */
+
+// Hub area permission constants
+export const HUB_AREAS = {
+	CONTACTS: 'contacts',
+	LISTS: 'lists',
+	ROTAS: 'rotas',
+	EVENTS: 'events',
+	MEETING_PLANNERS: 'meeting_planners',
+	NEWSLETTERS: 'emails',
+	FORMS: 'forms',
+	SAFEGUARDING_FORMS: 'safeguarding_forms',
+	MEMBERS: 'members',
+	USERS: 'users', // Admin management - only super admin
+	SUPER_ADMIN: 'super_admin' // Super admin permission - grants all permissions
+};
+
+// Route to hub area mapping
+const ROUTE_TO_AREA = {
+	'/hub/contacts': HUB_AREAS.CONTACTS,
+	'/hub/lists': HUB_AREAS.LISTS,
+	'/hub/rotas': HUB_AREAS.ROTAS,
+	'/hub/events': HUB_AREAS.EVENTS,
+	'/hub/meeting-planners': HUB_AREAS.MEETING_PLANNERS,
+	'/hub/emails': HUB_AREAS.NEWSLETTERS,
+	'/hub/forms': HUB_AREAS.FORMS,
+	'/hub/members': HUB_AREAS.MEMBERS,
+	'/hub/users': HUB_AREAS.USERS
+};
+
+// Legacy admin level constants (for backward compatibility during migration)
+export const ADMIN_LEVELS = {
+	SUPER_ADMIN: 'super_admin',
+	LEVEL_2: 'level_2',
+	LEVEL_2B: 'level_2b',
+	LEVEL_3: 'level_3',
+	LEVEL_4: 'level_4'
+};
+
+// Default super admin email (used on client-side)
+const DEFAULT_SUPER_ADMIN_EMAIL = 'john.watson@egcc.co.uk';
+
+/**
+ * Get the super admin email
+ * On server-side, this should be called with the email from envConfig
+ * On client-side, uses default or provided value from page data
+ * @param {string} [providedEmail] - Optional email to use (from server/env)
+ * @returns {string} Super admin email address
+ */
+export function getSuperAdminEmail(providedEmail = null) {
+	// If provided (from server), use it
+	if (providedEmail) {
+		return providedEmail;
+	}
+	// Client-side fallback
+	return DEFAULT_SUPER_ADMIN_EMAIL;
+}
+
+/**
+ * Check if an email is the super admin email
+ */
+export function isSuperAdminEmail(email, superAdminEmail = null) {
+	if (!email) return false;
+	const adminEmail = superAdminEmail || getSuperAdminEmail();
+	return email.toLowerCase().trim() === adminEmail.toLowerCase().trim();
+}
+
+/**
+ * Check if admin is super admin
+ */
+export function isSuperAdmin(admin, superAdminEmail = null) {
+	if (!admin) return false;
+
+	if (admin.email && isSuperAdminEmail(admin.email, superAdminEmail)) {
+		return true;
+	}
+	if (admin.permissions && Array.isArray(admin.permissions) && admin.permissions.includes(HUB_AREAS.SUPER_ADMIN)) {
+		return true;
+	}
+	if (admin.adminLevel === ADMIN_LEVELS.SUPER_ADMIN) {
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Get admin permissions array from admin object
+ */
+export function getAdminPermissions(admin, superAdminEmail = null) {
+	if (!admin) return [];
+
+	if (isSuperAdmin(admin, superAdminEmail)) {
+		return Object.values(HUB_AREAS).filter(p => p !== HUB_AREAS.SUPER_ADMIN);
+	}
+	if (admin.permissions && Array.isArray(admin.permissions)) {
+		return admin.permissions.filter(p => p !== HUB_AREAS.SUPER_ADMIN);
+	}
+	if (admin.adminLevel) {
+		return convertAdminLevelToPermissions(admin.adminLevel);
+	}
+	return [];
+}
+
+function convertAdminLevelToPermissions(adminLevel) {
+	switch (adminLevel) {
+		case ADMIN_LEVELS.SUPER_ADMIN:
+			return Object.values(HUB_AREAS);
+		case ADMIN_LEVELS.LEVEL_2:
+			return [HUB_AREAS.CONTACTS, HUB_AREAS.LISTS, HUB_AREAS.ROTAS, HUB_AREAS.EVENTS, HUB_AREAS.MEETING_PLANNERS];
+		case ADMIN_LEVELS.LEVEL_2B:
+			return [HUB_AREAS.CONTACTS, HUB_AREAS.LISTS, HUB_AREAS.ROTAS, HUB_AREAS.EVENTS, HUB_AREAS.MEETING_PLANNERS, HUB_AREAS.NEWSLETTERS];
+		case ADMIN_LEVELS.LEVEL_3:
+			return [HUB_AREAS.CONTACTS, HUB_AREAS.LISTS, HUB_AREAS.ROTAS, HUB_AREAS.EVENTS, HUB_AREAS.MEETING_PLANNERS, HUB_AREAS.NEWSLETTERS, HUB_AREAS.SAFEGUARDING_FORMS];
+		case ADMIN_LEVELS.LEVEL_4:
+			return [HUB_AREAS.CONTACTS, HUB_AREAS.LISTS, HUB_AREAS.ROTAS, HUB_AREAS.EVENTS, HUB_AREAS.MEETING_PLANNERS, HUB_AREAS.NEWSLETTERS, HUB_AREAS.FORMS];
+		default:
+			return [];
+	}
+}
+
+/** @deprecated Use getAdminPermissions instead */
+export function getAdminLevel(admin) {
+	if (!admin) return null;
+	if (isSuperAdmin(admin)) {
+		return ADMIN_LEVELS.SUPER_ADMIN;
+	}
+	return admin.adminLevel || ADMIN_LEVELS.LEVEL_2;
+}
+
+function getAreaForRoute(pathname) {
+	if (ROUTE_TO_AREA[pathname]) {
+		return ROUTE_TO_AREA[pathname];
+	}
+	for (const [route, area] of Object.entries(ROUTE_TO_AREA)) {
+		if (pathname.startsWith(route)) {
+			return area;
+		}
+	}
+	return null;
+}
+
+export function getEffectivePermissions(admin, organisationAreaPermissions, superAdminEmail = null) {
+	const userPerms = getAdminPermissions(admin, superAdminEmail);
+	if (!admin) return [];
+	if (isSuperAdmin(admin, superAdminEmail)) {
+		return organisationAreaPermissions && organisationAreaPermissions.length >= 0
+			? organisationAreaPermissions
+			: userPerms;
+	}
+	if (!organisationAreaPermissions || !Array.isArray(organisationAreaPermissions)) {
+		return userPerms;
+	}
+	return userPerms.filter((p) => organisationAreaPermissions.includes(p));
+}
+
+export function hasRouteAccess(admin, pathname, superAdminEmail = null, organisationAreaPermissions = null) {
+	if (!admin) return false;
+
+	const effectivePerms = getEffectivePermissions(admin, organisationAreaPermissions, superAdminEmail);
+
+	if (isSuperAdmin(admin, superAdminEmail)) {
+		if (Array.isArray(organisationAreaPermissions)) {
+			const area = getAreaForRoute(pathname);
+			if (area && area !== HUB_AREAS.USERS) {
+				return organisationAreaPermissions.includes(area);
+			}
+		}
+		return true;
+	}
+
+	if (pathname === '/hub' || pathname === '/hub/profile' || pathname === '/hub/help' || pathname === '/hub/video-tutorials') {
+		return true;
+	}
+	if (pathname.startsWith('/hub/settings') || pathname.startsWith('/hub/users') || pathname.startsWith('/hub/audit-logs')) {
+		return isSuperAdmin(admin, superAdminEmail);
+	}
+	if (pathname.startsWith('/hub/videos')) {
+		return isSuperAdmin(admin, superAdminEmail);
+	}
+	if (pathname.startsWith('/hub/images')) {
+		return isSuperAdmin(admin, superAdminEmail);
+	}
+
+	const area = getAreaForRoute(pathname);
+	if (!area) return false;
+	if (area === HUB_AREAS.USERS) {
+		return isSuperAdmin(admin, superAdminEmail);
+	}
+	return effectivePerms.includes(area);
+}
+
+export function canAccessSafeguarding(admin) {
+	if (!admin) return false;
+	if (isSuperAdmin(admin)) return true;
+	return getAdminPermissions(admin).includes(HUB_AREAS.SAFEGUARDING_FORMS);
+}
+
+export function canAccessForms(admin) {
+	if (!admin) return false;
+	if (isSuperAdmin(admin)) return true;
+	return getAdminPermissions(admin).includes(HUB_AREAS.FORMS);
+}
+
+export function canAccessNewsletters(admin) {
+	if (!admin) return false;
+	if (isSuperAdmin(admin)) return true;
+	return getAdminPermissions(admin).includes(HUB_AREAS.NEWSLETTERS);
+}
+
+export function getAvailableHubAreas(currentAdmin = null) {
+	const areas = [
+		{ value: HUB_AREAS.CONTACTS, label: 'Contacts', description: 'Manage contact database' },
+		{ value: HUB_AREAS.LISTS, label: 'Lists', description: 'Manage contact lists' },
+		{ value: HUB_AREAS.ROTAS, label: 'Rotas', description: 'Manage volunteer rotas' },
+		{ value: HUB_AREAS.EVENTS, label: 'Events', description: 'Manage events and calendar' },
+		{ value: HUB_AREAS.MEETING_PLANNERS, label: 'Meeting Planners', description: 'Plan and manage meetings' },
+		{ value: HUB_AREAS.NEWSLETTERS, label: 'Emails', description: 'Create and send emails' },
+		{ value: HUB_AREAS.FORMS, label: 'Forms (Non-Safeguarding)', description: 'Manage general forms and submissions' },
+		{ value: HUB_AREAS.SAFEGUARDING_FORMS, label: 'Safeguarding Forms', description: 'Access safeguarding forms and submissions' },
+		{ value: HUB_AREAS.MEMBERS, label: 'Members', description: 'Manage church members and membership information' }
+	];
+	if (currentAdmin && isSuperAdmin(currentAdmin)) {
+		areas.push({
+			value: HUB_AREAS.SUPER_ADMIN,
+			label: 'Super Admin',
+			description: 'Full access to all areas and can create other admins. Only super admins can grant this permission.'
+		});
+	}
+	return areas;
+}
+
+export function getOrganisationHubAreas() {
+	return [
+		{ value: HUB_AREAS.CONTACTS, label: 'Contacts', description: 'Manage contact database' },
+		{ value: HUB_AREAS.LISTS, label: 'Lists', description: 'Manage contact lists' },
+		{ value: HUB_AREAS.ROTAS, label: 'Rotas', description: 'Manage volunteer rotas' },
+		{ value: HUB_AREAS.EVENTS, label: 'Events', description: 'Manage events and calendar' },
+		{ value: HUB_AREAS.MEETING_PLANNERS, label: 'Meeting Planners', description: 'Plan and manage meetings' },
+		{ value: HUB_AREAS.NEWSLETTERS, label: 'Emails', description: 'Create and send emails' },
+		{ value: HUB_AREAS.FORMS, label: 'Forms (Non-Safeguarding)', description: 'Manage general forms and submissions' },
+		{ value: HUB_AREAS.SAFEGUARDING_FORMS, label: 'Safeguarding Forms', description: 'Access safeguarding forms and submissions' },
+		{ value: HUB_AREAS.MEMBERS, label: 'Members', description: 'Manage church members and membership information' }
+	];
+}
+
+export function canCreateAdmin(admin, superAdminEmail = null) {
+	if (!admin) return false;
+	return isSuperAdmin(admin, superAdminEmail);
+}

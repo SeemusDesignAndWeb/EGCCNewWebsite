@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import LoomVideo from '$lib/components/LoomVideo.svelte';
-	import { isSuperAdmin } from '$lib/crm/server/permissions.js';
+	import { isSuperAdmin } from '$lib/crm/permissions.js';
 
 	let docs = [];
 	let selectedDoc = null;

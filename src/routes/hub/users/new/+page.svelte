@@ -4,7 +4,7 @@
 	import { onMount } from 'svelte';
 	import FormField from '$lib/crm/components/FormField.svelte';
 	import { notifications } from '$lib/crm/stores/notifications.js';
-	import { isSuperAdmin, HUB_AREAS } from '$lib/crm/server/permissions.js';
+	import { isSuperAdmin, HUB_AREAS } from '$lib/crm/permissions.js';
 	
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
