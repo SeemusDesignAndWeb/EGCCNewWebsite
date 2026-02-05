@@ -67,7 +67,7 @@
 	</form>
 </div>
 
-<Table {columns} rows={lists} onRowClick={(row) => goto(`/hub/lists/${row.id}`)} />
+<Table {columns} rows={lists} emptyMessage="No lists yet. Add your first list above." onRowClick={(row) => goto(`/hub/lists/${row.id}`)} />
 
 <Pager {currentPage} {totalPages} onPageChange={handlePageChange} />
 

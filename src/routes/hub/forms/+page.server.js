@@ -4,6 +4,7 @@ import { canAccessSafeguarding, canAccessForms, isSuperAdmin } from '$lib/crm/se
 import { getSuperAdminEmail } from '$lib/crm/server/envConfig.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
 import { fail } from '@sveltejs/kit';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -15,10 +16,13 @@ export async function load({ url, cookies }) {
 	const page = parseInt(url.searchParams.get('page') || '1', 10);
 	const search = url.searchParams.get('search') || '';
 
-	const [forms, registers] = await Promise.all([
+	const organisationId = await getCurrentOrganisationId();
+	const [formsRaw, registersRaw] = await Promise.all([
 		readCollection('forms'),
 		readCollection('registers')
 	]);
+	const forms = filterByOrganisation(formsRaw, organisationId);
+	const registers = filterByOrganisation(registersRaw, organisationId);
 	
 	// Filter forms based on admin permissions
 	const canAccessSafeguardingForms = canAccessSafeguarding(admin);
@@ -110,8 +114,12 @@ export const actions = {
 				return fail(400, { error: 'Submission ID is required' });
 			}
 
+			const organisationId = await getCurrentOrganisationId();
 			const register = await findById('registers', submissionId.toString());
 			if (!register) {
+				return fail(404, { error: 'Submission not found' });
+			}
+			if (register.organisationId != null && register.organisationId !== organisationId) {
 				return fail(404, { error: 'Submission not found' });
 			}
 

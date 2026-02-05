@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import { findById } from '$lib/crm/server/fileStore.js';
 import { getAdminFromCookies } from '$lib/crm/server/auth.js';
 import { canAccessSafeguarding, canAccessForms } from '$lib/crm/server/permissions.js';
+import { getCurrentOrganisationId } from '$lib/crm/server/orgContext.js';
 
 /**
  * Export a single form structure (without submissions/data)
@@ -13,8 +14,12 @@ export async function GET({ params, cookies }) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
+	const organisationId = await getCurrentOrganisationId();
 	const form = await findById('forms', params.id);
 	if (!form) {
+		return json({ error: 'Form not found' }, { status: 404 });
+	}
+	if (form.organisationId != null && form.organisationId !== organisationId) {
 		return json({ error: 'Form not found' }, { status: 404 });
 	}
 

@@ -4,11 +4,13 @@ import { validateMeetingPlanner, validateRota } from '$lib/crm/server/validators
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
 import { getSettings } from '$lib/crm/server/settings.js';
+import { getCurrentOrganisationId, filterByOrganisation, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ cookies, url }) {
-	const events = await readCollection('events');
-	const occurrences = await readCollection('occurrences');
-	const meetingPlanners = await readCollection('meeting_planners');
+	const organisationId = await getCurrentOrganisationId();
+	const events = filterByOrganisation(await readCollection('events'), organisationId);
+	const occurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
+	const meetingPlanners = filterByOrganisation(await readCollection('meeting_planners'), organisationId);
 	const eventId = url.searchParams.get('eventId') || '';
 	
 	// Get occurrence IDs that already have a meeting planner attached
@@ -47,8 +49,10 @@ export const actions = {
 				return fail(400, { error: 'Event is required' });
 			}
 
-			// Verify event exists
-			const events = await readCollection('events');
+			const organisationId = await getCurrentOrganisationId();
+
+			// Verify event exists and belongs to current org
+			const events = filterByOrganisation(await readCollection('events'), organisationId);
 			const event = events.find(e => e.id === eventId);
 			if (!event) {
 				return fail(400, { error: 'Event not found' });
@@ -56,14 +60,14 @@ export const actions = {
 
 			// Verify occurrence exists if provided
 			if (occurrenceId) {
-				const occurrences = await readCollection('occurrences');
+				const occurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
 				const occurrence = occurrences.find(o => o.id === occurrenceId && o.eventId === eventId);
 				if (!occurrence) {
 					return fail(400, { error: 'Occurrence not found or does not belong to event' });
 				}
 				
 				// Check if this occurrence already has a meeting planner
-				const meetingPlanners = await readCollection('meeting_planners');
+				const meetingPlanners = filterByOrganisation(await readCollection('meeting_planners'), organisationId);
 				const existingPlanner = meetingPlanners.find(mp => mp.occurrenceId === occurrenceId);
 				if (existingPlanner) {
 					return fail(400, { error: 'This occurrence already has a meeting planner attached' });
@@ -81,8 +85,8 @@ export const actions = {
 				{ role: 'Call to Worship', capacity: 1 }
 			];
 
-			// Load existing rotas to check for duplicates
-			const existingRotas = await readCollection('rotas');
+			// Load existing rotas to check for duplicates (scoped to current org)
+			const existingRotas = filterByOrganisation(await readCollection('rotas'), organisationId);
 
 			const rotaIds = {};
 			const dynamicRotas = [];
@@ -114,7 +118,7 @@ export const actions = {
 					};
 
 					const validated = validateRota(rotaData);
-					const rota = await create('rotas', validated);
+					const rota = await create('rotas', withOrganisationId(validated, organisationId));
 					rotaId = rota.id;
 				}
 
@@ -147,7 +151,7 @@ export const actions = {
 			};
 
 			const validated = validateMeetingPlanner(meetingPlannerData);
-			const meetingPlanner = await create('meeting_planners', validated);
+			const meetingPlanner = await create('meeting_planners', withOrganisationId(validated, organisationId));
 
 			throw redirect(302, `/hub/meeting-planners/${meetingPlanner.id}`);
 		} catch (error) {

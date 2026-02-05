@@ -1,12 +1,14 @@
 import { readCollection } from '$lib/crm/server/fileStore.js';
 import { getCsrfToken } from '$lib/crm/server/auth.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ cookies }) {
-	const events = await readCollection('events');
-	const rotas = await readCollection('rotas');
-	const occurrences = await readCollection('occurrences');
-	const contactsRaw = await readCollection('contacts');
-	const lists = await readCollection('lists');
+	const organisationId = await getCurrentOrganisationId();
+	const events = filterByOrganisation(await readCollection('events'), organisationId);
+	const rotas = filterByOrganisation(await readCollection('rotas'), organisationId);
+	const occurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
+	const contactsRaw = filterByOrganisation(await readCollection('contacts'), organisationId);
+	const lists = filterByOrganisation(await readCollection('lists'), organisationId);
 
 	// Sort contacts alphabetically by last name, then first name
 	const contacts = contactsRaw.sort((a, b) => {

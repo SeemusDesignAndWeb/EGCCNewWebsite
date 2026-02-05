@@ -195,7 +195,7 @@
 	role="region"
 	aria-label="Contacts table"
 >
-	<Table {columns} rows={contacts} onRowClick={(row) => goto(`/hub/contacts/${row.id}`)} />
+	<Table {columns} rows={contacts} emptyMessage="No contacts yet. Add your first contact above." onRowClick={(row) => goto(`/hub/contacts/${row.id}`)} />
 </div>
 
 <Pager {currentPage} {totalPages} onPageChange={handlePageChange} />

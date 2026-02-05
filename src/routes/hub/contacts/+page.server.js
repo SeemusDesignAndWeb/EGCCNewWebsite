@@ -3,14 +3,17 @@ import { verifyCsrfToken, getCsrfToken } from '$lib/crm/server/auth.js';
 import { isSuperAdmin } from '$lib/crm/server/permissions.js';
 import { fail } from '@sveltejs/kit';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 const ITEMS_PER_PAGE = 20;
 
 export async function load({ url, cookies, locals }) {
 	const page = parseInt(url.searchParams.get('page') || '1', 10);
 	const search = url.searchParams.get('search') || '';
+	const organisationId = await getCurrentOrganisationId();
 
-	const contacts = await readCollection('contacts');
+	const allContacts = await readCollection('contacts');
+	const contacts = filterByOrganisation(allContacts, organisationId);
 	
 	// Sort contacts alphabetically by first name, then last name
 	const sorted = contacts.sort((a, b) => {
@@ -80,9 +83,11 @@ export const actions = {
 				return fail(400, { error: 'Update field and value are required' });
 			}
 
-			// Read all contacts
-			const contacts = await readCollection('contacts');
-			
+			// Read all contacts for current organisation
+			const organisationId = await getCurrentOrganisationId();
+			const allContacts = await readCollection('contacts');
+			const contacts = filterByOrganisation(allContacts, organisationId);
+
 			// Filter contacts based on condition
 			let contactsToUpdate;
 			if (filterCondition === 'empty') {
@@ -129,9 +134,10 @@ export const actions = {
 				}
 			}
 
-			// Update contacts
+			// Update contacts (work on full collection for write, but only update org-scoped contacts)
 			const contactIdsToUpdate = new Set(contactsToUpdate.map(c => c.id));
-			const updatedContacts = contacts.map(contact => {
+			const allContactsForWrite = await readCollection('contacts');
+			const updatedContacts = allContactsForWrite.map(contact => {
 				if (contactIdsToUpdate.has(contact.id)) {
 					const updates = {
 						...contact,
@@ -149,7 +155,7 @@ export const actions = {
 				return contact;
 			});
 
-			// Write all contacts back
+			// Write all contacts back (only contacts we're allowed to update are in contactIdsToUpdate and in current org)
 			await writeCollection('contacts', updatedContacts);
 
 			// Log audit event for bulk update

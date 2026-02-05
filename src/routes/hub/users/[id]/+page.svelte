@@ -51,7 +51,8 @@
 		}, 100);
 	}
 
-	let editing = false;
+	// Show edit form by default when viewing an admin (so form fields are visible without clicking Edit)
+	let editing = true;
 	let resettingPassword = false;
 	let formData = {
 		email: '',
@@ -66,11 +67,11 @@
 
 	let showPassword = false;
 
-	// Only update formData when admin changes and we're not editing
-	// Use a flag to prevent overwriting during form submission
+	// Populate formData from admin when admin is set (and not mid-submit)
+	// Runs on load and when admin data refreshes (e.g. after save)
 	let isSubmitting = false;
 	
-	$: if (admin && !editing && !isSubmitting) {
+	$: if (admin && !isSubmitting) {
 		// Get permissions from admin object
 		let permissions = admin.permissions || [];
 		// If admin is super admin (by email or permission), ensure SUPER_ADMIN is in permissions
@@ -304,15 +305,15 @@
 										type="checkbox"
 										name="permissions"
 										value={superAdminArea.value}
-										checked={hasSuperAdminPermission || isSuperAdminEmail}
-										disabled={isSuperAdminEmail}
-										on:change={() => !isSuperAdminEmail && togglePermission(superAdminArea.value)}
+										checked={hasSuperAdminPermission || isSuperAdminEmailMatch}
+										disabled={isSuperAdminEmailMatch}
+										on:change={() => !isSuperAdminEmailMatch && togglePermission(superAdminArea.value)}
 										class="mt-1 mr-3 h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
 									/>
 									<div class="flex-1">
 										<div class="text-sm font-bold text-purple-900">{superAdminArea.label}</div>
 										<div class="text-xs text-purple-700 mt-1">{superAdminArea.description}</div>
-										{#if hasSuperAdminPermission || isSuperAdminEmail}
+										{#if hasSuperAdminPermission || isSuperAdminEmailMatch}
 											<div class="text-xs text-purple-600 mt-2 font-medium">
 												All permissions will be granted automatically.
 											</div>

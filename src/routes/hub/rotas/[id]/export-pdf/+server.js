@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { findById, readCollection } from '$lib/crm/server/fileStore.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 import { formatDateTimeUK, formatTimeUK } from '$lib/crm/utils/dateFormat.js';
 
 /**
@@ -46,8 +47,12 @@ export async function GET({ params, locals }) {
 	}
 
 	try {
+		const organisationId = await getCurrentOrganisationId();
 		const rota = await findById('rotas', params.id);
 		if (!rota) {
+			throw error(404, 'Rota not found');
+		}
+		if (rota.organisationId != null && rota.organisationId !== organisationId) {
 			throw error(404, 'Rota not found');
 		}
 
@@ -55,9 +60,12 @@ export async function GET({ params, locals }) {
 		if (!event) {
 			throw error(404, 'Event not found');
 		}
+		if (event.organisationId != null && event.organisationId !== organisationId) {
+			throw error(404, 'Event not found');
+		}
 
 		// Load all occurrences for this event (for PDF, show all occurrences, not just upcoming)
-		const allOccurrences = await readCollection('occurrences');
+		const allOccurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
 		const eventOccurrences = allOccurrences
 			.filter(o => o.eventId === rota.eventId)
 			.sort((a, b) => {
@@ -67,8 +75,8 @@ export async function GET({ params, locals }) {
 				return dateA - dateB;
 			});
 		
-		// Load contacts for assignees
-		const contacts = await readCollection('contacts');
+		// Load contacts for assignees (scoped to current org)
+		const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
 		
 		// Process assignees and group by occurrence
 		const processedAssignees = (rota.assignees || []).map(assignee => {

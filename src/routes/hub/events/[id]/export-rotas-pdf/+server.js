@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { findById, readCollection, findMany } from '$lib/crm/server/fileStore.js';
 import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 /**
  * Format date in a readable format: "Sunday 22nd February at 10am"
@@ -46,20 +47,25 @@ export async function GET({ params, locals }) {
 	}
 
 	try {
+		const organisationId = await getCurrentOrganisationId();
 		const event = await findById('events', params.id);
 		if (!event) {
 			throw error(404, 'Event not found');
 		}
+		if (event.organisationId != null && event.organisationId !== organisationId) {
+			throw error(404, 'Event not found');
+		}
 
-		// Load all rotas for this event
-		const rotas = await findMany('rotas', r => r.eventId === params.id);
+		// Load all rotas for this event (scoped to current org)
+		const allRotas = filterByOrganisation(await readCollection('rotas'), organisationId);
+		const rotas = allRotas.filter(r => r.eventId === params.id);
 		
 		if (rotas.length === 0) {
 			throw error(404, 'No rotas found for this event');
 		}
 
-		// Load all occurrences for this event (for PDF, show all occurrences, sorted by date)
-		const allOccurrences = await readCollection('occurrences');
+		// Load all occurrences for this event (for PDF, show all occurrences, sorted by date, scoped to current org)
+		const allOccurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
 		const eventOccurrences = allOccurrences
 			.filter(o => o.eventId === params.id)
 			.sort((a, b) => {
@@ -69,8 +75,8 @@ export async function GET({ params, locals }) {
 				return dateA - dateB;
 			});
 		
-		// Load contacts for assignees
-		const contacts = await readCollection('contacts');
+		// Load contacts for assignees (scoped to current org)
+		const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
 		
 		// Process all rotas and their assignees
 		const rotasWithAssignees = rotas.map(rota => {

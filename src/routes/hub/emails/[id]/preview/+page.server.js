@@ -1,15 +1,20 @@
 import { redirect } from '@sveltejs/kit';
 import { findById, readCollection } from '$lib/crm/server/fileStore.js';
 import { personalizeContent, getUpcomingEvents, getUpcomingRotas, hasAnyRotas } from '$lib/crm/server/email.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, url, event }) {
+	const organisationId = await getCurrentOrganisationId();
 	const newsletter = await findById('emails', params.id);
 	if (!newsletter) {
 		throw redirect(302, '/hub/emails');
 	}
+	if (newsletter.organisationId != null && newsletter.organisationId !== organisationId) {
+		throw redirect(302, '/hub/emails');
+	}
 
-	// Get all contacts for the user selector
-	const contacts = await readCollection('contacts');
+	// Get all contacts for the user selector (scoped to current org)
+	const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
 	// Sort contacts alphabetically by last name, then first name
 	const sortedContacts = contacts.sort((a, b) => {
 		const aLastName = (a.lastName || '').toLowerCase();

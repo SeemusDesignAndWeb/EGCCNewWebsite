@@ -10,18 +10,20 @@
 	$: latestNewsletters = $page.data?.latestNewsletters || [];
 	$: latestRotas = $page.data?.latestRotas || [];
 	$: latestEvents = $page.data?.latestEvents || [];
-	
+	$: organisationAreaPermissions = $page.data?.organisationAreaPermissions ?? null;
+	$: superAdminEmail = $page.data?.superAdminEmail ?? null;
+
 	// Check for access denied error in URL
 	$: urlParams = new URLSearchParams($page.url.search);
 	$: accessDenied = urlParams.get('error') === 'access_denied';
-	
-	// Check permissions for various routes
-	$: canAccessContacts = admin && hasRouteAccess(admin, '/hub/contacts');
-	$: canAccessLists = admin && hasRouteAccess(admin, '/hub/lists');
-	$: canAccessNewsletters = admin && hasRouteAccess(admin, '/hub/emails');
-	$: canAccessEvents = admin && hasRouteAccess(admin, '/hub/events');
-	$: canAccessRotas = admin && hasRouteAccess(admin, '/hub/rotas');
-	$: canAccessForms = admin && hasRouteAccess(admin, '/hub/forms');
+
+	// Check permissions (respects MultiOrg org area restrictions)
+	$: canAccessContacts = admin && hasRouteAccess(admin, '/hub/contacts', superAdminEmail, organisationAreaPermissions);
+	$: canAccessLists = admin && hasRouteAccess(admin, '/hub/lists', superAdminEmail, organisationAreaPermissions);
+	$: canAccessNewsletters = admin && hasRouteAccess(admin, '/hub/emails', superAdminEmail, organisationAreaPermissions);
+	$: canAccessEvents = admin && hasRouteAccess(admin, '/hub/events', superAdminEmail, organisationAreaPermissions);
+	$: canAccessRotas = admin && hasRouteAccess(admin, '/hub/rotas', superAdminEmail, organisationAreaPermissions);
+	$: canAccessForms = admin && hasRouteAccess(admin, '/hub/forms', superAdminEmail, organisationAreaPermissions);
 	
 	onMount(() => {
 		// Clear error from URL after showing message

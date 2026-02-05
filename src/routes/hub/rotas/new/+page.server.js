@@ -4,12 +4,14 @@ import { validateRota } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { getCurrentOrganisationId, filterByOrganisation, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ url, cookies }) {
+	const organisationId = await getCurrentOrganisationId();
 	const eventId = url.searchParams.get('eventId') || '';
-	const events = await readCollection('events');
-	const occurrences = await readCollection('occurrences');
-	const contacts = await readCollection('contacts');
+	const events = filterByOrganisation(await readCollection('events'), organisationId);
+	const occurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
+	const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
 	
 	const csrfToken = getCsrfToken(cookies) || '';
 	return { events, occurrences, eventId, contacts, csrfToken };
@@ -40,7 +42,8 @@ export const actions = {
 			};
 
 			const validated = validateRota(rotaData);
-			const rota = await create('rotas', validated);
+			const organisationId = await getCurrentOrganisationId();
+			const rota = await create('rotas', withOrganisationId(validated, organisationId));
 
 			// Log audit event
 			const adminId = locals?.admin?.id || null;

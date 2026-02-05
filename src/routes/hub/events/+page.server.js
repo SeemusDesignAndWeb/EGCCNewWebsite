@@ -7,11 +7,14 @@ export async function load({ url }) {
 	// If view=list, show list view, otherwise redirect to calendar
 	if (view === 'list') {
 		const { readCollection } = await import('$lib/crm/server/fileStore.js');
+		const { getCurrentOrganisationId, filterByOrganisation } = await import('$lib/crm/server/orgContext.js');
 		const ITEMS_PER_PAGE = 20;
 		const page = parseInt(url.searchParams.get('page') || '1', 10);
 		const search = url.searchParams.get('search') || '';
+		const organisationId = await getCurrentOrganisationId();
 
-		const events = await readCollection('events');
+		const allEvents = await readCollection('events');
+		const events = filterByOrganisation(allEvents, organisationId);
 		
 		let filtered = events;
 		if (search) {

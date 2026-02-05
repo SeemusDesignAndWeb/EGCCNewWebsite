@@ -3,11 +3,17 @@ import { findById, readCollection, findMany, create, update } from '$lib/crm/ser
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { validateMember } from '$lib/crm/server/validators.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { getCurrentOrganisationId, filterByOrganisation, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies }) {
+	const organisationId = await getCurrentOrganisationId();
+
 	// Get the contact (member)
 	const contact = await findById('contacts', params.id);
 	if (!contact) {
+		throw redirect(302, '/hub/members');
+	}
+	if (contact.organisationId != null && contact.organisationId !== organisationId) {
 		throw redirect(302, '/hub/members');
 	}
 
@@ -16,9 +22,9 @@ export async function load({ params, cookies }) {
 		throw redirect(302, '/hub/contacts/' + params.id);
 	}
 
-	// Get member-specific data if it exists
-	const members = await readCollection('members');
-	const memberData = members.find(m => m.contactId === params.id) || null;
+	// Get member-specific data if it exists (scoped to current org)
+	const allMembers = filterByOrganisation(await readCollection('members'), organisationId);
+	const memberData = allMembers.find(m => m.contactId === params.id) || null;
 	
 	const csrfToken = getCsrfToken(cookies) || '';
 	return { 
@@ -39,8 +45,14 @@ export const actions = {
 		}
 
 		try {
-			// Get existing member data or create new
-			const members = await readCollection('members');
+			const organisationId = await getCurrentOrganisationId();
+			// Verify contact belongs to current org
+			const contact = await findById('contacts', params.id);
+			if (!contact || (contact.organisationId != null && contact.organisationId !== organisationId)) {
+				return fail(404, { error: 'Member not found' });
+			}
+			// Get existing member data or create new (scoped to current org)
+			const members = filterByOrganisation(await readCollection('members'), organisationId);
 			const existingMember = members.find(m => m.contactId === params.id);
 
 			const isChristFollowerVal = data.get('isChristFollower');
@@ -94,13 +106,12 @@ export const actions = {
 			if (existingMember) {
 				memberRecord = await update('members', existingMember.id, validated);
 			} else {
-				memberRecord = await create('members', validated);
+				memberRecord = await create('members', withOrganisationId(validated, organisationId));
 			}
 
 			// Log audit event
 			const adminId = locals?.admin?.id || null;
 			const event = { getClientAddress: () => 'unknown', request };
-			const contact = await findById('contacts', params.id);
 			await logDataChange(adminId, existingMember ? 'update' : 'create', 'member', memberRecord.id, {
 				contactId: params.id,
 				email: contact?.email,

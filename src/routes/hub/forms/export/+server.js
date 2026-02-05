@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import { readCollection } from '$lib/crm/server/fileStore.js';
 import { getAdminFromCookies } from '$lib/crm/server/auth.js';
 import { canAccessSafeguarding, canAccessForms } from '$lib/crm/server/permissions.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 /**
  * Export all forms structure (without submissions/data)
@@ -13,7 +14,8 @@ export async function GET({ cookies }) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	const forms = await readCollection('forms');
+	const organisationId = await getCurrentOrganisationId();
+	const forms = filterByOrganisation(await readCollection('forms'), organisationId);
 	
 	// Filter forms based on admin permissions
 	const canAccessSafeguardingForms = canAccessSafeguarding(admin);

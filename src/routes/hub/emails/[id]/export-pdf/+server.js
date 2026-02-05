@@ -13,8 +13,13 @@ export async function GET({ params, locals, url }) {
 	}
 
 	try {
+		const { getCurrentOrganisationId } = await import('$lib/crm/server/orgContext.js');
+		const organisationId = await getCurrentOrganisationId();
 		const newsletter = await findById('emails', params.id);
 		if (!newsletter) {
+			throw error(404, 'Newsletter not found');
+		}
+		if (newsletter.organisationId != null && newsletter.organisationId !== organisationId) {
 			throw error(404, 'Newsletter not found');
 		}
 

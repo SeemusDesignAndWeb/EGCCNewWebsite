@@ -5,10 +5,15 @@ import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { isUpcomingOccurrence } from '$lib/crm/utils/occurrenceFilters.js';
 import { ensureOccurrenceToken } from '$lib/crm/server/tokens.js';
 import { env } from '$env/dynamic/private';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies, url }) {
+	const organisationId = await getCurrentOrganisationId();
 	const event = await findById('events', params.id);
 	if (!event) {
+		throw redirect(302, '/hub/events');
+	}
+	if (event.organisationId != null && event.organisationId !== organisationId) {
 		throw redirect(302, '/hub/events');
 	}
 
@@ -16,14 +21,18 @@ export async function load({ params, cookies, url }) {
 	if (!occurrence || occurrence.eventId !== params.id) {
 		throw redirect(302, `/hub/events/${params.id}`);
 	}
+	if (occurrence.organisationId != null && occurrence.organisationId !== organisationId) {
+		throw redirect(302, '/hub/events');
+	}
 
 	// Hide past occurrences by redirecting to the event page
 	if (!isUpcomingOccurrence(occurrence)) {
 		throw redirect(302, `/hub/events/${params.id}`);
 	}
 
-	// Get all rotas for this event
-	const allRotas = await findMany('rotas', r => r.eventId === params.id);
+	// Get all rotas for this event (scoped to current org)
+	const allRotasRaw = filterByOrganisation(await readCollection('rotas'), organisationId);
+	const allRotas = allRotasRaw.filter(r => r.eventId === params.id);
 	
 	// Filter rotas that apply to this occurrence
 	// A rota applies if:
@@ -33,8 +42,8 @@ export async function load({ params, cookies, url }) {
 		return !rota.occurrenceId || rota.occurrenceId === params.occurrenceId;
 	});
 
-	// Load contacts to enrich assignees
-	const contacts = await readCollection('contacts');
+	// Load contacts to enrich assignees (scoped to current org)
+	const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
 
 	// Process rotas with assignees for this occurrence
 	const rotasWithAssignees = applicableRotas.map(rota => {
@@ -132,6 +141,11 @@ export const actions = {
 		}
 
 		try {
+			const organisationId = await getCurrentOrganisationId();
+			const currentOcc = await findById('occurrences', params.occurrenceId);
+			if (!currentOcc || (currentOcc.organisationId != null && currentOcc.organisationId !== organisationId)) {
+				return { error: 'Occurrence not found' };
+			}
 			const startsAt = data.get('startsAt');
 			const endsAt = data.get('endsAt');
 			const applyScope = data.get('applyScope') || 'this'; // 'this' or 'future'
@@ -160,23 +174,17 @@ export const actions = {
 
 			const validated = validateOccurrence(occurrenceData);
 			
-			// Get the current occurrence to check its start time
-			const currentOccurrence = await findById('occurrences', params.occurrenceId);
-			if (!currentOccurrence) {
-				return { error: 'Occurrence not found' };
-			}
-			
 			// Get the original start time before updating (to determine which occurrences are "future")
-			const originalStartTime = new Date(currentOccurrence.startsAt);
+			const originalStartTime = new Date(currentOcc.startsAt);
 			
 			// Update the current occurrence
 			await update('occurrences', params.occurrenceId, validated);
 			
-			// If applyScope is 'future', update all future occurrences
+			// If applyScope is 'future', update all future occurrences (scoped to current org)
 			if (applyScope === 'future') {
-				
 				// Find all occurrences for this event that start after the current occurrence's original start time
-				const allOccurrences = await findMany('occurrences', o => o.eventId === params.id);
+				const allOccurrencesRaw = filterByOrganisation(await readCollection('occurrences'), organisationId);
+				const allOccurrences = allOccurrencesRaw.filter(o => o.eventId === params.id);
 				
 				// Filter to future occurrences (starting after the current occurrence's original start time)
 				const futureOccurrences = allOccurrences.filter(occ => {
@@ -217,6 +225,11 @@ export const actions = {
 			return { error: 'CSRF token validation failed' };
 		}
 
+		const organisationId = await getCurrentOrganisationId();
+		const occurrence = await findById('occurrences', params.occurrenceId);
+		if (!occurrence || (occurrence.organisationId != null && occurrence.organisationId !== organisationId)) {
+			throw redirect(302, '/hub/events');
+		}
 		await remove('occurrences', params.occurrenceId);
 		throw redirect(302, `/hub/events/${params.id}`);
 	},
@@ -235,9 +248,13 @@ export const actions = {
 				return fail(400, { error: 'Signup ID is required' });
 			}
 
-			// Verify the signup belongs to this event and occurrence
+			const organisationId = await getCurrentOrganisationId();
+			// Verify the signup belongs to this event and occurrence (and current org)
 			const signup = await findById('event_signups', signupId);
 			if (!signup) {
+				return fail(404, { error: 'Signup not found' });
+			}
+			if (signup.organisationId != null && signup.organisationId !== organisationId) {
 				return fail(404, { error: 'Signup not found' });
 			}
 

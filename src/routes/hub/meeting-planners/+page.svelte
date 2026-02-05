@@ -79,6 +79,6 @@
 	</form>
 </div>
 
-<Table {columns} rows={meetingPlanners} onRowClick={(row) => goto(`/hub/meeting-planners/${row.id}`)} />
+<Table {columns} rows={meetingPlanners} emptyMessage="No meeting planners yet. Add your first above." onRowClick={(row) => goto(`/hub/meeting-planners/${row.id}`)} />
 
 <Pager {currentPage} {totalPages} onPageChange={handlePageChange} />

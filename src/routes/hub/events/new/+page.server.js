@@ -6,11 +6,14 @@ import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
 import { generateOccurrences } from '$lib/crm/server/recurrence.js';
 import { generateId } from '$lib/crm/server/ids.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { getCurrentOrganisationId, filterByOrganisation, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ cookies }) {
+	const organisationId = await getCurrentOrganisationId();
 	const csrfToken = getCsrfToken(cookies) || '';
 	const eventColors = await getEventColors();
-	const lists = await readCollection('lists');
+	const allLists = await readCollection('lists');
+	const lists = filterByOrganisation(allLists, organisationId);
 	return { csrfToken, eventColors, lists };
 }
 
@@ -52,7 +55,8 @@ export const actions = {
 			};
 
 			const validated = await validateEvent(eventData);
-			const event = await create('events', validated);
+			const organisationId = await getCurrentOrganisationId();
+			const event = await create('events', withOrganisationId(validated, organisationId));
 
 			// Get first occurrence dates
 			let firstStart = data.get('firstStart');
@@ -93,7 +97,7 @@ export const actions = {
 							allDay: allDay
 						};
 						const validatedOcc = validateOccurrence(occurrenceData);
-						await create('occurrences', validatedOcc);
+						await create('occurrences', withOrganisationId(validatedOcc, organisationId));
 					}
 				} else {
 					// Create a single occurrence for non-recurring events
@@ -105,7 +109,7 @@ export const actions = {
 						allDay: allDay
 					};
 					const validatedOcc = validateOccurrence(occurrenceData);
-					await create('occurrences', validatedOcc);
+					await create('occurrences', withOrganisationId(validatedOcc, organisationId));
 				}
 			} else if (allDay && firstDate) {
 				// Fallback: if we have firstDate but no firstStart/firstEnd, create occurrence from firstDate
@@ -117,7 +121,7 @@ export const actions = {
 					allDay: true
 				};
 				const validatedOcc = validateOccurrence(occurrenceData);
-				await create('occurrences', validatedOcc);
+				await create('occurrences', withOrganisationId(validatedOcc, organisationId));
 			}
 
 			// Log audit event

@@ -3,6 +3,7 @@ import { create } from '$lib/crm/server/fileStore.js';
 import { validateForm } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken, getAdminFromCookies } from '$lib/crm/server/auth.js';
 import { canAccessForms, canAccessSafeguarding } from '$lib/crm/server/permissions.js';
+import { getCurrentOrganisationId, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ cookies }) {
 	const admin = await getAdminFromCookies(cookies);
@@ -43,7 +44,8 @@ export const actions = {
 			};
 
 			const validated = validateForm(formData);
-			const form = await create('forms', validated);
+			const organisationId = await getCurrentOrganisationId();
+			const form = await create('forms', withOrganisationId(validated, organisationId));
 
 			throw redirect(302, `/hub/forms/${form.id}`);
 		} catch (error) {

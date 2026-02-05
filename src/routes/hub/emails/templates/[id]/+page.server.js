@@ -3,10 +3,15 @@ import { findById, update, remove } from '$lib/crm/server/fileStore.js';
 import { validateNewsletterTemplate } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
+import { getCurrentOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies }) {
+	const organisationId = await getCurrentOrganisationId();
 	const template = await findById('email_templates', params.id);
 	if (!template) {
+		throw redirect(302, '/hub/emails/templates');
+	}
+	if (template.organisationId != null && template.organisationId !== organisationId) {
 		throw redirect(302, '/hub/emails/templates');
 	}
 	const csrfToken = getCsrfToken(cookies) || '';
@@ -23,6 +28,11 @@ export const actions = {
 		}
 
 		try {
+			const organisationId = await getCurrentOrganisationId();
+			const existing = await findById('email_templates', params.id);
+			if (!existing || (existing.organisationId != null && existing.organisationId !== organisationId)) {
+				return fail(404, { error: 'Template not found' });
+			}
 			const htmlContent = data.get('htmlContent') || '';
 			const sanitizedHtml = await sanitizeHtml(htmlContent);
 
@@ -62,6 +72,11 @@ export const actions = {
 			return fail(403, { error: 'CSRF token validation failed' });
 		}
 
+		const organisationId = await getCurrentOrganisationId();
+		const template = await findById('email_templates', params.id);
+		if (template && template.organisationId != null && template.organisationId !== organisationId) {
+			return fail(404, { error: 'Template not found' });
+		}
 		await remove('email_templates', params.id);
 		throw redirect(302, '/hub/emails/templates');
 	}

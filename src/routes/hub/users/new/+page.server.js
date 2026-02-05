@@ -3,7 +3,7 @@ import { createAdmin, getAdminFromCookies } from '$lib/crm/server/auth.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sendAdminWelcomeEmail } from '$lib/crm/server/email.js';
 import { isSuperAdmin, canCreateAdmin, getAvailableHubAreas, HUB_AREAS, isSuperAdminEmail } from '$lib/crm/server/permissions.js';
-import { getSuperAdminEmail } from '$lib/crm/server/envConfig.js';
+import { getEffectiveSuperAdminEmail } from '$lib/crm/server/settings.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
 
 export async function load({ cookies }) {
@@ -12,14 +12,14 @@ export async function load({ cookies }) {
 		throw redirect(302, '/hub/auth/login');
 	}
 	
-	// Only super admins can create admins
-	if (!isSuperAdmin(admin)) {
+	// Only super admins can create admins (use effective super admin from hub_settings/Multi-org)
+	const superAdminEmail = await getEffectiveSuperAdminEmail();
+	if (!isSuperAdmin(admin, superAdminEmail)) {
 		throw redirect(302, '/hub/users');
 	}
 	
 	const csrfToken = getCsrfToken(cookies) || '';
-	const availableAreas = getAvailableHubAreas(admin);
-	const superAdminEmail = getSuperAdminEmail();
+	const availableAreas = getAvailableHubAreas(admin, superAdminEmail);
 	return { csrfToken, availableAreas, superAdminEmail };
 }
 
@@ -47,25 +47,25 @@ export const actions = {
 			return { error: 'Not authenticated' };
 		}
 
-		// Check if current admin can create admins
-		if (!canCreateAdmin(currentAdmin)) {
+		// Check if current admin can create admins (use effective super admin from hub_settings/Multi-org)
+		const effectiveSuperAdminEmail = await getEffectiveSuperAdminEmail();
+		if (!canCreateAdmin(currentAdmin, effectiveSuperAdminEmail)) {
 			return { error: 'You do not have permission to create admins' };
 		}
 
 		// Check if email matches super admin email - always super admin (no permissions needed)
 		const normalizedEmail = email.toString().toLowerCase().trim();
-		const superAdminEmail = getSuperAdminEmail();
-		const isSuperAdminEmailMatch = isSuperAdminEmail(normalizedEmail, superAdminEmail);
+		const isSuperAdminEmailMatch = isSuperAdminEmail(normalizedEmail, effectiveSuperAdminEmail);
 
 		// Validate permissions array
-		const validAreas = getAvailableHubAreas(currentAdmin).map(a => a.value);
+		const validAreas = getAvailableHubAreas(currentAdmin, effectiveSuperAdminEmail).map(a => a.value);
 		let validPermissions = permissions.filter(p => validAreas.includes(p.toString()));
 		
 		// Check if SUPER_ADMIN permission is being set
 		const hasSuperAdminPermission = validPermissions.includes(HUB_AREAS.SUPER_ADMIN);
 		
 		// Only super admins can grant SUPER_ADMIN permission
-		if (hasSuperAdminPermission && !isSuperAdmin(currentAdmin)) {
+		if (hasSuperAdminPermission && !isSuperAdmin(currentAdmin, effectiveSuperAdminEmail)) {
 			return { error: 'Only super admins can grant super admin permission' };
 		}
 		

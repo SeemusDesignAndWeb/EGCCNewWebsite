@@ -104,13 +104,14 @@ export function isSuperAdmin(admin, superAdminEmail = null) {
  * Get admin permissions array from admin object
  * Handles both new permissions array and legacy adminLevel
  * @param {object} admin - Admin user object
+ * @param {string} [superAdminEmail] - Effective super admin email (e.g. from hub_settings), optional
  * @returns {string[]} Array of permission area strings
  */
-export function getAdminPermissions(admin) {
+export function getAdminPermissions(admin, superAdminEmail = null) {
 	if (!admin) return [];
 	
 	// Super admin has all permissions (check this first)
-	if (isSuperAdmin(admin)) {
+	if (isSuperAdmin(admin, superAdminEmail)) {
 		// Return all permissions except SUPER_ADMIN itself (it's a meta-permission)
 		return Object.values(HUB_AREAS).filter(p => p !== HUB_AREAS.SUPER_ADMIN);
 	}
@@ -192,49 +193,84 @@ function getAreaForRoute(pathname) {
 }
 
 /**
+ * Get effective permissions for an admin in the current organisation.
+ * When the org has areaPermissions set (MultiOrg), the user can only access areas
+ * that are both in the org's areaPermissions and in the user's permissions.
+ * @param {object} admin - Admin user object
+ * @param {string[]|null|undefined} organisationAreaPermissions - Org's allowed areas (from MultiOrg), or null for no restriction
+ * @param {string} [superAdminEmail] - Effective super admin email, optional
+ * @returns {string[]} Effective permission area values
+ */
+export function getEffectivePermissions(admin, organisationAreaPermissions, superAdminEmail = null) {
+	const userPerms = getAdminPermissions(admin, superAdminEmail);
+	if (!admin) return [];
+	if (isSuperAdmin(admin, superAdminEmail)) {
+		return organisationAreaPermissions && organisationAreaPermissions.length >= 0
+			? organisationAreaPermissions
+			: userPerms;
+	}
+	if (!organisationAreaPermissions || !Array.isArray(organisationAreaPermissions)) {
+		return userPerms;
+	}
+	return userPerms.filter((p) => organisationAreaPermissions.includes(p));
+}
+
+/**
  * Check if admin has access to a route
  * @param {object} admin - Admin user object
  * @param {string} pathname - Route pathname
+ * @param {string} [superAdminEmail] - Effective super admin email (e.g. from hub_settings), optional
+ * @param {string[]|null} [organisationAreaPermissions] - Org's allowed areas (from MultiOrg). When set, user access is restricted to intersection with their permissions.
  * @returns {boolean} True if admin has access
  */
-export function hasRouteAccess(admin, pathname) {
+export function hasRouteAccess(admin, pathname, superAdminEmail = null, organisationAreaPermissions = null) {
 	if (!admin) return false;
-	
-	// Super admin has access to everything
-	if (isSuperAdmin(admin)) {
+
+	const effectivePerms = getEffectivePermissions(admin, organisationAreaPermissions, superAdminEmail);
+
+	// Super admin: when org has areaPermissions set (including empty), restrict to those areas like any other user
+	if (isSuperAdmin(admin, superAdminEmail)) {
+		if (Array.isArray(organisationAreaPermissions)) {
+			const area = getAreaForRoute(pathname);
+			if (area && area !== HUB_AREAS.USERS) {
+				return organisationAreaPermissions.includes(area);
+			}
+		}
 		return true;
 	}
-	
+
 	// Dashboard, Profile, Help, and Video Tutorials (viewing) are accessible to all authenticated admins
 	if (pathname === '/hub' || pathname === '/hub/profile' || pathname === '/hub/help' || pathname === '/hub/video-tutorials') {
 		return true;
 	}
-	
+
+	// Hub-level admin routes (not scoped by org area): super admin only
+	if (pathname.startsWith('/hub/settings') || pathname.startsWith('/hub/users') || pathname.startsWith('/hub/audit-logs')) {
+		return isSuperAdmin(admin, superAdminEmail);
+	}
+
 	// Video management pages (/hub/videos) are only for super admin
 	if (pathname.startsWith('/hub/videos')) {
-		return isSuperAdmin(admin);
+		return isSuperAdmin(admin, superAdminEmail);
 	}
-	
+
 	// Image management pages (/hub/images) are only for super admin
 	if (pathname.startsWith('/hub/images')) {
-		return isSuperAdmin(admin);
+		return isSuperAdmin(admin, superAdminEmail);
 	}
-	
+
 	// Get the hub area for this route
 	const area = getAreaForRoute(pathname);
 	if (!area) {
-		// Unknown route - deny access
 		return false;
 	}
-	
-	// Users area is only for super admin (already checked above)
+
+	// Users area is only for super admin
 	if (area === HUB_AREAS.USERS) {
-		return false;
+		return isSuperAdmin(admin, superAdminEmail);
 	}
-	
-	// Check if admin has permission for this area
-	const permissions = getAdminPermissions(admin);
-	return permissions.includes(area);
+
+	return effectivePerms.includes(area);
 }
 
 /**
@@ -355,11 +391,30 @@ export function getAvailableHubAreas(currentAdmin = null) {
 }
 
 /**
+ * Hub areas that can be assigned to an organisation (for MultiOrg).
+ * Excludes SUPER_ADMIN and USERS (those are Hub-level only).
+ * @returns {Array} Array of hub area objects for organisation permissions
+ */
+export function getOrganisationHubAreas() {
+	return [
+		{ value: HUB_AREAS.CONTACTS, label: 'Contacts', description: 'Manage contact database' },
+		{ value: HUB_AREAS.LISTS, label: 'Lists', description: 'Manage contact lists' },
+		{ value: HUB_AREAS.ROTAS, label: 'Rotas', description: 'Manage volunteer rotas' },
+		{ value: HUB_AREAS.EVENTS, label: 'Events', description: 'Manage events and calendar' },
+		{ value: HUB_AREAS.MEETING_PLANNERS, label: 'Meeting Planners', description: 'Plan and manage meetings' },
+		{ value: HUB_AREAS.NEWSLETTERS, label: 'Emails', description: 'Create and send emails' },
+		{ value: HUB_AREAS.FORMS, label: 'Forms (Non-Safeguarding)', description: 'Manage general forms and submissions' },
+		{ value: HUB_AREAS.SAFEGUARDING_FORMS, label: 'Safeguarding Forms', description: 'Access safeguarding forms and submissions' },
+		{ value: HUB_AREAS.MEMBERS, label: 'Members', description: 'Manage church members and membership information' }
+	];
+}
+
+/**
  * Check if admin can create another admin
  * @param {object} admin - Admin user object
  * @returns {boolean} True if admin can create other admins
  */
-export function canCreateAdmin(admin) {
+export function canCreateAdmin(admin, superAdminEmail = null) {
 	if (!admin) return false;
-	return isSuperAdmin(admin);
+	return isSuperAdmin(admin, superAdminEmail);
 }

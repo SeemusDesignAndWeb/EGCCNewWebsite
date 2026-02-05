@@ -3,12 +3,14 @@ import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { validateRota } from '$lib/crm/server/validators.js';
 import { fail } from '@sveltejs/kit';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ cookies }) {
-	const events = await readCollection('events');
-	const rotas = await readCollection('rotas');
-	const contacts = await readCollection('contacts');
-	const lists = await readCollection('lists');
+	const organisationId = await getCurrentOrganisationId();
+	const events = filterByOrganisation(await readCollection('events'), organisationId);
+	const rotas = filterByOrganisation(await readCollection('rotas'), organisationId);
+	const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
+	const lists = filterByOrganisation(await readCollection('lists'), organisationId);
 
 	// Sort contacts alphabetically
 	const sortedContacts = contacts.sort((a, b) => {
@@ -295,9 +297,14 @@ export const actions = {
 				return fail(400, { error: 'End date is required' });
 			}
 
+			const organisationId = await getCurrentOrganisationId();
+
 			// Get the rota
 			const rota = await findById('rotas', rotaId);
 			if (!rota) {
+				return fail(404, { error: 'Rota not found' });
+			}
+			if (rota.organisationId != null && rota.organisationId !== organisationId) {
 				return fail(404, { error: 'Rota not found' });
 			}
 
@@ -306,6 +313,9 @@ export const actions = {
 			if (contactSelectionType === 'list') {
 				const list = await findById('lists', listId);
 				if (!list) {
+					return fail(404, { error: 'List not found' });
+				}
+				if (list.organisationId != null && list.organisationId !== organisationId) {
 					return fail(404, { error: 'List not found' });
 				}
 				contactIds = Array.isArray(list.contactIds) ? list.contactIds : [];
@@ -323,10 +333,10 @@ export const actions = {
 
 			console.log('[BULK ASSIGN] Contact IDs to assign:', contactIds.length, contactIds);
 
-			// Get all occurrences for this event
-			const allOccurrences = await readCollection('occurrences');
+			// Get all occurrences for this event (scoped to current org)
+			const allOccurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
 			const eventOccurrences = allOccurrences.filter(o => o.eventId === rota.eventId);
-			const holidays = await readCollection('holidays');
+			const holidays = filterByOrganisation(await readCollection('holidays'), organisationId);
 
 			console.log('[BULK ASSIGN] Total event occurrences:', eventOccurrences.length);
 			console.log('[BULK ASSIGN] Pattern:', patternType, patternType === 'day-of-week' ? `${dayOfWeek} (${weekOfMonth})` : dayOfMonthPosition);

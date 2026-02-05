@@ -4,6 +4,7 @@ import { decrypt } from '$lib/crm/server/crypto.js';
 import { getAdminFromCookies, getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { logSensitiveOperation, logDataChange } from '$lib/crm/server/audit.js';
 import { isSuperAdmin, canAccessSafeguarding } from '$lib/crm/server/permissions.js';
+import { getCurrentOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies, request }) {
 	const admin = await getAdminFromCookies(cookies);
@@ -11,14 +12,21 @@ export async function load({ params, cookies, request }) {
 		throw redirect(302, '/hub/auth/login');
 	}
 
+	const organisationId = await getCurrentOrganisationId();
 	const form = await findById('forms', params.id);
 	if (!form) {
+		throw redirect(302, '/hub/forms');
+	}
+	if (form.organisationId != null && form.organisationId !== organisationId) {
 		throw redirect(302, '/hub/forms');
 	}
 
 	const register = await findById('registers', params.submissionId);
 	if (!register || register.formId !== params.id) {
 		throw redirect(302, `/hub/forms/${params.id}`);
+	}
+	if (register.organisationId != null && register.organisationId !== organisationId) {
+		throw redirect(302, '/hub/forms');
 	}
 
 	// Log sensitive operation if safeguarding
@@ -65,13 +73,20 @@ export const actions = {
 			return fail(401, { error: 'Unauthorized' });
 		}
 
+		const organisationId = await getCurrentOrganisationId();
 		const register = await findById('registers', params.submissionId);
 		if (!register || register.formId !== params.id) {
+			return fail(404, { error: 'Submission not found' });
+		}
+		if (register.organisationId != null && register.organisationId !== organisationId) {
 			return fail(404, { error: 'Submission not found' });
 		}
 
 		const form = await findById('forms', params.id);
 		if (!form) {
+			return fail(404, { error: 'Form not found' });
+		}
+		if (form.organisationId != null && form.organisationId !== organisationId) {
 			return fail(404, { error: 'Form not found' });
 		}
 

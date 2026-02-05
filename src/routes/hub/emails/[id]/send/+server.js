@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import { findById, readCollection, update } from '$lib/crm/server/fileStore.js';
 import { prepareNewsletterEmail, sendNewsletterBatch } from '$lib/crm/server/email.js';
 import { verifyCsrfToken } from '$lib/crm/server/auth.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function POST({ request, cookies, params, url }) {
 	const data = await request.json();
@@ -11,8 +12,12 @@ export async function POST({ request, cookies, params, url }) {
 		throw error(403, 'CSRF token validation failed');
 	}
 
+	const organisationId = await getCurrentOrganisationId();
 	const email = await findById('emails', params.id);
 	if (!email) {
+		throw error(404, 'Email not found');
+	}
+	if (email.organisationId != null && email.organisationId !== organisationId) {
 		throw error(404, 'Email not found');
 	}
 
@@ -25,8 +30,11 @@ export async function POST({ request, cookies, params, url }) {
 	if (!list) {
 		throw error(404, 'List not found');
 	}
+	if (list.organisationId != null && list.organisationId !== organisationId) {
+		throw error(404, 'List not found');
+	}
 
-	const contacts = await readCollection('contacts');
+	const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
 	// Filter to only subscribed contacts (subscribed !== false)
 	const listContacts = contacts.filter(c => 
 		list.contactIds?.includes(c.id) && 

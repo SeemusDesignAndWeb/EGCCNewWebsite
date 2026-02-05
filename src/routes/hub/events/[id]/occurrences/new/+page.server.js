@@ -3,10 +3,15 @@ import { findById, create } from '$lib/crm/server/fileStore.js';
 import { validateOccurrence } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { generateOccurrences } from '$lib/crm/server/recurrence.js';
+import { getCurrentOrganisationId, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies }) {
+	const organisationId = await getCurrentOrganisationId();
 	const event = await findById('events', params.id);
 	if (!event) {
+		throw redirect(302, '/hub/events');
+	}
+	if (event.organisationId != null && event.organisationId !== organisationId) {
 		throw redirect(302, '/hub/events');
 	}
 
@@ -24,9 +29,13 @@ export const actions = {
 		}
 
 		try {
+			const organisationId = await getCurrentOrganisationId();
 			// Get event to use its location as fallback
 			const event = await findById('events', params.id);
 			if (!event) {
+				return fail(404, { error: 'Event not found' });
+			}
+			if (event.organisationId != null && event.organisationId !== organisationId) {
 				return fail(404, { error: 'Event not found' });
 			}
 
@@ -63,7 +72,7 @@ export const actions = {
 					location: location
 				});
 
-				// Create all occurrences
+				// Create all occurrences (scoped to current org)
 				for (const occ of occurrences) {
 					const occurrenceData = {
 						eventId: params.id,
@@ -75,10 +84,10 @@ export const actions = {
 						allDay: allDay
 					};
 					const validated = validateOccurrence(occurrenceData);
-					await create('occurrences', validated);
+					await create('occurrences', withOrganisationId(validated, organisationId));
 				}
 			} else {
-				// Single occurrence
+				// Single occurrence (scoped to current org)
 				const occurrenceData = {
 					eventId: params.id,
 					startsAt: startISO,
@@ -90,7 +99,7 @@ export const actions = {
 				};
 
 				const validated = validateOccurrence(occurrenceData);
-				await create('occurrences', validated);
+				await create('occurrences', withOrganisationId(validated, organisationId));
 			}
 
 			throw redirect(302, `/hub/events/${params.id}`);

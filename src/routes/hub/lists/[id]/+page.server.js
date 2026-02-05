@@ -3,15 +3,21 @@ import { findById, update, remove, readCollection } from '$lib/crm/server/fileSt
 import { validateList } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies, url }) {
+	const organisationId = await getCurrentOrganisationId();
 	const list = await findById('lists', params.id);
 	if (!list) {
 		throw redirect(302, '/hub/lists');
 	}
+	if (list.organisationId != null && list.organisationId !== organisationId) {
+		throw redirect(302, '/hub/lists');
+	}
 
-	// Get contact IDs in this list
-	const contacts = await readCollection('contacts');
+	// Get contact IDs in this list (contacts scoped to org)
+	const allContacts = await readCollection('contacts');
+	const contacts = filterByOrganisation(allContacts, organisationId);
 	
 	// Sort contacts alphabetically by first name, then last name
 	const sortContacts = (contacts) => {

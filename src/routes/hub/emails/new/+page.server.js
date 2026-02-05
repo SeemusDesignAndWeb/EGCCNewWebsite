@@ -2,9 +2,11 @@ import { fail, redirect } from '@sveltejs/kit';
 import { create, readCollection } from '$lib/crm/server/fileStore.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
+import { getCurrentOrganisationId, filterByOrganisation, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ cookies }) {
-	const templates = await readCollection('email_templates');
+	const organisationId = await getCurrentOrganisationId();
+	const templates = filterByOrganisation(await readCollection('email_templates'), organisationId);
 	const csrfToken = getCsrfToken(cookies) || '';
 	return { templates, csrfToken };
 }
@@ -41,14 +43,15 @@ export const actions = {
 			.trim();
 
 		try {
-			const newsletter = await create('emails', {
+			const organisationId = await getCurrentOrganisationId();
+			const newsletter = await create('emails', withOrganisationId({
 				subject: subject.trim(),
 				htmlContent: sanitizedHtml,
 				textContent: textContent,
 				status: 'draft',
 				logs: [],
 				metrics: {}
-			});
+			}, organisationId));
 
 			// Redirect after successful creation - don't wrap in try-catch
 			throw redirect(302, `/hub/emails/${newsletter.id}?created=true`);

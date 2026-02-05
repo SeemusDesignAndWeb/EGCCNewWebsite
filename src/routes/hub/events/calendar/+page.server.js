@@ -3,11 +3,13 @@ import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
 import { getWeekKey } from '$lib/crm/utils/weekUtils.js';
+import { getCurrentOrganisationId, filterByOrganisation, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ url, cookies }) {
-	const events = await readCollection('events');
-	const occurrences = await readCollection('occurrences');
-	const weekNotes = await readCollection('week_notes');
+	const organisationId = await getCurrentOrganisationId();
+	const events = filterByOrganisation(await readCollection('events'), organisationId);
+	const occurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
+	const weekNotes = filterByOrganisation(await readCollection('week_notes'), organisationId);
 
 	// Enrich occurrences with event data
 	const eventsMap = new Map(events.map(e => [e.id, e]));
@@ -46,7 +48,8 @@ export const actions = {
 			const note = data.get('note') || '';
 			const sanitizedNote = await sanitizeHtml(note);
 
-			const weekNotes = await readCollection('week_notes');
+			const organisationId = await getCurrentOrganisationId();
+			const weekNotes = filterByOrganisation(await readCollection('week_notes'), organisationId);
 			const adminId = locals?.admin?.id || null;
 			const event = { getClientAddress: () => 'unknown', request };
 			const savedWeekKeys = [];
@@ -68,10 +71,10 @@ export const actions = {
 						weekKey: weekKey
 					}, event);
 				} else {
-					const newNote = await create('week_notes', {
+					const newNote = await create('week_notes', withOrganisationId({
 						weekKey: weekKey,
 						note: sanitizedNote
-					});
+					}, organisationId));
 
 					await logDataChange(adminId, 'create', 'week_note', newNote.id, {
 						weekKey: weekKey
@@ -107,7 +110,8 @@ export const actions = {
 				return { error: 'Week key is required' };
 			}
 
-			const weekNotes = await readCollection('week_notes');
+			const organisationId = await getCurrentOrganisationId();
+			const weekNotes = filterByOrganisation(await readCollection('week_notes'), organisationId);
 			const noteToDelete = weekNotes.find(n => n.weekKey === weekKey);
 
 			if (!noteToDelete) {

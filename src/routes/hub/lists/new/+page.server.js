@@ -3,6 +3,7 @@ import { create } from '$lib/crm/server/fileStore.js';
 import { validateList } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { getCurrentOrganisationId, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ cookies }) {
 	const csrfToken = getCsrfToken(cookies) || '';
@@ -26,7 +27,8 @@ export const actions = {
 
 		try {
 			const validated = validateList(listData);
-			const list = await create('lists', validated);
+			const organisationId = await getCurrentOrganisationId();
+			const list = await create('lists', withOrganisationId(validated, organisationId));
 
 			// Log audit event
 			const adminId = locals?.admin?.id || null;

@@ -1,4 +1,5 @@
 import { readCollection } from '$lib/crm/server/fileStore.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -6,7 +7,8 @@ export async function load({ url }) {
 	const page = parseInt(url.searchParams.get('page') || '1', 10);
 	const search = url.searchParams.get('search') || '';
 
-	const emails = await readCollection('emails');
+	const organisationId = await getCurrentOrganisationId();
+	const emails = filterByOrganisation(await readCollection('emails'), organisationId);
 	
 	// Sort by latest first (updatedAt or createdAt, most recent first)
 	const sorted = [...emails].sort((a, b) => {

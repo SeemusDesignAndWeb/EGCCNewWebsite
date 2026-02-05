@@ -6,21 +6,25 @@
 	export let admin = null;
 	/** @type {{ logoPath?: string; primaryColor?: string; brandColor?: string } | null} */
 	export let theme = null;
-	
+	/** Effective super admin email (from hub_settings when set by MultiOrg) */
+	export let superAdminEmail = null;
+	/** Org's allowed areas from MultiOrg (null = no restriction). Restricts navbar and access per user. */
+	export let organisationAreaPermissions = null;
+
 	$: isAuthPage = $page.url.pathname.startsWith('/hub/auth/');
 	$: accessDenied = $page.url.searchParams.get('error') === 'access_denied';
-	
-	// Check permissions for various routes
-	$: canAccessContacts = admin && hasRouteAccess(admin, '/hub/contacts');
-	$: canAccessLists = admin && hasRouteAccess(admin, '/hub/lists');
-	$: canAccessMembers = admin && hasRouteAccess(admin, '/hub/members');
-	$: canAccessNewsletters = admin && hasRouteAccess(admin, '/hub/emails');
-	$: canAccessEvents = admin && hasRouteAccess(admin, '/hub/events');
-	$: canAccessMeetingPlanners = admin && hasRouteAccess(admin, '/hub/meeting-planners');
-	$: canAccessRotas = admin && hasRouteAccess(admin, '/hub/rotas');
-	$: canAccessForms = admin && hasRouteAccess(admin, '/hub/forms');
-	$: canAccessUsers = admin && isSuperAdmin(admin);
-	$: canAccessVideos = admin && isSuperAdmin(admin);
+
+	// Check permissions: user permissions intersected with org's allowed areas (MultiOrg)
+	$: canAccessContacts = admin && hasRouteAccess(admin, '/hub/contacts', superAdminEmail, organisationAreaPermissions);
+	$: canAccessLists = admin && hasRouteAccess(admin, '/hub/lists', superAdminEmail, organisationAreaPermissions);
+	$: canAccessMembers = admin && hasRouteAccess(admin, '/hub/members', superAdminEmail, organisationAreaPermissions);
+	$: canAccessNewsletters = admin && hasRouteAccess(admin, '/hub/emails', superAdminEmail, organisationAreaPermissions);
+	$: canAccessEvents = admin && hasRouteAccess(admin, '/hub/events', superAdminEmail, organisationAreaPermissions);
+	$: canAccessMeetingPlanners = admin && hasRouteAccess(admin, '/hub/meeting-planners', superAdminEmail, organisationAreaPermissions);
+	$: canAccessRotas = admin && hasRouteAccess(admin, '/hub/rotas', superAdminEmail, organisationAreaPermissions);
+	$: canAccessForms = admin && hasRouteAccess(admin, '/hub/forms', superAdminEmail, organisationAreaPermissions);
+	$: canAccessUsers = admin && isSuperAdmin(admin, superAdminEmail);
+	$: canAccessVideos = admin && isSuperAdmin(admin, superAdminEmail);
 	
 	// Show contacts dropdown if any contacts-related permission exists
 	$: showContactsDropdown = canAccessContacts || canAccessLists || canAccessMembers;
@@ -130,9 +134,6 @@
 										{/if}
 									</div>
 								{/if}
-								{#if canAccessNewsletters}
-									<a href="/hub/emails" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/emails') ? 'bg-theme-button-3 text-white' : 'text-white hover:bg-white hover:text-theme-button-1'}">Emails</a>
-								{/if}
 								<!-- Events Dropdown -->
 								{#if showEventsDropdown}
 									<div class="relative" bind:this={eventsDropdownElement}>
@@ -162,6 +163,9 @@
 								{/if}
 								{#if canAccessRotas}
 									<a href="/hub/rotas" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/rotas') ? 'bg-theme-button-3 text-white' : 'text-white hover:bg-white hover:text-theme-button-1'}">Rotas</a>
+								{/if}
+								{#if canAccessNewsletters}
+									<a href="/hub/emails" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/emails') ? 'bg-theme-button-3 text-white' : 'text-white hover:bg-white hover:text-theme-button-1'}">Emails</a>
 								{/if}
 								{#if canAccessForms}
 									<a href="/hub/forms" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/forms') ? 'bg-theme-button-3 text-white' : 'text-white hover:bg-white hover:text-theme-button-1'}">Forms</a>
@@ -259,9 +263,6 @@
 							{#if canAccessMembers}
 								<a href="/hub/members" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/members') ? 'bg-theme-button-3 text-white' : 'text-white hover:bg-white hover:text-theme-button-1'}">Members</a>
 							{/if}
-							{#if canAccessNewsletters}
-								<a href="/hub/emails" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/emails') ? 'bg-theme-button-3 text-white' : 'text-white hover:bg-white hover:text-theme-button-1'}">Emails</a>
-							{/if}
 							{#if canAccessEvents}
 								<a href="/hub/events/calendar" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/events') ? 'bg-theme-button-3 text-white' : 'text-white hover:bg-white hover:text-theme-button-1'}">Events</a>
 							{/if}
@@ -270,6 +271,9 @@
 							{/if}
 							{#if canAccessRotas}
 								<a href="/hub/rotas" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/rotas') ? 'bg-theme-button-3 text-white' : 'text-white hover:bg-white hover:text-theme-button-1'}">Rotas</a>
+							{/if}
+							{#if canAccessNewsletters}
+								<a href="/hub/emails" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/emails') ? 'bg-theme-button-3 text-white' : 'text-white hover:bg-white hover:text-theme-button-1'}">Emails</a>
 							{/if}
 							{#if canAccessForms}
 								<a href="/hub/forms" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/forms') ? 'bg-theme-button-3 text-white' : 'text-white hover:bg-white hover:text-theme-button-1'}">Forms</a>

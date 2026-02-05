@@ -3,6 +3,7 @@ import { readCollection, create } from '$lib/crm/server/fileStore.js';
 import { validateContact } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { getCurrentOrganisationId, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -415,10 +416,11 @@ export const actions = {
 						continue;
 					}
 
-					// Validate and create contact
+					// Validate and create contact (scoped to current Hub organisation)
 					// Note: Duplicate emails are now allowed (e.g., husband and wife sharing an email)
 					const validated = validateContact(contactData);
-					const contact = await create('contacts', validated);
+					const organisationId = await getCurrentOrganisationId();
+					const contact = await create('contacts', withOrganisationId(validated, organisationId));
 					
 					results.success.push({
 						row: rowNumber,

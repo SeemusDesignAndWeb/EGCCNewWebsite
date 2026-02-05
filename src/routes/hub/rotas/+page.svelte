@@ -160,7 +160,8 @@
 <div bind:this={tableContainer}>
 	<Table 
 		{columns} 
-		rows={rotas} 
+		rows={rotas}
+		emptyMessage="No rotas yet. Create an event first, then add rotas from the event page."
 		onRowClick={(row) => goto(`/hub/rotas/${row.id}`)}
 	/>
 </div>

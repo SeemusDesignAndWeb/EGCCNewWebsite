@@ -4,22 +4,30 @@ import { validateMeetingPlanner, validateRota } from '$lib/crm/server/validators
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
 import { getSettings } from '$lib/crm/server/settings.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies, url }) {
+	const organisationId = await getCurrentOrganisationId();
 	const meetingPlanner = await findById('meeting_planners', params.id);
 	if (!meetingPlanner) {
 		throw redirect(302, '/hub/meeting-planners');
 	}
+	if (meetingPlanner.organisationId != null && meetingPlanner.organisationId !== organisationId) {
+		throw redirect(302, '/hub/meeting-planners');
+	}
 
 	const event = await findById('events', meetingPlanner.eventId);
+	if (event && event.organisationId != null && event.organisationId !== organisationId) {
+		throw redirect(302, '/hub/meeting-planners');
+	}
 	const occurrence = meetingPlanner.occurrenceId ? await findById('occurrences', meetingPlanner.occurrenceId) : null;
 	
-	// Load all occurrences for this event
-	const allOccurrences = await readCollection('occurrences');
+	// Load all occurrences for this event (scoped to current org)
+	const allOccurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
 	const eventOccurrences = allOccurrences.filter(o => o.eventId === meetingPlanner.eventId);
 
-	// Load all rotas
-	const allRotas = await readCollection('rotas');
+	// Load all rotas (scoped to current org)
+	const allRotas = filterByOrganisation(await readCollection('rotas'), organisationId);
 	const settings = await getSettings();
 	const settingsRotas = settings.meetingPlannerRotas || [];
 	
@@ -45,8 +53,8 @@ export async function load({ params, cookies, url }) {
 		};
 	});
 
-	// Load contacts for assignee selection
-	const contactsRaw = await readCollection('contacts');
+	// Load contacts for assignee selection (scoped to current org)
+	const contactsRaw = filterByOrganisation(await readCollection('contacts'), organisationId);
 	
 	// Sort contacts alphabetically by first name, then last name
 	const contacts = contactsRaw.sort((a, b) => {
@@ -61,8 +69,8 @@ export async function load({ params, cookies, url }) {
 		return aLastName.localeCompare(bLastName);
 	});
 	
-	// Load all lists for filtering contacts
-	const lists = await readCollection('lists');
+	// Load all lists for filtering contacts (scoped to current org)
+	const lists = filterByOrganisation(await readCollection('lists'), organisationId);
 
 	// Process assignees for each rota, filtering by meeting planner's occurrence
 	function processAssignees(rota) {
@@ -148,8 +156,8 @@ export async function load({ params, cookies, url }) {
 		}
 	}
 
-	// Get unique speaker series from all meeting planners (excluding current one)
-	const allMeetingPlanners = await readCollection('meeting_planners');
+	// Get unique speaker series from all meeting planners (excluding current one, scoped to current org)
+	const allMeetingPlanners = filterByOrganisation(await readCollection('meeting_planners'), organisationId);
 	const speakerSeries = [...new Set(
 		allMeetingPlanners
 			.filter(mp => mp.id !== params.id) // Exclude current meeting planner
@@ -187,8 +195,12 @@ export const actions = {
 			const notes = data.get('notes') || '';
 			const sanitized = await sanitizeHtml(notes);
 
+			const organisationId = await getCurrentOrganisationId();
 			const meetingPlanner = await findById('meeting_planners', params.id);
 			if (!meetingPlanner) {
+				return fail(404, { error: 'Meeting planner not found' });
+			}
+			if (meetingPlanner.organisationId != null && meetingPlanner.organisationId !== organisationId) {
 				return fail(404, { error: 'Meeting planner not found' });
 			}
 
@@ -220,8 +232,12 @@ export const actions = {
 		}
 
 		try {
+			const organisationId = await getCurrentOrganisationId();
 			const meetingPlanner = await findById('meeting_planners', params.id);
 			if (!meetingPlanner) {
+				return fail(404, { error: 'Meeting planner not found' });
+			}
+			if (meetingPlanner.organisationId != null && meetingPlanner.organisationId !== organisationId) {
 				return fail(404, { error: 'Meeting planner not found' });
 			}
 
@@ -280,8 +296,12 @@ export const actions = {
 				}
 			}
 
+			const organisationId = await getCurrentOrganisationId();
 			const rota = await findById('rotas', rotaId);
 			if (!rota) {
+				return fail(404, { error: 'Rota not found' });
+			}
+			if (rota.organisationId != null && rota.organisationId !== organisationId) {
 				return fail(404, { error: 'Rota not found' });
 			}
 
@@ -379,8 +399,12 @@ export const actions = {
 				return fail(400, { error: 'Invalid index' });
 			}
 
+			const organisationId = await getCurrentOrganisationId();
 			const rota = await findById('rotas', rotaId);
 			if (!rota) {
+				return fail(404, { error: 'Rota not found' });
+			}
+			if (rota.organisationId != null && rota.organisationId !== organisationId) {
 				return fail(404, { error: 'Rota not found' });
 			}
 

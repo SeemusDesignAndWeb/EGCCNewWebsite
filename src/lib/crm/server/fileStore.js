@@ -1,6 +1,6 @@
 /**
  * CRM data store facade. Routes to file store or database based on store mode.
- * Admins and sessions always use file store so login works when DB is unavailable.
+ * When DATA_STORE=database (or store_mode.json), all collections use the database.
  */
 
 import { readFile } from 'fs/promises';

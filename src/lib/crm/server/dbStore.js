@@ -1,7 +1,7 @@
 /**
  * Postgres-backed store implementing the same API as fileStoreImpl.
  * Used when DATA_STORE=database or store_mode.json says "database".
- * Admins and sessions are always served from file store (see facade).
+ * All collections (including admins, sessions, organisations) use the database.
  */
 
 import pg from 'pg';
@@ -82,11 +82,19 @@ export async function readCollection(collection) {
 
 export async function writeCollection(collection, records) {
 	await ensureTable();
+	// Deduplicate by id (keep last) so we never violate (collection, id) primary key
+	const byId = new Map();
+	for (const rec of records) {
+		const id = rec?.id;
+		if (id != null) byId.set(id, rec);
+	}
+	const uniqueRecords = [...byId.values()];
+
 	const client = await getPool().connect();
 	try {
 		await client.query('BEGIN');
 		await client.query(`DELETE FROM ${TABLE_NAME} WHERE collection = $1`, [collection]);
-		for (const rec of records) {
+		for (const rec of uniqueRecords) {
 			const row = recordToRow(rec);
 			await client.query(
 				`INSERT INTO ${TABLE_NAME} (collection, id, body, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)`,
@@ -113,15 +121,18 @@ export async function findMany(collection, predicate) {
 }
 
 export async function create(collection, data) {
-	const records = await readCollection(collection);
 	const record = {
 		...data,
 		id: data.id || generateId(),
 		createdAt: data.createdAt || new Date().toISOString(),
 		updatedAt: new Date().toISOString()
 	};
-	records.push(record);
-	await writeCollection(collection, records);
+	const row = recordToRow(record);
+	await ensureTable();
+	await getPool().query(
+		`INSERT INTO ${TABLE_NAME} (collection, id, body, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)`,
+		[collection, row.id, JSON.stringify(row.body), row.created_at, row.updated_at]
+	);
 	return record;
 }
 

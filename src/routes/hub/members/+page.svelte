@@ -97,31 +97,20 @@
 	</div>
 
 	<!-- Members Table -->
-	{#if members.length > 0}
-		<Table 
-			{columns}
-			rows={members}
-			onRowClick={(member) => goto(`/hub/members/${member.id}`)}
-		/>
-		
-		{#if totalPages > 1}
-			<div class="mt-6">
-				<Pager 
-					currentPage={currentPage} 
-					totalPages={totalPages} 
-					onPageChange={handlePageChange}
-				/>
-			</div>
-		{/if}
-	{:else}
-		<div class="text-center py-12">
-			<p class="text-gray-500 text-lg">
-				{#if search}
-					No members found matching "{search}".
-				{:else}
-					No members found.
-				{/if}
-			</p>
+	<Table 
+		{columns}
+		rows={members}
+		emptyMessage={search ? `No members found matching "${search}".` : 'No members yet. Members are contacts with membership status — add contacts first.'}
+		onRowClick={(member) => goto(`/hub/members/${member.id}`)}
+	/>
+
+	{#if totalPages > 1}
+		<div class="mt-6">
+			<Pager 
+				currentPage={currentPage} 
+				totalPages={totalPages} 
+				onPageChange={handlePageChange}
+			/>
 		</div>
 	{/if}
 </div>

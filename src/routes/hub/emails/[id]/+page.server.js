@@ -3,14 +3,19 @@ import { findById, update, create, readCollection, remove } from '$lib/crm/serve
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
 import { validateNewsletterTemplate } from '$lib/crm/server/validators.js';
+import { getCurrentOrganisationId, filterByOrganisation, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies }) {
+	const organisationId = await getCurrentOrganisationId();
 	const email = await findById('emails', params.id);
 	if (!email) {
 		throw redirect(302, '/hub/emails');
 	}
+	if (email.organisationId != null && email.organisationId !== organisationId) {
+		throw redirect(302, '/hub/emails');
+	}
 
-	const templates = await readCollection('email_templates');
+	const templates = filterByOrganisation(await readCollection('email_templates'), organisationId);
 	const csrfToken = getCsrfToken(cookies) || '';
 	return { newsletter: email, templates, csrfToken };
 }
@@ -25,9 +30,13 @@ export const actions = {
 		}
 
 		try {
+			const organisationId = await getCurrentOrganisationId();
 			// Get existing email to preserve fields not being updated
 			const existing = await findById('emails', params.id);
 			if (!existing) {
+				return fail(404, { error: 'Newsletter not found' });
+			}
+			if (existing.organisationId != null && existing.organisationId !== organisationId) {
 				return fail(404, { error: 'Newsletter not found' });
 			}
 
@@ -75,8 +84,12 @@ export const actions = {
 		}
 
 		try {
+			const organisationId = await getCurrentOrganisationId();
 			const email = await findById('emails', params.id);
 			if (!email) {
+				return fail(404, { error: 'Email not found' });
+			}
+			if (email.organisationId != null && email.organisationId !== organisationId) {
 				return fail(404, { error: 'Email not found' });
 			}
 
@@ -94,7 +107,7 @@ export const actions = {
 			};
 
 			const validated = validateNewsletterTemplate(templateData);
-			const template = await create('email_templates', validated);
+			const template = await create('email_templates', withOrganisationId(validated, organisationId));
 
 			return { success: true, templateId: template.id };
 		} catch (error) {
@@ -110,6 +123,11 @@ export const actions = {
 			return fail(403, { error: 'CSRF token validation failed' });
 		}
 
+		const organisationId = await getCurrentOrganisationId();
+		const email = await findById('emails', params.id);
+		if (email && email.organisationId != null && email.organisationId !== organisationId) {
+			return fail(404, { error: 'Newsletter not found' });
+		}
 		await remove('emails', params.id);
 		throw redirect(302, '/hub/emails');
 	}

@@ -2,6 +2,8 @@
 	export let columns = [];
 	export let rows = [];
 	export let onRowClick = null;
+	/** Optional message when there are no rows (e.g. "No contacts yet. Add your first contact above.") */
+	export let emptyMessage = 'No results';
 </script>
 
 <!-- Mobile Card View -->
@@ -49,8 +51,8 @@
 		</div>
 	{/each}
 	{#if rows.length === 0}
-		<div class="text-center py-8 text-gray-500 bg-white shadow rounded-lg">
-			No records found
+		<div class="text-center py-8 text-gray-500 bg-white shadow rounded-lg border border-gray-200">
+			{emptyMessage}
 		</div>
 	{/if}
 </div>
@@ -89,12 +91,14 @@
 					{/each}
 				</tr>
 			{/each}
+			{#if rows.length === 0}
+				<tr>
+					<td colspan={columns.length} class="px-4 py-8 text-center text-gray-500 border-t border-gray-200">
+						{emptyMessage}
+					</td>
+				</tr>
+			{/if}
 		</tbody>
 	</table>
-	{#if rows.length === 0}
-		<div class="text-center py-8 text-gray-500">
-			No records found
-		</div>
-	{/if}
 </div>
 

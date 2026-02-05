@@ -1,5 +1,5 @@
 /**
- * File-based NDJSON store. Used when DATA_STORE=file or for admins/sessions always.
+ * File-based NDJSON store. Used when DATA_STORE=file (deprecated for Hub; prefer database).
  */
 
 import { writeFile, readFile, mkdir } from 'fs/promises';

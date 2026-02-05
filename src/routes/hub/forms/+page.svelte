@@ -223,7 +223,7 @@
 	</form>
 </div>
 
-<Table {columns} rows={forms} onRowClick={(row) => goto(`/hub/forms/${row.id}`)} />
+<Table {columns} rows={forms} emptyMessage="No forms yet. Create your first form above." onRowClick={(row) => goto(`/hub/forms/${row.id}`)} />
 
 <Pager {currentPage} {totalPages} onPageChange={handlePageChange} />
 

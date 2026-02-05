@@ -75,7 +75,7 @@
 	</form>
 </div>
 
-<Table {columns} rows={events} onRowClick={(row) => goto(`/hub/events/${row.id}`)} />
+<Table {columns} rows={events} emptyMessage="No events yet. Add your first event above." onRowClick={(row) => goto(`/hub/events/${row.id}`)} />
 
 <Pager {currentPage} {totalPages} onPageChange={handlePageChange} />
 

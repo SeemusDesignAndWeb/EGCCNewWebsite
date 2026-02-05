@@ -1,5 +1,6 @@
 import { readCollection } from '$lib/crm/server/fileStore.js';
 import { getCsrfToken } from '$lib/crm/server/auth.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -7,7 +8,8 @@ export async function load({ url, cookies }) {
 	const page = parseInt(url.searchParams.get('page') || '1', 10);
 	const search = url.searchParams.get('search') || '';
 
-	const contacts = await readCollection('contacts');
+	const organisationId = await getCurrentOrganisationId();
+	const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
 	
 	// Filter to only members (handle null, undefined, and empty strings)
 	const members = contacts.filter(c => c && c.membershipStatus && c.membershipStatus.toLowerCase().trim() === 'member');

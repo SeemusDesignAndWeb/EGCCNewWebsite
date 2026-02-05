@@ -4,6 +4,7 @@ import { validateForm } from '$lib/crm/server/validators.js';
 import { getAdminFromCookies, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { canAccessForms } from '$lib/crm/server/permissions.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { getCurrentOrganisationId, filterByOrganisation, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 /**
  * Import form(s) structure
@@ -55,8 +56,9 @@ export async function POST({ request, cookies }) {
 			errors: []
 		};
 
-		// Get existing forms to check for duplicates
-		const existingForms = await readCollection('forms');
+		// Get existing forms to check for duplicates (scoped to current org)
+		const organisationId = await getCurrentOrganisationId();
+		const existingForms = filterByOrganisation(await readCollection('forms'), organisationId);
 		const existingNames = new Set(existingForms.map(f => f.name.toLowerCase()));
 
 		// Import each form
@@ -77,8 +79,8 @@ export async function POST({ request, cookies }) {
 					continue;
 				}
 
-				// Create the form
-				const createdForm = await create('forms', validated);
+				// Create the form (scoped to current org)
+				const createdForm = await create('forms', withOrganisationId(validated, organisationId));
 				existingNames.add(validated.name.toLowerCase());
 
 				// Log the import

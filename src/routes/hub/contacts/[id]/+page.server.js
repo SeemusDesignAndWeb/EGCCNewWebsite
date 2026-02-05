@@ -4,10 +4,16 @@ import { validateContact } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { logDataChange, getAdminIdFromEvent } from '$lib/crm/server/audit.js';
 import { getSettings } from '$lib/crm/server/settings.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies }) {
+	const organisationId = await getCurrentOrganisationId();
 	const contact = await findById('contacts', params.id);
 	if (!contact) {
+		throw redirect(302, '/hub/contacts');
+	}
+	// Ensure contact belongs to current organisation (or legacy null)
+	if (contact.organisationId != null && contact.organisationId !== organisationId) {
 		throw redirect(302, '/hub/contacts');
 	}
 
@@ -17,9 +23,10 @@ export async function load({ params, cookies }) {
 		spouse = await findById('contacts', contact.spouseId);
 	}
 
-	// Load all contacts for spouse selection dropdown (excluding current contact)
+	// Load all contacts for spouse selection dropdown (excluding current contact), scoped to org
 	const allContacts = await readCollection('contacts');
-	const contacts = allContacts
+	const orgContacts = filterByOrganisation(allContacts, organisationId);
+	const contacts = orgContacts
 		.filter(c => c.id !== params.id) // Exclude current contact
 		.sort((a, b) => {
 			const aFirstName = (a.firstName || '').toLowerCase();

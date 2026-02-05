@@ -9,6 +9,7 @@
 import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import { env } from '$env/dynamic/private';
 import { readCollection, writeCollection, getDataDir } from './fileStore.js';
 
 const HUB_SETTINGS_COLLECTION = 'hub_settings';
@@ -103,7 +104,9 @@ function mergeWithDefaults(record) {
 		meetingPlannerRotas: Array.isArray(record.meetingPlannerRotas)
 			? record.meetingPlannerRotas
 			: defaultSettings.meetingPlannerRotas,
-		theme
+		theme,
+		hubSuperAdminEmail: record.hubSuperAdminEmail ?? null,
+		currentOrganisationId: record.currentOrganisationId ?? null
 	};
 }
 
@@ -181,10 +184,126 @@ export async function writeSettings(settings) {
 		calendarColours: settings.calendarColours,
 		meetingPlannerRotas: settings.meetingPlannerRotas,
 		theme: settings.theme,
+		hubSuperAdminEmail: existing?.hubSuperAdminEmail ?? settings.hubSuperAdminEmail ?? null,
+		currentOrganisationId: existing?.currentOrganisationId ?? settings.currentOrganisationId ?? null,
 		createdAt: existing?.createdAt ?? now,
 		updatedAt: now
 	};
 	await writeCollection(HUB_SETTINGS_COLLECTION, [record]);
+	invalidateSettingsCache();
+}
+
+/**
+ * Get Hub super admin email from settings (set by MultiOrg when creating Hub super admin).
+ * @returns {Promise<string|null>}
+ */
+export async function getHubSuperAdminEmail() {
+	const s = await getSettings();
+	return s.hubSuperAdminEmail ?? null;
+}
+
+/**
+ * Set Hub super admin email in settings (used by MultiOrg when creating Hub super admin).
+ * @param {string} email
+ */
+export async function setHubSuperAdminEmail(email) {
+	let records = await readCollection(HUB_SETTINGS_COLLECTION);
+	let defaultRecord = records.find((r) => r.id === DEFAULT_RECORD_ID);
+	if (!defaultRecord) {
+		// Ensure default record exists (getSettings creates one if missing)
+		await getSettings();
+		records = await readCollection(HUB_SETTINGS_COLLECTION);
+		defaultRecord = records.find((r) => r.id === DEFAULT_RECORD_ID);
+	}
+	if (defaultRecord) {
+		defaultRecord.hubSuperAdminEmail = email || null;
+		defaultRecord.updatedAt = new Date().toISOString();
+		await writeCollection(HUB_SETTINGS_COLLECTION, records);
+	}
+	invalidateSettingsCache();
+}
+
+/**
+ * Get Hub super admin email for a specific organisation (per-org super admin).
+ * @param {string|null} organisationId
+ * @returns {Promise<string|null>}
+ */
+export async function getHubSuperAdminEmailForOrganisation(organisationId) {
+	if (!organisationId) return null;
+	const orgs = await readCollection('organisations');
+	const org = orgs.find((o) => o.id === organisationId) || null;
+	return (org && org.hubSuperAdminEmail) ? org.hubSuperAdminEmail : null;
+}
+
+/**
+ * Effective super admin email: current organisation's hubSuperAdminEmail, then hub_settings, then env.
+ * Used by permissions so Hub recognises the Hub organisation's super admin.
+ * @returns {Promise<string>}
+ */
+export async function getEffectiveSuperAdminEmail() {
+	const currentOrgId = await getCurrentOrganisationId();
+	const fromOrg = await getHubSuperAdminEmailForOrganisation(currentOrgId);
+	if (fromOrg) return fromOrg;
+	const fromSettings = await getHubSuperAdminEmail();
+	return fromSettings || env.SUPER_ADMIN_EMAIL || 'john.watson@egcc.co.uk';
+}
+
+/**
+ * Get the current Hub organisation ID (which org's data the Hub shows).
+ * When the request is on a custom hub domain (e.g. hub.egcc.co.uk), the org is
+ * taken from request context (set in the hook); we never use hub_settings or
+ * client input in that case. Otherwise from hub_settings.currentOrganisationId,
+ * or the first organisation if not set.
+ * @returns {Promise<string|null>}
+ */
+export async function getCurrentOrganisationId() {
+	const { getRequestOrganisationId } = await import('./requestOrg.js');
+	const requestOrgId = getRequestOrganisationId();
+	if (requestOrgId) {
+		if (env.DEBUG_ORG_SCOPE === '1') {
+			console.log('[org] getCurrentOrganisationId:', requestOrgId, '(from hub domain)');
+		}
+		return requestOrgId;
+	}
+	const records = await readCollection(HUB_SETTINGS_COLLECTION);
+	const defaultRecord = records.find((r) => r.id === DEFAULT_RECORD_ID);
+	const currentOrganisationId = defaultRecord?.currentOrganisationId ?? null;
+	if (currentOrganisationId) {
+		if (env.DEBUG_ORG_SCOPE === '1') {
+			console.log('[org] getCurrentOrganisationId:', currentOrganisationId, '(from hub_settings)');
+		}
+		return currentOrganisationId;
+	}
+	const orgs = await readCollection('organisations');
+	const first = orgs && orgs.length > 0 ? orgs[0] : null;
+	const fallback = first ? first.id : null;
+	if (env.DEBUG_ORG_SCOPE === '1' && fallback) {
+		console.log('[org] getCurrentOrganisationId:', fallback, '(fallback first org)');
+	}
+	return fallback;
+}
+
+/**
+ * Set the current Hub organisation ID in hub_settings.
+ * @param {string|null} organisationId
+ */
+export async function setCurrentOrganisationId(organisationId) {
+	const records = await readCollection(HUB_SETTINGS_COLLECTION);
+	const defaultRecord = records.find((r) => r.id === DEFAULT_RECORD_ID);
+	if (!defaultRecord) {
+		await getSettings();
+		const recs = await readCollection(HUB_SETTINGS_COLLECTION);
+		const def = recs.find((r) => r.id === DEFAULT_RECORD_ID);
+		if (def) {
+			def.currentOrganisationId = organisationId || null;
+			def.updatedAt = new Date().toISOString();
+			await writeCollection(HUB_SETTINGS_COLLECTION, recs);
+		}
+	} else {
+		defaultRecord.currentOrganisationId = organisationId || null;
+		defaultRecord.updatedAt = new Date().toISOString();
+		await writeCollection(HUB_SETTINGS_COLLECTION, records);
+	}
 	invalidateSettingsCache();
 }
 

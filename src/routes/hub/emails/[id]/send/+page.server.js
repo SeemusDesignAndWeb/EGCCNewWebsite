@@ -1,15 +1,20 @@
 import { redirect } from '@sveltejs/kit';
 import { findById, readCollection } from '$lib/crm/server/fileStore.js';
 import { getCsrfToken } from '$lib/crm/server/auth.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies }) {
+	const organisationId = await getCurrentOrganisationId();
 	const newsletter = await findById('emails', params.id);
 	if (!newsletter) {
 		throw redirect(302, '/hub/emails');
 	}
+	if (newsletter.organisationId != null && newsletter.organisationId !== organisationId) {
+		throw redirect(302, '/hub/emails');
+	}
 
-	const lists = await readCollection('lists');
-	const contacts = await readCollection('contacts');
+	const lists = filterByOrganisation(await readCollection('lists'), organisationId);
+	const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
 	
 	// Enrich lists with actual contact counts (only count contacts that exist and are subscribed)
 	const listsWithCounts = lists.map(list => {

@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { findById, readCollection } from '$lib/crm/server/fileStore.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 /**
  * Format date in a readable format: "Sunday 22nd February at 10am"
@@ -44,8 +45,12 @@ export async function GET({ params, locals }) {
 	}
 
 	try {
+		const organisationId = await getCurrentOrganisationId();
 		const meetingPlanner = await findById('meeting_planners', params.id);
 		if (!meetingPlanner) {
+			throw error(404, 'Meeting planner not found');
+		}
+		if (meetingPlanner.organisationId != null && meetingPlanner.organisationId !== organisationId) {
 			throw error(404, 'Meeting planner not found');
 		}
 
@@ -53,11 +58,14 @@ export async function GET({ params, locals }) {
 		if (!event) {
 			throw error(404, 'Event not found');
 		}
+		if (event.organisationId != null && event.organisationId !== organisationId) {
+			throw error(404, 'Event not found');
+		}
 
 		const occurrence = meetingPlanner.occurrenceId ? await findById('occurrences', meetingPlanner.occurrenceId) : null;
 		
-		// Load all occurrences for this event (for PDF, show all occurrences, sorted by date)
-		const allOccurrences = await readCollection('occurrences');
+		// Load all occurrences for this event (for PDF, show all occurrences, sorted by date, scoped to current org)
+		const allOccurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
 		const eventOccurrences = allOccurrences
 			.filter(o => o.eventId === meetingPlanner.eventId)
 			.sort((a, b) => {
@@ -66,15 +74,15 @@ export async function GET({ params, locals }) {
 				return dateA - dateB;
 			});
 
-		// Load all rotas
-		const rotas = await readCollection('rotas');
+		// Load all rotas (scoped to current org)
+		const rotas = filterByOrganisation(await readCollection('rotas'), organisationId);
 		const meetingLeaderRota = meetingPlanner.meetingLeaderRotaId ? rotas.find(r => r.id === meetingPlanner.meetingLeaderRotaId) : null;
 		const worshipLeaderRota = meetingPlanner.worshipLeaderRotaId ? rotas.find(r => r.id === meetingPlanner.worshipLeaderRotaId) : null;
 		const speakerRota = meetingPlanner.speakerRotaId ? rotas.find(r => r.id === meetingPlanner.speakerRotaId) : null;
 		const callToWorshipRota = meetingPlanner.callToWorshipRotaId ? rotas.find(r => r.id === meetingPlanner.callToWorshipRotaId) : null;
 
-		// Load contacts
-		const contacts = await readCollection('contacts');
+		// Load contacts (scoped to current org)
+		const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
 		
 		// Process assignees for each rota, filtering by meeting planner's occurrence and only future dates
 		const now = new Date();

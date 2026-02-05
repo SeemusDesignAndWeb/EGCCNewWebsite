@@ -54,6 +54,8 @@
 		}
 	}
 
+	$: orgFromDomain = $page.data?.hubOrganisationFromDomain;
+
 	onMount(() => {
 		document.addEventListener('keydown', handleEscapeKey);
 		return () => {
@@ -67,14 +69,14 @@
 		<div class="text-center">
 			<img
 				src="/images/egcc-color.png"
-				alt="Eltham Green Community Church"
+				alt={orgFromDomain?.name ?? 'Eltham Green Community Church'}
 				class="h-16 w-auto max-w-full object-contain mx-auto mb-4"
 			/>
 			<h2 class="mt-6 text-center text-2xl sm:text-3xl font-extrabold text-gray-900">
 				Sign in to The HUB
 			</h2>
 			<p class="mt-2 text-center text-xs sm:text-sm text-gray-600">
-				Eltham Green Community Church
+				{orgFromDomain?.name ?? 'Eltham Green Community Church'}
 			</p>
 		</div>
 		<form method="POST" action="?/login" use:enhance>

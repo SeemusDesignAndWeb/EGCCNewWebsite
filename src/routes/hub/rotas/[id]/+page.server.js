@@ -7,10 +7,15 @@ import { ensureRotaToken } from '$lib/crm/server/tokens.js';
 import { env } from '$env/dynamic/private';
 import { logDataChange } from '$lib/crm/server/audit.js';
 import { filterUpcomingOccurrences } from '$lib/crm/utils/occurrenceFilters.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies, url }) {
+	const organisationId = await getCurrentOrganisationId();
 	const rota = await findById('rotas', params.id);
 	if (!rota) {
+		throw redirect(302, '/hub/rotas');
+	}
+	if (rota.organisationId != null && rota.organisationId !== organisationId) {
 		throw redirect(302, '/hub/rotas');
 	}
 
@@ -20,7 +25,7 @@ export async function load({ params, cookies, url }) {
 	// Load all occurrences for this event to show capacity per occurrence
 	// Filter to only show upcoming occurrences (today or future)
 	// But always include the rota's specific occurrence if it has one (even if in the past)
-	const allOccurrences = await readCollection('occurrences');
+	const allOccurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
 	const allEventOccurrences = allOccurrences.filter(o => o.eventId === rota.eventId);
 	let eventOccurrences = filterUpcomingOccurrences(allEventOccurrences);
 	
@@ -35,7 +40,7 @@ export async function load({ params, cookies, url }) {
 
 	// Load contact details for assignees
 	// New structure: assignees are objects with { contactId, occurrenceId }
-	const contacts = await readCollection('contacts');
+	const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
 	
 	// Process assignees - handle both old format (backward compatibility) and new format
 	const processedAssignees = (rota.assignees || []).map(assignee => {
@@ -159,7 +164,7 @@ export async function load({ params, cookies, url }) {
 	});
 
 	// Load all lists for filtering contacts
-	const lists = await readCollection('lists');
+	const lists = filterByOrganisation(await readCollection('lists'), organisationId);
 
 	// Ensure a token exists for this rota and generate signup link
 	let signupLink = '';
@@ -345,7 +350,7 @@ export const actions = {
 				
 				// If this rota is linked to a meeting planner for a specific occurrence,
 				// default to that occurrence so the assignment shows up in both places
-				const meetingPlanners = await readCollection('meeting_planners');
+				const meetingPlanners = filterByOrganisation(await readCollection('meeting_planners'), organisationId);
 				const linkedMeetingPlanner = meetingPlanners.find(mp => 
 					mp.meetingLeaderRotaId === params.id ||
 					mp.worshipLeaderRotaId === params.id ||

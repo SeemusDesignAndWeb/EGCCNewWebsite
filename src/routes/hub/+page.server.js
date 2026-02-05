@@ -1,7 +1,10 @@
 import { readCollection } from '$lib/crm/server/fileStore.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ locals }) {
-	const [contacts, lists, emails, events, rotas, forms, emailStats] = await Promise.all([
+	const organisationId = await getCurrentOrganisationId();
+
+	const [contactsRaw, listsRaw, emailsRaw, eventsRaw, rotasRaw, formsRaw, emailStatsRaw] = await Promise.all([
 		readCollection('contacts'),
 		readCollection('lists'),
 		readCollection('emails'),
@@ -10,6 +13,14 @@ export async function load({ locals }) {
 		readCollection('forms'),
 		readCollection('email_stats')
 	]);
+
+	const contacts = organisationId ? filterByOrganisation(contactsRaw, organisationId) : contactsRaw;
+	const lists = organisationId ? filterByOrganisation(listsRaw, organisationId) : listsRaw;
+	const emails = organisationId ? filterByOrganisation(emailsRaw, organisationId) : emailsRaw;
+	const events = organisationId ? filterByOrganisation(eventsRaw, organisationId) : eventsRaw;
+	const rotas = organisationId ? filterByOrganisation(rotasRaw, organisationId) : rotasRaw;
+	const forms = organisationId ? filterByOrganisation(formsRaw, organisationId) : formsRaw;
+	const emailStats = organisationId ? filterByOrganisation(emailStatsRaw, organisationId) : emailStatsRaw;
 
 	// Get latest 3 emails (sorted by updatedAt or createdAt, most recent first)
 	const latestNewsletters = [...emails]

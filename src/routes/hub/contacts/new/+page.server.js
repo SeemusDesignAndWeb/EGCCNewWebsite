@@ -3,10 +3,12 @@ import { create, update, readCollection } from '$lib/crm/server/fileStore.js';
 import { validateContact } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
+import { getCurrentOrganisationId, filterByOrganisation, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ cookies }) {
-	// Load all contacts for spouse selection dropdown
-	const contacts = await readCollection('contacts');
+	const organisationId = await getCurrentOrganisationId();
+	const allContacts = await readCollection('contacts');
+	const contacts = filterByOrganisation(allContacts, organisationId);
 	// Sort contacts alphabetically by last name, then first name
 	const sortedContacts = contacts.sort((a, b) => {
 		const aLastName = (a.lastName || '').toLowerCase();
@@ -53,7 +55,8 @@ export const actions = {
 			};
 
 			const validated = validateContact(contactData);
-			const contact = await create('contacts', validated);
+			const organisationId = await getCurrentOrganisationId();
+			const contact = await create('contacts', withOrganisationId(validated, organisationId));
 
 			// Sync bidirectional spouse relationship
 			if (validated.spouseId) {

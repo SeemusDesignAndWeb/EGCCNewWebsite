@@ -7,10 +7,15 @@ import { ensureEventToken, ensureOccurrenceToken } from '$lib/crm/server/tokens.
 import { env } from '$env/dynamic/private';
 import { logDataChange } from '$lib/crm/server/audit.js';
 import { filterUpcomingOccurrences } from '$lib/crm/utils/occurrenceFilters.js';
+import { getCurrentOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies, url }) {
+	const organisationId = await getCurrentOrganisationId();
 	const event = await findById('events', params.id);
 	if (!event) {
+		throw redirect(302, '/hub/events');
+	}
+	if (event.organisationId != null && event.organisationId !== organisationId) {
 		throw redirect(302, '/hub/events');
 	}
 
@@ -113,7 +118,8 @@ export async function load({ params, cookies, url }) {
 
 	const csrfToken = getCsrfToken(cookies) || '';
 	const eventColors = await getEventColors();
-	const lists = await readCollection('lists');
+	const { filterByOrganisation } = await import('$lib/crm/server/orgContext.js');
+	const lists = filterByOrganisation(await readCollection('lists'), organisationId);
 	return { event, occurrences: occurrencesWithStats, rotas, meetingPlanners, rotaSignupLink, publicEventLink, occurrenceLinks, csrfToken, eventColors, lists };
 }
 

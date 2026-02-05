@@ -1,17 +1,26 @@
 import { redirect } from '@sveltejs/kit';
 import { getAdminFromCookies, generateCsrfToken, setCsrfToken, getCsrfToken } from './auth.js';
 import { hasRouteAccess } from './permissions.js';
+import {
+	getMultiOrgAdminFromCookies,
+	generateMultiOrgCsrfToken,
+	setMultiOrgCsrfToken,
+	getMultiOrgCsrfToken
+} from './multiOrgAuth.js';
+import { resolveOrganisationFromHost } from './hubDomain.js';
+import { runWithOrganisation } from './requestOrg.js';
 
 /**
- * CRM hook plugin - handles authentication and CSRF for /hub routes
+ * CRM hook plugin - handles authentication and CSRF for /hub and /multi-org routes.
+ * When request host matches an organisation's hubDomain, that org is bound for the request.
  * @param {object} event - SvelteKit event
  * @param {Function} resolve - Next handler
  * @returns {Promise<Response>}
  */
 export async function crmHandle({ event, resolve }) {
 	const { url, request, cookies } = event;
-	const isProduction = process.env.NODE_ENV === 'production';
 	const pathname = url.pathname;
+	const isProduction = process.env.NODE_ENV === 'production';
 
 	// Set security headers
 	event.setHeaders({
@@ -22,10 +31,54 @@ export async function crmHandle({ event, resolve }) {
 		'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; frame-src 'self' https://www.google.com https://maps.google.com https://www.loom.com;"
 	});
 
+	// MultiOrg area: separate login and session
+	if (pathname.startsWith('/multi-org')) {
+		if (pathname.startsWith('/multi-org/auth/login') || pathname === '/multi-org/auth/logout' || pathname === '/multi-org/auth/forgot-password') {
+			if (request.method === 'GET' && pathname.startsWith('/multi-org/auth/login')) {
+				if (!getMultiOrgCsrfToken(cookies)) {
+					const token = generateMultiOrgCsrfToken();
+					setMultiOrgCsrfToken(cookies, token, isProduction);
+				}
+			}
+			return resolve(event);
+		}
+		const multiOrgAdmin = await getMultiOrgAdminFromCookies(cookies);
+		if (!multiOrgAdmin) {
+			throw redirect(302, '/multi-org/auth/login');
+		}
+		event.locals.multiOrgAdmin = multiOrgAdmin;
+		if (request.method === 'GET') {
+			if (!getMultiOrgCsrfToken(cookies)) {
+				const token = generateMultiOrgCsrfToken();
+				setMultiOrgCsrfToken(cookies, token, isProduction);
+			}
+		}
+		return resolve(event);
+	}
+
 	// Only handle /hub and public signup routes
 	if (!pathname.startsWith('/hub') && !pathname.startsWith('/signup/')) {
 		return resolve(event);
 	}
+
+	// Resolve organisation from request host when using custom hub domain (e.g. hub.egcc.co.uk).
+	// When set, org is fixed for this request; getCurrentOrganisationId() will use it.
+	const host = url.host || request.headers.get('host') || '';
+	const orgFromHost = await resolveOrganisationFromHost(host);
+	if (orgFromHost) {
+		event.locals.hubOrganisationFromHost = orgFromHost.id;
+		event.locals.hubOrganisationFromDomain = { id: orgFromHost.id, name: orgFromHost.name };
+		// Run the rest of the request with this org as the current org (no client override).
+		return runWithOrganisation(orgFromHost.id, () => crmHandleHubAndSignup(event, resolve));
+	}
+
+	return crmHandleHubAndSignup(event, resolve);
+}
+
+async function crmHandleHubAndSignup(event, resolve) {
+	const { url, request, cookies } = event;
+	const isProduction = process.env.NODE_ENV === 'production';
+	const pathname = url.pathname;
 
 	// Public signup routes - no auth required (rota, event, member, membership-form, rotas)
 	if (pathname.startsWith('/signup/rota/') || pathname.startsWith('/signup/event/') || pathname.startsWith('/signup/member') || pathname.startsWith('/signup/membership-form') || pathname.startsWith('/signup/rotas')) {
@@ -70,8 +123,20 @@ export async function crmHandle({ event, resolve }) {
 		throw redirect(302, '/hub/auth/login');
 	}
 
-	// Check if admin has permission to access this route
-	if (!hasRouteAccess(admin, pathname)) {
+	// Effective super admin email (from hub_settings when set by MultiOrg, else env)
+	const { getEffectiveSuperAdminEmail, getCurrentOrganisationId } = await import('./settings.js');
+	const effectiveSuperAdminEmail = await getEffectiveSuperAdminEmail();
+	event.locals.superAdminEmail = effectiveSuperAdminEmail;
+
+	// Organisation area permissions (MultiOrg): restrict access to areas allowed for this org
+	const organisationId = await getCurrentOrganisationId();
+	const { findById } = await import('./fileStore.js');
+	const org = organisationId ? await findById('organisations', organisationId) : null;
+	const organisationAreaPermissions =
+		org && Array.isArray(org.areaPermissions) ? org.areaPermissions : null;
+
+	// Check if admin has permission to access this route (user permissions × org areas)
+	if (!hasRouteAccess(admin, pathname, effectiveSuperAdminEmail, organisationAreaPermissions)) {
 		// Prevent redirect loop - if we're already on /hub with access_denied, don't redirect again
 		if (pathname === '/hub' && url.searchParams.get('error') === 'access_denied') {
 			// Allow access to show the error message

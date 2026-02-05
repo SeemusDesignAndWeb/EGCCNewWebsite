@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { readCollection, findById } from '$lib/crm/server/fileStore.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 /**
  * Format date in a readable format: "Sunday 22nd February at 10am"
@@ -44,12 +45,13 @@ export async function GET({ locals, url }) {
 	}
 
 	try {
-		// Load all meeting planners, events, and occurrences
-		const allMeetingPlanners = await readCollection('meeting_planners');
-		const events = await readCollection('events');
-		const occurrences = await readCollection('occurrences');
-		const rotas = await readCollection('rotas');
-		const contacts = await readCollection('contacts');
+		const organisationId = await getCurrentOrganisationId();
+		// Load all meeting planners, events, and occurrences (scoped to current org)
+		const allMeetingPlanners = filterByOrganisation(await readCollection('meeting_planners'), organisationId);
+		const events = filterByOrganisation(await readCollection('events'), organisationId);
+		const occurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
+		const rotas = filterByOrganisation(await readCollection('rotas'), organisationId);
+		const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
 		
 		// Filter to only future occurrences and sort by date
 		const now = new Date();

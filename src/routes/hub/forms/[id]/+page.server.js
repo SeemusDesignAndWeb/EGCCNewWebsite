@@ -6,6 +6,7 @@ import { decrypt } from '$lib/crm/server/crypto.js';
 import { canAccessSafeguarding, canAccessForms, isSuperAdmin } from '$lib/crm/server/permissions.js';
 import { logSensitiveOperation, logDataChange } from '$lib/crm/server/audit.js';
 import { getSuperAdminEmail } from '$lib/crm/server/envConfig.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies, url, request }) {
 	const admin = await getAdminFromCookies(cookies);
@@ -13,8 +14,12 @@ export async function load({ params, cookies, url, request }) {
 		throw redirect(302, '/hub/auth/login');
 	}
 	
+	const organisationId = await getCurrentOrganisationId();
 	const form = await findById('forms', params.id);
 	if (!form) {
+		throw redirect(302, '/hub/forms');
+	}
+	if (form.organisationId != null && form.organisationId !== organisationId) {
 		throw redirect(302, '/hub/forms');
 	}
 	
@@ -36,8 +41,9 @@ export async function load({ params, cookies, url, request }) {
 		}
 	}
 
-	// Get form submissions (registers) - exclude archived ones
-	const registers = await findMany('registers', r => r.formId === params.id && !r.archived);
+	// Get form submissions (registers) - exclude archived ones, scoped to current org
+	const allRegisters = filterByOrganisation(await readCollection('registers'), organisationId);
+	const registers = allRegisters.filter(r => r.formId === params.id && !r.archived);
 	
 	// Decrypt safeguarding submissions
 	const decryptedRegisters = await Promise.all(registers.map(async (register) => {
@@ -138,8 +144,12 @@ export const actions = {
 				return fail(400, { error: 'Submission ID is required' });
 			}
 
+			const organisationId = await getCurrentOrganisationId();
 			const register = await findById('registers', submissionId.toString());
 			if (!register || register.formId !== params.id) {
+				return fail(404, { error: 'Submission not found' });
+			}
+			if (register.organisationId != null && register.organisationId !== organisationId) {
 				return fail(404, { error: 'Submission not found' });
 			}
 
