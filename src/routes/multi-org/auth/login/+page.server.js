@@ -8,9 +8,10 @@ import {
 	verifyMultiOrgCsrfToken
 } from '$lib/crm/server/multiOrgAuth.js';
 
-export async function load({ cookies }) {
+export async function load({ cookies, url }) {
 	const csrfToken = getMultiOrgCsrfToken(cookies) || '';
-	return { csrfToken };
+	const resetSuccess = url.searchParams.get('reset') === 'success';
+	return { csrfToken, resetSuccess };
 }
 
 export const actions = {

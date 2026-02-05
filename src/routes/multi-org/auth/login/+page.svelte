@@ -28,6 +28,11 @@
 		</div>
 
 		<div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200/80 p-8">
+			{#if data?.resetSuccess}
+				<div class="rounded-xl bg-green-50 border border-green-200 p-3 mb-4 text-green-800 text-sm">
+					Your password has been reset. You can sign in with your new password.
+				</div>
+			{/if}
 			<form method="POST" action="?/login" use:enhance>
 				<input type="hidden" name="_csrf" value={$page.data?.csrfToken || ''} />
 				<div class="space-y-4">

@@ -41,8 +41,12 @@ export async function crmHandle({ event, resolve }) {
 		pathname.startsWith('/multi-org/auth/login') ||
 		pathname.startsWith('/multi-org/auth/logout') ||
 		pathname.startsWith('/multi-org/auth/forgot-password') ||
+		pathname.startsWith('/multi-org/auth/reset-password') ||
 		(!!event.locals.multiOrgAdminDomain &&
-			(pathname.startsWith('/auth/login') || pathname === '/auth/logout' || pathname.startsWith('/auth/forgot-password')));
+			(pathname.startsWith('/auth/login') ||
+				pathname === '/auth/logout' ||
+				pathname.startsWith('/auth/forgot-password') ||
+				pathname.startsWith('/auth/reset-password')));
 	if (isMultiOrgPath) {
 		const adminSubdomain = !!event.locals.multiOrgAdminDomain;
 		if (isMultiOrgPublicAuth) {

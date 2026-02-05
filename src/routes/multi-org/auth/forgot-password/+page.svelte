@@ -1,8 +1,14 @@
 <script>
+	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 
 	export let data;
+	export let form;
+
 	$: base = data?.multiOrgBasePath ?? '/multi-org';
+	$: error = form?.error ?? '';
+	$: success = form?.success ?? false;
+	$: message = form?.message ?? (success ? 'If an account exists for that email, we\'ve sent a password reset link. Check your inbox and spam folder.' : '');
 </script>
 
 <svelte:head>
@@ -22,22 +28,54 @@
 		</div>
 
 		<div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200/80 p-8">
-			<p class="text-slate-600 text-sm mb-4">
-				MultiOrg password reset is done from the command line. From your project root, run:
-			</p>
-			<pre class="p-4 rounded-xl bg-slate-100 text-slate-800 text-sm font-mono overflow-x-auto mb-4">node scripts/reset-multi-org-password.js <span class="text-cyan-600">your@email.com</span> <span class="text-cyan-600">"YourNewPassword123!"</span></pre>
-			<p class="text-slate-600 text-sm mb-4">
-				Replace <strong>your@email.com</strong> with your MultiOrg admin email and <strong>YourNewPassword123!</strong> with a new password. Password must be at least 12 characters with upper, lower, number and special character.
-			</p>
-			<p class="text-slate-500 text-xs">
-				If you don’t have terminal access, ask another MultiOrg super admin to run this for you or to create a new admin for you.
-			</p>
-			<a
-				href="{base}/auth/login"
-				class="mt-6 block w-full text-center py-3 px-4 rounded-xl font-semibold text-cyan-600 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition-colors"
-			>
-				← Back to sign in
-			</a>
+			{#if success}
+				<div class="rounded-xl bg-cyan-50 border border-cyan-200 p-4 mb-4">
+					<p class="text-cyan-800 text-sm">{message}</p>
+				</div>
+				<a
+					href="{base}/auth/login"
+					class="block w-full text-center py-3 px-4 rounded-xl font-semibold text-cyan-600 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition-colors"
+				>
+					← Back to sign in
+				</a>
+			{:else}
+				<form method="POST" action="?/default" use:enhance={() => ({ result: (r) => r })}>
+					{#if error}
+						<div class="rounded-xl bg-red-50 border border-red-200 p-3 mb-4 text-red-700 text-sm">
+							{error}
+						</div>
+					{/if}
+					{#if message && !error}
+						<div class="rounded-xl bg-cyan-50 border border-cyan-200 p-3 mb-4 text-cyan-800 text-sm">
+							{message}
+						</div>
+					{/if}
+					<div class="mb-4">
+						<label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email address</label>
+						<input
+							id="email"
+							name="email"
+							type="email"
+							autocomplete="email"
+							required
+							class="block w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 placeholder-slate-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none transition-shadow sm:text-sm"
+							placeholder="you@example.com"
+						/>
+					</div>
+					<button
+						type="submit"
+						class="w-full py-3 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 shadow-lg shadow-cyan-500/25 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+					>
+						Send reset link
+					</button>
+				</form>
+				<a
+					href="{base}/auth/login"
+					class="mt-6 block w-full text-center py-3 px-4 rounded-xl font-semibold text-cyan-600 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition-colors"
+				>
+					← Back to sign in
+				</a>
+			{/if}
 		</div>
 	</div>
 </div>

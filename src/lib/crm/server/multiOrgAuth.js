@@ -52,6 +52,73 @@ export async function getMultiOrgAdminById(id) {
 	return findById('multi_org_admins', id);
 }
 
+function generatePasswordResetToken() {
+	return randomBytes(32).toString('base64url');
+}
+
+/**
+ * Request MultiOrg password reset – generates token and stores it on the admin.
+ * Returns admin with token or null (to prevent email enumeration).
+ */
+export async function requestMultiOrgPasswordReset(email) {
+	const admin = await getMultiOrgAdminByEmail(email);
+	if (!admin) return null;
+
+	const resetToken = generatePasswordResetToken();
+	const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+	await update('multi_org_admins', admin.id, {
+		passwordResetToken: resetToken,
+		passwordResetTokenExpires: expiresAt.toISOString()
+	});
+
+	return {
+		id: admin.id,
+		email: admin.email,
+		name: admin.name,
+		passwordResetToken: resetToken,
+		passwordResetTokenExpires: expiresAt.toISOString()
+	};
+}
+
+/**
+ * Verify MultiOrg password reset token. Returns admin if valid, null otherwise.
+ */
+export async function verifyMultiOrgPasswordResetToken(email, token) {
+	const admin = await getMultiOrgAdminByEmail(email);
+	if (!admin || !admin.passwordResetToken || !admin.passwordResetTokenExpires) return null;
+
+	const stored = (admin.passwordResetToken || '').trim();
+	const provided = (token || '').trim();
+	if (stored !== provided) return null;
+
+	const expiresAt = new Date(admin.passwordResetTokenExpires);
+	if (expiresAt < new Date()) return null;
+
+	return admin;
+}
+
+/**
+ * Reset MultiOrg admin password using token. Clears token and updates password.
+ */
+export async function resetMultiOrgPasswordWithToken(email, token, newPassword) {
+	const admin = await verifyMultiOrgPasswordResetToken(email, token);
+	if (!admin) throw new Error('Invalid or expired reset link');
+
+	validatePassword(newPassword);
+	const hashedPassword = await hashPassword(newPassword);
+	const now = new Date().toISOString();
+
+	await update('multi_org_admins', admin.id, {
+		passwordHash: hashedPassword,
+		passwordResetToken: null,
+		passwordResetTokenExpires: null,
+		updatedAt: now
+	});
+
+	return { id: admin.id, email: admin.email, name: admin.name };
+}
+
 export function isMultiOrgSuperAdmin(admin) {
 	return admin && admin.role === 'super_admin';
 }
