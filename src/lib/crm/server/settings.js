@@ -46,7 +46,7 @@ function getDefaultMeetingPlannerRotas() {
 
 function getDefaultTheme() {
 	return {
-		logoPath: '',
+		logoPath: '/images/egcc-color.png',
 		loginLogoPath: '',
 		primaryColor: '#4BB170',
 		brandColor: '#4A97D2',

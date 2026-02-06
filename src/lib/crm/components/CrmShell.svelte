@@ -90,7 +90,7 @@
 					<div class="flex items-center gap-4">
 						<a href="/hub" class="flex items-center gap-2">
 							<img
-								src={theme?.logoPath?.trim() || '/images/OnNuma-Icon.png'}
+								src={theme?.logoPath?.trim() || '/images/egcc-color.png'}
 								alt="EGCC"
 								class="h-8 w-auto"
 							/>
@@ -327,7 +327,7 @@
 				<div class="flex flex-col md:flex-row justify-center md:justify-between items-center space-y-4 md:space-y-0">
 					<div class="flex flex-col md:flex-row items-center md:items-center space-y-2 md:space-y-0 md:space-x-3">
 						<img
-							src="/images/egcc-logo.png"
+							src="/images/egcc-color.png"
 							alt="Eltham Green Community Church"
 							class="h-8 w-auto"
 						/>

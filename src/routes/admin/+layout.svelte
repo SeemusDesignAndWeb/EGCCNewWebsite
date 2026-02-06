@@ -131,7 +131,7 @@
 				<div class="flex items-center gap-4">
 					<a href="/admin" class="flex items-center gap-2">
 						<img
-							src="/images/egcc-logo.png"
+							src="/images/egcc-color.png"
 							alt="EGCC"
 							class="h-8 w-auto"
 						/>

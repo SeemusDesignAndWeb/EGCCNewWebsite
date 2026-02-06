@@ -17,7 +17,6 @@ In your **web app** service (not the Postgres service):
 - Set **`DATA_STORE`** to **`database`**.
 - Set **`DATABASE_URL`** to the **private** Postgres connection string.
 - Do **not** use `DATABASE_PUBLIC_URL` or any URL that goes through `RAILWAY_TCP_PROXY_DOMAIN` for app ↔ Postgres connections when both run on Railway.
-- (Recommended) Set **`SUPER_ADMIN_EMAIL`** and **`ADMIN_PASSWORD`** so the deploy script can create an initial admin when the database has none (see below).
 
 ## Where to get the private URL
 
@@ -43,11 +42,6 @@ If you **reference** the Postgres service from your app (e.g. “Add reference�
 
 So: when the development (or production) host is on Railway, use the internal/private Postgres URL for `DATABASE_URL` to avoid egress and the public-endpoint warning.
 
-## Deploy script (initial admin)
+## Deploy script
 
-On each deploy, before the app starts, the start command runs `scripts/deploy.js`. It:
-
-- Ensures the `crm_records` table exists.
-- If there are **no** admins in the database, creates one from **`SUPER_ADMIN_EMAIL`** and **`ADMIN_PASSWORD`** (if both are set).
-
-So on first deploy (or after a fresh DB), set `SUPER_ADMIN_EMAIL` and `ADMIN_PASSWORD` in Railway variables; the first start will create that admin and you can log in at `/hub/auth/login`. If admins already exist, the script does nothing. To run the script manually: `npm run deploy`.
+On each deploy, before the app starts, the start command runs `scripts/deploy.js`. It only ensures the `crm_records` table exists. To create an admin user, run manually: `node -r dotenv/config scripts/create-admin.js <email> <password> [name]`, or on Railway: `railway run -- ./scripts/create-admin-railway.sh` (set `SUPER_ADMIN_EMAIL` in Railway variables; password is optional and will be generated if missing).
