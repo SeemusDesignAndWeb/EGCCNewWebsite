@@ -17,6 +17,9 @@ data/database.json
 # Local contact data - should not be committed (contains real data)
 data/contacts.ndjson
 
+# Admin users (password hashes, emails) - per environment, not in git
+data/admins.ndjson
+
 # Hub settings (theme, calendar colours, etc.) - persist in DB or volume, not in git
 data/hub_settings.ndjson
 

@@ -24,9 +24,10 @@
 
 3. **Create Initial Admin User**
    
-   You'll need to create an admin user. You can do this by:
-   - Creating a script to add an admin (see below)
-   - Or manually creating an entry in `data/admins.ndjson`
+   Admin users are stored in `data/admins.ndjson`. This file is **not** in git (it contains password hashes), so each environment (local, Railway, etc.) has its own copy. You can:
+   - Run the script below to create an admin
+   - Or copy `data/admins.ndjson` from another environment (e.g. from your machine to the server volume)
+   - Or manually create an entry in `data/admins.ndjson`
 
 ## Quick Start Script
 
