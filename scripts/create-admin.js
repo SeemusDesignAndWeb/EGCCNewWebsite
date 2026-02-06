@@ -3,6 +3,7 @@
  * Create an admin user. Uses the database when DATA_STORE=database and DATABASE_URL are set;
  * otherwise writes to data/admins.ndjson (file store).
  * Run with: node -r dotenv/config scripts/create-admin.js <email> <password> [name]
+ * Add --reset-password to update the password for an existing admin.
  */
 
 import bcrypt from 'bcryptjs';
@@ -88,7 +89,18 @@ async function createAdminInDatabase({ email, password, name }) {
 		);
 		if (existing.rows.length > 0) {
 			const row = existing.rows[0];
-			console.log('⚠️  Admin with this email already exists. Returning existing admin.');
+			if (process.env.RESET_ADMIN_PASSWORD === '1') {
+				validatePassword(password);
+				const hashedPassword = await hashPassword(password);
+				const body = { ...row.body, passwordHash: hashedPassword, passwordChangedAt: new Date().toISOString() };
+				await client.query(
+					`UPDATE ${TABLE_NAME} SET body = $1, updated_at = $2 WHERE collection = $3 AND id = $4`,
+					[JSON.stringify(body), new Date().toISOString(), 'admins', row.id]
+				);
+				console.log('✅ Password updated for existing admin.');
+				return { id: row.id, email: row.body?.email ?? email, name: row.body?.name ?? name };
+			}
+			console.log('⚠️  Admin with this email already exists. Returning existing admin. (Use RESET_ADMIN_PASSWORD=1 to set a new password.)');
 			return { id: row.id, email: row.body?.email ?? email, name: row.body?.name ?? name };
 		}
 
@@ -128,10 +140,23 @@ async function createAdminInFile({ email, password, name }) {
 	validatePassword(password);
 	const admins = await readAdminsFile();
 	const normalizedEmail = email.toLowerCase().trim();
-	const existing = admins.find((a) => (a.email || '').toLowerCase().trim() === normalizedEmail);
-	if (existing) {
-		console.log('⚠️  Admin with this email already exists. Returning existing admin.');
-		return existing;
+	const existingIndex = admins.findIndex((a) => (a.email || '').toLowerCase().trim() === normalizedEmail);
+	if (existingIndex >= 0) {
+		if (process.env.RESET_ADMIN_PASSWORD === '1') {
+			validatePassword(password);
+			const hashedPassword = await hashPassword(password);
+			admins[existingIndex] = {
+				...admins[existingIndex],
+				passwordHash: hashedPassword,
+				passwordChangedAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString()
+			};
+			await writeAdminsFile(admins);
+			console.log('✅ Password updated for existing admin.');
+			return admins[existingIndex];
+		}
+		console.log('⚠️  Admin with this email already exists. Returning existing admin. (Use RESET_ADMIN_PASSWORD=1 to set a new password.)');
+		return admins[existingIndex];
 	}
 
 	const hashedPassword = await hashPassword(password);

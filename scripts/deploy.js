@@ -1,202 +1,78 @@
 #!/usr/bin/env node
 /**
- * Deploy script: when DATA_STORE=database, ensure the database is set up and
- * a Multi-org super admin exists. Loads SUPER_ADMIN_EMAIL and ADMIN_PASSWORD from .env.
+ * Run on deploy (e.g. before the app starts on Railway).
+ * - When using database: ensures crm_records table exists and at least one admin exists
+ *   (creates from SUPER_ADMIN_EMAIL + ADMIN_PASSWORD if none).
+ * - Exits 0 so the server can start even if this is skipped or fails (when wrapped with || true).
  *
- * - If crm_records table does not exist, creates it.
- * - If no Multi-org admin exists for SUPER_ADMIN_EMAIL, creates one (idempotent by email).
- *
- * Run: node scripts/deploy.js
- * Or with env: SUPER_ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=Secret123! node scripts/deploy.js
- *
- * Safe to run on every deploy (e.g. in Railway startCommand before the app).
+ * Set SUPER_ADMIN_EMAIL and ADMIN_PASSWORD in production so the first deploy creates an admin.
+ * Railway startCommand example: (node -r dotenv/config scripts/deploy.js || true) && node -r dotenv/config build/index.js
  */
 
-import { config } from 'dotenv';
-import { join, dirname } from 'path';
+import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
-import { existsSync, readFileSync } from 'fs';
-import pg from 'pg';
-import bcrypt from 'bcryptjs';
-import { ulid } from 'ulid';
-import { getCreateTableSql, TABLE_NAME } from '../src/lib/crm/server/dbSchema.js';
+import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const projectRoot = join(__dirname, '..');
-config({ path: join(projectRoot, '.env') });
+const rootDir = join(__dirname, '..');
 
-function getDataDir() {
-	const envDir = process.env.CRM_DATA_DIR;
-	if (envDir && envDir.trim()) {
-		const t = envDir.trim();
-		return t.startsWith('/') ? t : join(projectRoot, t);
-	}
-	return join(projectRoot, 'data');
-}
-
-function getStoreMode() {
-	const dataDir = getDataDir();
-	const modePath = join(dataDir, 'store_mode.json');
-	if (existsSync(modePath)) {
-		try {
-			const content = readFileSync(modePath, 'utf8');
-			const data = JSON.parse(content);
-			return (data.dataStore || 'file').toLowerCase();
-		} catch {
-			// fall through to env
-		}
-	}
-	const envMode = process.env.DATA_STORE;
-	if (typeof envMode === 'string' && envMode.trim()) {
-		return envMode.trim().toLowerCase();
-	}
-	return 'file';
-}
-
-async function tableExists(client) {
-	const res = await client.query(
-		`SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = $1`,
-		[TABLE_NAME]
-	);
-	return res.rows.length > 0;
-}
-
-function validatePassword(password) {
-	if (!password || password.length < 12) {
-		throw new Error('ADMIN_PASSWORD must be at least 12 characters long');
-	}
-	if (!/[a-z]/.test(password)) {
-		throw new Error('ADMIN_PASSWORD must contain at least one lowercase letter');
-	}
-	if (!/[A-Z]/.test(password)) {
-		throw new Error('ADMIN_PASSWORD must contain at least one uppercase letter');
-	}
-	if (!/[0-9]/.test(password)) {
-		throw new Error('ADMIN_PASSWORD must contain at least one number');
-	}
-	if (!/[^a-zA-Z0-9]/.test(password)) {
-		throw new Error('ADMIN_PASSWORD must contain at least one special character');
-	}
-	return true;
-}
-
-async function getMultiOrgAdminByEmail(client, email) {
-	const normalized = (email || '').toLowerCase().trim();
-	const res = await client.query(
-		`SELECT id, body FROM ${TABLE_NAME} WHERE collection = $1`,
-		['multi_org_admins']
-	);
-	for (const row of res.rows) {
-		const body = row.body || {};
-		if ((body.email || '').toLowerCase().trim() === normalized) {
-			return { id: row.id, ...body };
-		}
-	}
-	return null;
-}
-
-async function createMultiOrgSuperAdmin(client, { email, password, name }) {
-	validatePassword(password);
-	const existing = await getMultiOrgAdminByEmail(client, email);
-	if (existing) {
-		return { id: existing.id, email: existing.email, name: existing.name };
-	}
-	const hashedPassword = await bcrypt.hash(password, 10);
-	const now = new Date().toISOString();
-	const id = ulid();
-	const body = {
-		email: email.trim(),
-		passwordHash: hashedPassword,
-		name: (name || email).trim(),
-		role: 'super_admin',
-		createdAt: now,
-		updatedAt: now
-	};
-	await client.query(
-		`INSERT INTO ${TABLE_NAME} (collection, id, body, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)`,
-		['multi_org_admins', id, JSON.stringify(body), now, now]
-	);
-	return { id, email: body.email, name: body.name };
-}
+const DATA_STORE = process.env.DATA_STORE?.trim().toLowerCase();
+const DATABASE_URL = process.env.DATABASE_URL?.trim();
+const USE_DATABASE = DATA_STORE === 'database' && !!DATABASE_URL;
 
 async function main() {
-	const mode = getStoreMode();
-	if (mode !== 'database') {
-		console.log('[deploy] DATA_STORE is not database, skipping.');
-		process.exit(0);
+	if (!USE_DATABASE) {
+		console.log('[deploy] DATA_STORE is not database or DATABASE_URL missing; skipping deploy script.');
+		return;
 	}
 
-	const url = process.env.DATABASE_URL;
-	if (!url) {
-		console.warn('[deploy] DATA_STORE=database but DATABASE_URL not set, skipping.');
-		process.exit(0);
-	}
+	const pg = (await import('pg')).default;
+	const { getCreateTableSql, TABLE_NAME } = await import('../src/lib/crm/server/dbSchema.js');
 
+	const pool = new pg.Pool({
+		connectionString: DATABASE_URL,
+		ssl: DATABASE_URL.includes('localhost') || DATABASE_URL.includes('127.0.0.1')
+			? false
+			: { rejectUnauthorized: false }
+	});
+
+	const client = await pool.connect();
 	try {
-		const parsed = new URL(url.replace(/^postgres(ql)?:\/\//, 'https://'));
-		if (parsed.hostname === 'base') {
-			console.error('[deploy] DATABASE_URL has placeholder host "base". Set a real Postgres URL.');
-			process.exit(1);
+		await client.query(getCreateTableSql());
+		const count = await client.query(
+			`SELECT 1 FROM ${TABLE_NAME} WHERE collection = $1 LIMIT 1`,
+			['admins']
+		);
+		client.release();
+		await pool.end();
+
+		if (count.rows.length > 0) {
+			console.log('[deploy] At least one admin exists; skipping admin creation.');
+			return;
 		}
-	} catch (e) {
-		if (e.message && e.message.includes('DATABASE_URL')) throw e;
-	}
 
-	const isInternal = url.includes('railway.internal');
-	const isLocalhost = /localhost|127\.0\.0\.1/.test(url);
-	const useSsl = !isInternal && !isLocalhost;
+		const email = process.env.SUPER_ADMIN_EMAIL?.trim();
+		const password = process.env.ADMIN_PASSWORD?.trim();
+		if (!email || !password) {
+			console.warn('[deploy] No admins in database. Set SUPER_ADMIN_EMAIL and ADMIN_PASSWORD and redeploy, or run: node -r dotenv/config scripts/create-admin.js <email> <password> [name]');
+			return;
+		}
 
-	let client;
-	try {
-		client = new pg.Client({
-			connectionString: url,
-			...(useSsl ? { ssl: { rejectUnauthorized: false } } : {})
-		});
-		await client.connect();
+		console.log('[deploy] No admins found; creating initial admin from SUPER_ADMIN_EMAIL.');
+		execFileSync(
+			process.execPath,
+			['-r', 'dotenv/config', join(rootDir, 'scripts', 'create-admin.js'), email, password, 'Admin'],
+			{ stdio: 'inherit', cwd: rootDir, env: process.env }
+		);
 	} catch (err) {
-		console.error('[deploy] Could not connect to database:', err.message);
-		process.exit(1);
+		client.release?.();
+		await pool.end?.();
+		console.error('[deploy] Error:', err.message);
+		throw err;
 	}
-
-	try {
-		const exists = await tableExists(client);
-		if (!exists) {
-			console.log('[deploy] Creating table', TABLE_NAME, '...');
-			await client.query(getCreateTableSql());
-			console.log('[deploy] Table created.');
-		}
-
-		const superAdminEmail = process.env.SUPER_ADMIN_EMAIL?.trim();
-		const adminPassword = process.env.ADMIN_PASSWORD;
-
-		if (superAdminEmail) {
-			const existing = await getMultiOrgAdminByEmail(client, superAdminEmail);
-			if (existing) {
-				console.log('[deploy] Multi-org super admin already exists:', superAdminEmail);
-			} else if (adminPassword) {
-				const admin = await createMultiOrgSuperAdmin(client, {
-					email: superAdminEmail,
-					password: adminPassword,
-					name: 'MultiOrg Super Admin'
-				});
-				console.log('[deploy] Multi-org super admin created:', admin.email);
-			} else {
-				console.warn(
-					'[deploy] No Multi-org admin for SUPER_ADMIN_EMAIL. Set ADMIN_PASSWORD in .env to create one.'
-				);
-			}
-		} else {
-			console.warn('[deploy] Set SUPER_ADMIN_EMAIL in .env to ensure Multi-org super admin.');
-		}
-	} finally {
-		await client.end();
-	}
-
-	console.log('[deploy] Done.');
-	process.exit(0);
 }
 
-main().catch((err) => {
-	console.error('[deploy]', err);
-	process.exit(1);
-});
+main().then(
+	() => process.exit(0),
+	() => process.exit(1)
+);

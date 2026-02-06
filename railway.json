@@ -5,7 +5,7 @@
 		"buildCommand": "npm run build"
 	},
 	"deploy": {
-		"startCommand": "node -r dotenv/config build/index.js",
+		"startCommand": "(node -r dotenv/config scripts/deploy.js || true) && node -r dotenv/config build/index.js",
 		"restartPolicyType": "ON_FAILURE",
 		"restartPolicyMaxRetries": 10
 	}
