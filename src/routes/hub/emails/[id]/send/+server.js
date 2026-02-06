@@ -1,4 +1,5 @@
 import { json, error } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 import { findById, readCollection, update } from '$lib/crm/server/fileStore.js';
 import { prepareNewsletterEmail, sendNewsletterBatch } from '$lib/crm/server/email.js';
 import { verifyCsrfToken } from '$lib/crm/server/auth.js';
@@ -86,18 +87,32 @@ export async function POST({ request, cookies, params, url }) {
 		}
 	});
 
-	// Send emails in batches
-	const batchResults = await sendNewsletterBatch(validEmails, email.id);
-	
-	// Combine preparation errors with batch results
-	const results = [...prepErrors, ...batchResults];
+	try {
+		// Send emails in batches
+		const batchResults = await sendNewsletterBatch(validEmails, email.id);
 
-	// Update email status
-	await update('emails', email.id, {
-		status: 'sent',
-		sentAt: new Date().toISOString()
-	});
+		// Combine preparation errors with batch results
+		const results = [...prepErrors, ...batchResults];
 
-	return json({ success: true, results });
+		// Update email status
+		await update('emails', email.id, {
+			status: 'sent',
+			sentAt: new Date().toISOString()
+		});
+
+		return json({ success: true, results });
+	} catch (err) {
+		const errMsg = err?.message || String(err);
+		console.error('[Send email] Error:', errMsg, err);
+		if (err?.stack) console.error('[Send email] stack:', err.stack);
+		const showDetails = process.env.NODE_ENV === 'development' || env.SHOW_EMAIL_ERROR_DETAILS === 'true' || env.SHOW_EMAIL_ERROR_DETAILS === '1';
+		return json(
+			{
+				error: errMsg,
+				details: showDetails ? (err?.details ?? err?.body ?? err?.response) : undefined
+			},
+			{ status: 500 }
+		);
+	}
 }
 

@@ -193,7 +193,8 @@
 					success = false;
 				}, 5000);
 			} else {
-				error = result.error || 'Failed to send message. Please try again.';
+				// Show server error details when present (e.g. in development) so you can see what went wrong
+				error = result.details || result.error || 'Failed to send message. Please try again.';
 			}
 		} catch (err) {
 			error = 'Network error. Please check your connection and try again.';

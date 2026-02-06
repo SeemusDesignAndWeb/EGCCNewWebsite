@@ -52,9 +52,20 @@ export async function sendEmail({ from, to, subject, html, text, replyTo }) {
 		...(html && { html }),
 		...(replyTo && { 'h:Reply-To': replyTo })
 	};
-	const response = await client.messages.create(domain, payload);
-	// Resend-compatible shape so existing code using result.data?.id still works
-	return { data: { id: response?.id ?? response?.message ?? null } };
+	try {
+		const response = await client.messages.create(domain, payload);
+		return { data: { id: response?.id ?? response?.message ?? null } };
+	} catch (err) {
+		// Log full error so you can see it in server logs (Railway, terminal, etc.)
+		const detail = {
+			message: err?.message,
+			status: err?.status ?? err?.statusCode,
+			details: err?.details ?? err?.body ?? err?.response ?? (typeof err?.details === 'string' ? err.details : undefined)
+		};
+		console.error('[Mailgun] send failed:', JSON.stringify(detail, null, 2));
+		if (err?.stack) console.error('[Mailgun] stack:', err.stack);
+		throw err;
+	}
 }
 
 export { getClient };

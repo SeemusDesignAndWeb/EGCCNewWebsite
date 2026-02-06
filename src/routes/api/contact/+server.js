@@ -183,17 +183,20 @@ export const POST = async (event) => {
 				message: 'Thank you for your message. We will get back to you soon!'
 			});
 		} catch (emailError) {
-			console.error('Email sending error:', emailError);
+			const errMsg = emailError?.message || String(emailError);
+			console.error('Email sending error:', errMsg);
 			console.error('Error details:', {
-				message: emailError.message,
-				name: emailError.name,
-				stack: emailError.stack,
-				response: emailError.response || emailError.body
+				message: emailError?.message,
+				name: emailError?.name,
+				stack: emailError?.stack,
+				response: emailError?.response ?? emailError?.body
 			});
+			// Show error details in development or when SHOW_EMAIL_ERROR_DETAILS is set (e.g. for debugging on Railway)
+			const showDetails = process.env.NODE_ENV === 'development' || env.SHOW_EMAIL_ERROR_DETAILS === 'true' || env.SHOW_EMAIL_ERROR_DETAILS === '1';
 			return json(
 				{
 					error: 'Failed to send email. Please try again or contact us directly.',
-					details: process.env.NODE_ENV === 'development' ? emailError.message : undefined
+					details: showDetails ? errMsg : undefined
 				},
 				{ status: 500 }
 			);
