@@ -190,11 +190,12 @@ async function createAdmin({ email, password, name }) {
 }
 
 const email = process.argv[2];
-const password = process.argv[3];
+const password = process.argv[3] || process.env.ADMIN_PASSWORD || '';
 const name = process.argv[4] || 'Admin';
 
 if (!email || !password) {
 	console.error('Usage: node -r dotenv/config scripts/create-admin.js <email> <password> [name]');
+	console.error('Or set ADMIN_PASSWORD in env and run with: <email> [name]');
 	console.error('Example: node -r dotenv/config scripts/create-admin.js admin@example.com "YourSecurePassword12!" "Admin Name"');
 	process.exit(1);
 }

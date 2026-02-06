@@ -2,14 +2,13 @@
 /**
  * Run on deploy (e.g. before the app starts on Railway).
  * - When using database: ensures crm_records table exists and at least one admin exists
- *   (creates from SUPER_ADMIN_EMAIL + ADMIN_PASSWORD if none).
+ *   (creates from SUPER_ADMIN_EMAIL + ADMIN_PASSWORD if none; generates strong password if missing or < 12 chars).
  * - Exits 0 so the server can start even if this is skipped or fails (when wrapped with || true).
  *
- * Set SUPER_ADMIN_EMAIL and ADMIN_PASSWORD in production so the first deploy creates an admin.
- * Railway startCommand example: (node -r dotenv/config scripts/deploy.js || true) && node -r dotenv/config build/index.js
+ * Set SUPER_ADMIN_EMAIL in production; ADMIN_PASSWORD is optional (generated and logged if missing/short).
  */
 
-import { execFileSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -51,18 +50,26 @@ async function main() {
 			return;
 		}
 
-		const email = process.env.SUPER_ADMIN_EMAIL?.trim();
-		const password = process.env.ADMIN_PASSWORD?.trim();
-		if (!email || !password) {
-			console.warn('[deploy] No admins in database. Set SUPER_ADMIN_EMAIL and ADMIN_PASSWORD and redeploy, or run: node -r dotenv/config scripts/create-admin.js <email> <password> [name]');
+		let email = process.env.SUPER_ADMIN_EMAIL?.trim();
+		let password = process.env.ADMIN_PASSWORD?.trim() || '';
+		if (!email) {
+			console.warn('[deploy] No admins in database. Set SUPER_ADMIN_EMAIL (and optionally ADMIN_PASSWORD) and redeploy.');
 			return;
 		}
+		if (password.length < 12) {
+			password = execSync('node scripts/generate-password.js', { encoding: 'utf8', cwd: rootDir }).trim();
+			process.env.ADMIN_PASSWORD = password;
+			console.log('[deploy] No admins found; creating initial admin (password generated).');
+			console.log('[deploy] ⚠️  Save this password from the logs — you need it to log in:');
+			console.log('[deploy]    ' + password);
+		} else {
+			console.log('[deploy] No admins found; creating initial admin from SUPER_ADMIN_EMAIL.');
+		}
 
-		console.log('[deploy] No admins found; creating initial admin from SUPER_ADMIN_EMAIL.');
 		execFileSync(
 			process.execPath,
-			['-r', 'dotenv/config', join(rootDir, 'scripts', 'create-admin.js'), email, password, 'Admin'],
-			{ stdio: 'inherit', cwd: rootDir, env: process.env }
+			['-r', 'dotenv/config', join(rootDir, 'scripts', 'create-admin.js'), email, '', 'Admin'],
+			{ stdio: 'inherit', cwd: rootDir, env: { ...process.env, ADMIN_PASSWORD: password } }
 		);
 	} catch (err) {
 		client.release?.();
