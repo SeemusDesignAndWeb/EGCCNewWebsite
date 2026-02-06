@@ -29,7 +29,8 @@ COPY --from=builder /app/data ./data
 
 EXPOSE 3000
 ENV NODE_ENV=production
+ENV HOST=0.0.0.0
 ENV PORT=3000
 
-# Railway provides all secrets as environment variables at container start
-CMD ["sh", "-c", "node scripts/init-crm-data-on-build.js && node scripts/ensure-db-on-deploy.js && node -r dotenv/config build/index.js"]
+# Run init scripts (allow failure so server still starts), then start app. Railway sets PORT at runtime.
+CMD ["sh", "-c", "(node scripts/init-crm-data-on-build.js || true) && (node scripts/ensure-db-on-deploy.js || true) && exec node -r dotenv/config build/index.js"]
