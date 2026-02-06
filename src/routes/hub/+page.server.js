@@ -3,7 +3,7 @@ import { readCollection } from '$lib/crm/server/fileStore.js';
 import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function load({ locals }) {
-	const emailModuleEnabled = !!env.RESEND_API_KEY;
+	const emailModuleEnabled = !!(env.MAILGUN_API_KEY && env.MAILGUN_DOMAIN);
 	const organisationId = await getCurrentOrganisationId();
 
 	const [contactsRaw, listsRaw, emailsRaw, eventsRaw, rotasRaw, formsRaw, emailStatsRaw] = await Promise.all([

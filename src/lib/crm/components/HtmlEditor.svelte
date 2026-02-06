@@ -315,7 +315,8 @@
 		try {
 			const response = await fetch('/hub/api/images');
 			if (response.ok) {
-				images = await response.json();
+				const data = await response.json();
+				images = Array.isArray(data) ? data : [];
 			}
 		} catch (error) {
 			console.error('Failed to load images:', error);
@@ -550,7 +551,6 @@
 
 	function openImagePicker() {
 		showImageModal = true;
-		showImageOptions = false;
 		if (images.length === 0) {
 			loadImages();
 		}

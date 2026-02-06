@@ -30,6 +30,9 @@ export async function load({ params, cookies }) {
 	
 	const csrfToken = getCsrfToken(cookies) || '';
 
-	return { newsletter, lists: listsWithCounts, csrfToken };
+	// Subscribed contacts only, for manual selection
+	const subscribedContacts = contacts.filter(c => c.subscribed !== false);
+
+	return { newsletter, lists: listsWithCounts, contacts: subscribedContacts, csrfToken };
 }
 

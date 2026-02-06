@@ -1,10 +1,10 @@
-import { Resend } from 'resend';
 import { env } from '$env/dynamic/private';
 import { readCollection, findById, update, findMany } from './fileStore.js';
 import { ensureUnsubscribeToken, ensureEventToken } from './tokens.js';
 import { rateLimitedSend } from './emailRateLimiter.js';
+import { sendEmail } from '$lib/server/mailgun.js';
 
-const resend = new Resend(env.RESEND_API_KEY);
+const fromEmailDefault = () => env.MAILGUN_FROM_EMAIL || env.RESEND_FROM_EMAIL || '';
 
 /**
  * Get base URL for absolute links in emails
@@ -590,7 +590,7 @@ export async function prepareNewsletterEmail({ newsletterId, to, name, contact }
 	}
 
 	const baseUrl = getBaseUrl(event);
-	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const fromEmail = fromEmailDefault();
 
 	// Get upcoming events for personalisation (filtered by contact's list membership)
 	const upcomingEvents = await getUpcomingEvents(event, contact);
@@ -681,7 +681,7 @@ export async function sendNewsletterEmail({ newsletterId, to, name, contact }, e
 	const email = await findById('emails', newsletterId);
 
 	try {
-		const result = await rateLimitedSend(() => resend.emails.send({
+		const result = await rateLimitedSend(() => sendEmail({
 			from: emailData.from,
 			to: emailData.to,
 			subject: emailData.subject,
@@ -734,83 +734,36 @@ export async function sendNewsletterBatch(emailDataArray, newsletterId) {
 	}
 
 	const results = [];
-	const BATCH_SIZE = 100; // Resend batch API limit
+	const logs = email.logs || [];
 
-	// Process in batches of 100
-	for (let i = 0; i < emailDataArray.length; i += BATCH_SIZE) {
-		const batch = emailDataArray.slice(i, i + BATCH_SIZE);
-		
-		// Prepare batch payload (remove newsletterId and contactEmail from payload)
-		const batchPayload = batch.map(emailData => ({
-			from: emailData.from,
-			to: emailData.to,
-			subject: emailData.subject,
-			html: emailData.html,
-			text: emailData.text
-		}));
-
+	// Mailgun has no batch API – send each email with rate limiting
+	for (const emailData of emailDataArray) {
 		try {
-			// Send batch with rate limiting (pass batch size for tracking)
-			const result = await rateLimitedSend(() => resend.batch.send(batchPayload), batch.length);
-
-			// Check for errors in response
-			if (result.error) {
-				throw new Error(result.error.message || 'Batch send failed');
-			}
-
-			// Log results for each email in the batch
-			const logs = email.logs || [];
-			if (result.data && Array.isArray(result.data)) {
-				batch.forEach((emailData, index) => {
-					const messageId = result.data[index]?.id || null;
-					logs.push({
-						timestamp: new Date().toISOString(),
-						email: emailData.contactEmail,
-						status: 'sent',
-						messageId: messageId
-					});
-					results.push({ 
-						email: emailData.contactEmail, 
-						status: 'sent',
-						messageId: messageId
-					});
-				});
-			} else {
-				// Fallback if response format is unexpected
-				batch.forEach((emailData) => {
-					logs.push({
-						timestamp: new Date().toISOString(),
-						email: emailData.contactEmail,
-						status: 'sent',
-						messageId: null
-					});
-					results.push({ 
-						email: emailData.contactEmail, 
-						status: 'sent'
-					});
-				});
-			}
-
-			await update('emails', newsletterId, { logs });
-		} catch (error) {
-			// Log errors for all emails in the failed batch
-			const logs = email.logs || [];
-			batch.forEach((emailData) => {
-				logs.push({
-					timestamp: new Date().toISOString(),
-					email: emailData.contactEmail,
-					status: 'error',
-					error: error.message
-				});
-				results.push({ 
-					email: emailData.contactEmail, 
-					status: 'error', 
-					error: error.message 
-				});
+			const result = await rateLimitedSend(() => sendEmail({
+				from: emailData.from,
+				to: emailData.to,
+				subject: emailData.subject,
+				html: emailData.html,
+				text: emailData.text
+			}));
+			const messageId = result?.data?.id ?? null;
+			logs.push({
+				timestamp: new Date().toISOString(),
+				email: emailData.contactEmail,
+				status: 'sent',
+				messageId
 			});
-
-			await update('emails', newsletterId, { logs });
+			results.push({ email: emailData.contactEmail, status: 'sent', messageId });
+		} catch (error) {
+			logs.push({
+				timestamp: new Date().toISOString(),
+				email: emailData.contactEmail,
+				status: 'error',
+				error: error.message
+			});
+			results.push({ email: emailData.contactEmail, status: 'error', error: error.message });
 		}
+		await update('emails', newsletterId, { logs });
 	}
 
 	return results;
@@ -831,7 +784,7 @@ export async function sendRotaInvite({ to, name, token }, rotaData, contact, eve
 	const { rota, event: eventData, occurrence } = rotaData;
 	const baseUrl = getBaseUrl(event);
 	const signupUrl = `${baseUrl}/signup/rota/${token}`;
-	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const fromEmail = fromEmailDefault();
 
 	const eventTitle = eventData?.title || 'Event';
 	const role = rota?.role || 'Volunteer';
@@ -974,7 +927,7 @@ ${upcomingRotasText}
 	`.trim();
 
 	try {
-		const result = await rateLimitedSend(() => resend.emails.send({
+		const result = await rateLimitedSend(() => sendEmail({
 			from: fromEmail,
 			to: [to],
 			subject: `Can you help with volunteering? - sign up for these rotas`,
@@ -1001,7 +954,7 @@ ${upcomingRotasText}
 export async function sendCombinedRotaInvites(contactInvites, eventData, eventPageUrl, event, customMessage = '') {
 	const emailDataArray = [];
 	const baseUrl = getBaseUrl(event);
-	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const fromEmail = fromEmailDefault();
 	
 	for (const contactInvite of contactInvites) {
 		const { contact, invites } = contactInvite;
@@ -1222,59 +1175,27 @@ async function sendRotaInviteBatch(emailDataArray) {
 	}
 
 	const results = [];
-	const BATCH_SIZE = 100; // Resend batch API limit
 	const validEmails = emailDataArray.filter(item => item.emailData);
 	const errors = emailDataArray.filter(item => item.error);
 
-	// Add errors to results
 	errors.forEach(item => {
 		results.push({ email: item.email, status: 'error', error: item.error });
 	});
 
-	// Process valid emails in batches of 100
-	for (let i = 0; i < validEmails.length; i += BATCH_SIZE) {
-		const batch = validEmails.slice(i, i + BATCH_SIZE);
-		
-		// Prepare batch payload
-		const batchPayload = batch.map(item => item.emailData);
-
+	// Mailgun has no batch API – send each email with rate limiting
+	for (const item of validEmails) {
 		try {
-			// Send batch with rate limiting (pass batch size for tracking)
-			const result = await rateLimitedSend(() => resend.batch.send(batchPayload), batch.length);
-
-			// Check for errors in response
-			if (result.error) {
-				throw new Error(result.error.message || 'Batch send failed');
-			}
-
-			// Process results for each email in the batch
-			if (result.data && Array.isArray(result.data)) {
-				batch.forEach((item, index) => {
-					const messageId = result.data[index]?.id || null;
-					results.push({ 
-						email: item.email, 
-						status: 'sent',
-						messageId: messageId
-					});
-				});
-			} else {
-				// Fallback if response format is unexpected
-				batch.forEach((item) => {
-					results.push({ 
-						email: item.email, 
-						status: 'sent'
-					});
-				});
-			}
+			const result = await rateLimitedSend(() => sendEmail({
+				from: item.emailData.from,
+				to: item.emailData.to,
+				subject: item.emailData.subject,
+				html: item.emailData.html,
+				text: item.emailData.text
+			}));
+			const messageId = result?.data?.id ?? null;
+			results.push({ email: item.email, status: 'sent', messageId });
 		} catch (error) {
-			// Log errors for all emails in the failed batch
-			batch.forEach((item) => {
-				results.push({ 
-					email: item.email, 
-					status: 'error', 
-					error: error.message 
-				});
-			});
+			results.push({ email: item.email, status: 'error', error: error.message });
 		}
 	}
 
@@ -1320,7 +1241,7 @@ export async function sendBulkRotaInvites(invites, event) {
  */
 export async function sendAdminWelcomeEmail({ to, name, email, verificationToken, password }, event) {
 	const baseUrl = getBaseUrl(event);
-	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const fromEmail = fromEmailDefault();
 	
 	// Create verification link
 	const verificationLink = `${baseUrl}/hub/auth/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`;
@@ -1444,7 +1365,7 @@ Visit our website: ${baseUrl}
 	`.trim();
 
 	try {
-		const result = await rateLimitedSend(() => resend.emails.send({
+		const result = await rateLimitedSend(() => sendEmail({
 			from: fromEmail,
 			to: [to],
 			subject: 'Welcome to TheHUB - Your Admin Account',
@@ -1470,7 +1391,7 @@ Visit our website: ${baseUrl}
  */
 export async function sendPasswordResetEmail({ to, name, resetToken }, event) {
 	const baseUrl = getBaseUrl(event);
-	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const fromEmail = fromEmailDefault();
 	
 	// Create reset link - token is base64url encoded so should be URL-safe, but encode it anyway to be safe
 	const encodedToken = encodeURIComponent(resetToken);
@@ -1561,7 +1482,7 @@ Visit our website: ${baseUrl}
 	`.trim();
 
 	try {
-		const result = await rateLimitedSend(() => resend.emails.send({
+		const result = await rateLimitedSend(() => sendEmail({
 			from: fromEmail,
 			to: [to],
 			subject: 'Reset Your Password - TheHUB',
@@ -1582,9 +1503,9 @@ Visit our website: ${baseUrl}
  * @param {{ url: URL, adminSubdomain?: boolean }} event - url.origin and adminSubdomain (for reset link path)
  */
 export async function sendMultiOrgPasswordResetEmail({ to, name, resetToken }, event) {
-	if (!env.RESEND_API_KEY || env.RESEND_API_KEY.trim() === '') {
-		console.error('[MultiOrg password reset email] RESEND_API_KEY is not set. Set it in your environment (e.g. Railway variables).');
-		throw new Error('Email is not configured: RESEND_API_KEY is missing.');
+	if (!env.MAILGUN_API_KEY || !env.MAILGUN_DOMAIN) {
+		console.error('[MultiOrg password reset email] MAILGUN_API_KEY or MAILGUN_DOMAIN is not set. Set them in your environment (e.g. Railway variables).');
+		throw new Error('Email is not configured: Mailgun credentials are missing.');
 	}
 	const adminSubdomain = !!event?.adminSubdomain;
 	const baseUrl = adminSubdomain ? event.url?.origin : getBaseUrl(event);
@@ -1593,7 +1514,7 @@ export async function sendMultiOrgPasswordResetEmail({ to, name, resetToken }, e
 	const encodedEmail = encodeURIComponent(to);
 	const resetLink = `${baseUrl}${path}?token=${encodedToken}&email=${encodedEmail}`;
 
-	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const fromEmail = fromEmailDefault();
 	const logoUrl = `${baseUrl}/images/onnuma-logo.png`;
 	const html = `
 		<!DOCTYPE html>
@@ -1621,7 +1542,7 @@ export async function sendMultiOrgPasswordResetEmail({ to, name, resetToken }, e
 	const text = `Reset Your Password - OnNuma\n\nHello ${name},\n\nWe received a request to reset your OnNuma admin password.\n\nOpen this link to set a new password (expires in 24 hours):\n${resetLink}\n\nIf you didn't request this, ignore this email.\n`;
 
 	try {
-		return await rateLimitedSend(() => resend.emails.send({
+		return await rateLimitedSend(() => sendEmail({
 			from: fromEmail,
 			to: [to],
 			subject: 'Reset your OnNuma password',
@@ -1646,7 +1567,7 @@ export async function sendMultiOrgPasswordResetEmail({ to, name, resetToken }, e
  */
 export async function sendEventSignupConfirmation({ to, name, event, occurrence, guestCount = 0, dietaryRequirements }, svelteEvent) {
 	const baseUrl = getBaseUrl(svelteEvent);
-	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const fromEmail = fromEmailDefault();
 
 	// Format date and time
 	const formatDate = (dateString) => {
@@ -1771,7 +1692,7 @@ Eltham Green Community Church
 	`.trim();
 
 	try {
-		const result = await rateLimitedSend(() => resend.emails.send({
+		const result = await rateLimitedSend(() => sendEmail({
 			from: fromEmail,
 			to: [to],
 			subject: `Event Signup Confirmed: ${event.title}`,
@@ -1798,7 +1719,7 @@ Eltham Green Community Church
 export async function sendRotaUpdateNotification({ to, name }, rotaData, event) {
 	const { rota, event: eventData, occurrence } = rotaData;
 	const baseUrl = getBaseUrl(event);
-	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const fromEmail = fromEmailDefault();
 	const hubUrl = `${baseUrl}/hub/rotas/${rota.id}`;
 
 	const eventTitle = eventData?.title || 'Event';
@@ -2023,7 +1944,7 @@ View the rota: ${hubUrl}
 	`.trim();
 
 	try {
-		const result = await rateLimitedSend(() => resend.emails.send({
+		const result = await rateLimitedSend(() => sendEmail({
 			from: fromEmail,
 			to: [to],
 			subject: `Rota Updated: ${role} - ${eventTitle}`,
@@ -2050,7 +1971,7 @@ View the rota: ${hubUrl}
 export async function sendUpcomingRotaReminder({ to, name }, rotaData, event) {
 	const { rota, event: eventData, occurrence } = rotaData;
 	const baseUrl = getBaseUrl(event);
-	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const fromEmail = fromEmailDefault();
 	
 	// Get signup link if token exists
 	let signupLink = '';
@@ -2173,7 +2094,7 @@ Note: If you are unable to fulfill this assignment, please contact the rota coor
 	`.trim();
 
 	try {
-		const result = await rateLimitedSend(() => resend.emails.send({
+		const result = await rateLimitedSend(() => sendEmail({
 			from: fromEmail,
 			to: [to],
 			subject: `Reminder: ${role} - ${eventTitle} in 3 days`,
@@ -2197,7 +2118,7 @@ Note: If you are unable to fulfill this assignment, please contact the rota coor
  * @returns {Promise<object>} Resend API response
  */
 export async function sendMemberSignupConfirmationEmail({ to, name }, event) {
-	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const fromEmail = fromEmailDefault();
 	const baseUrl = getBaseUrl(event);
 	const branding = getEmailBranding();
 	const contactName = name || to;
@@ -2254,7 +2175,7 @@ Eltham Green Community Church
 	`.trim();
 
 	try {
-		const result = await rateLimitedSend(() => resend.emails.send({
+		const result = await rateLimitedSend(() => sendEmail({
 			from: fromEmail,
 			to: [to],
 			subject: 'Welcome to Eltham Green Community Church',
@@ -2278,7 +2199,7 @@ Eltham Green Community Church
  * @returns {Promise<object>} Resend API response
  */
 export async function sendMemberSignupAdminNotification({ to, contact }, event) {
-	const fromEmail = env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+	const fromEmail = fromEmailDefault();
 	const baseUrl = getBaseUrl(event);
 	const branding = getEmailBranding();
 	const contactName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email;
@@ -2378,7 +2299,7 @@ This email was sent from the member signup form on Eltham Green Community Church
 	`.trim();
 
 	try {
-		const result = await rateLimitedSend(() => resend.emails.send({
+		const result = await rateLimitedSend(() => sendEmail({
 			from: fromEmail,
 			to: to,
 			subject: `${isUpdate ? 'Member Information Updated' : 'New Member Signup'}: ${contactName}`,

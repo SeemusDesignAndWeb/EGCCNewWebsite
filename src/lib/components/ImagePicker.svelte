@@ -3,6 +3,8 @@
 
 	export let open = false;
 	export let onSelect; // Legacy prop support for backward compatibility
+	/** Use '/hub/api/images' when in Hub (event edit, etc.) so the library loads without admin auth */
+	export let imagesApiUrl = '/api/images';
 
 	const dispatch = createEventDispatcher();
 
@@ -23,9 +25,10 @@
 	async function loadImages() {
 		loading = true;
 		try {
-			const response = await fetch('/api/images');
+			const response = await fetch(imagesApiUrl);
 			if (response.ok) {
-				images = await response.json();
+				const data = await response.json();
+				images = Array.isArray(data) ? data : [];
 			}
 		} catch (error) {
 			console.error('Failed to load images:', error);

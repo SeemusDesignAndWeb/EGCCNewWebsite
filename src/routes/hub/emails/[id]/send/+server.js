@@ -22,24 +22,35 @@ export async function POST({ request, cookies, params, url }) {
 	}
 
 	const listId = data.listId;
-	if (!listId) {
-		throw error(400, 'List ID is required');
-	}
-
-	const list = await findById('lists', listId);
-	if (!list) {
-		throw error(404, 'List not found');
-	}
-	if (list.organisationId != null && list.organisationId !== organisationId) {
-		throw error(404, 'List not found');
-	}
+	const contactIds = Array.isArray(data.contactIds) ? data.contactIds : [];
 
 	const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
-	// Filter to only subscribed contacts (subscribed !== false)
-	const listContacts = contacts.filter(c => 
-		list.contactIds?.includes(c.id) && 
-		c.subscribed !== false
-	);
+	let listContacts;
+
+	if (contactIds.length > 0) {
+		// Manual selection: use only the provided contact IDs (must be in org and subscribed)
+		listContacts = contacts.filter(c =>
+			contactIds.includes(c.id) && c.subscribed !== false
+		);
+	} else if (listId) {
+		// List selection
+		const list = await findById('lists', listId);
+		if (!list) {
+			throw error(404, 'List not found');
+		}
+		if (list.organisationId != null && list.organisationId !== organisationId) {
+			throw error(404, 'List not found');
+		}
+		listContacts = contacts.filter(c =>
+			list.contactIds?.includes(c.id) && c.subscribed !== false
+		);
+	} else {
+		throw error(400, 'Either select a contact list or manually select at least one contact.');
+	}
+
+	if (listContacts.length === 0) {
+		throw error(400, 'No recipients. The list may be empty or selected contacts are not subscribed.');
+	}
 
 	// Prepare all emails first
 	const emailDataPromises = listContacts.map(contact => 

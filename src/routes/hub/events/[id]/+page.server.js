@@ -1,5 +1,5 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { findById, update, remove, readCollection, findMany } from '$lib/crm/server/fileStore.js';
+import { findById, update, remove, readCollection, findMany, create } from '$lib/crm/server/fileStore.js';
 import { validateEvent, getEventColors } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
@@ -7,7 +7,7 @@ import { ensureEventToken, ensureOccurrenceToken } from '$lib/crm/server/tokens.
 import { env } from '$env/dynamic/private';
 import { logDataChange } from '$lib/crm/server/audit.js';
 import { filterUpcomingOccurrences } from '$lib/crm/utils/occurrenceFilters.js';
-import { getCurrentOrganisationId } from '$lib/crm/server/orgContext.js';
+import { getCurrentOrganisationId, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
 export async function load({ params, cookies, url }) {
 	const organisationId = await getCurrentOrganisationId();
@@ -149,6 +149,7 @@ export const actions = {
 				title: data.get('title'),
 				description: sanitized,
 				location: data.get('location'),
+				image: data.get('image') ?? existingEvent.image ?? '',
 				visibility: ['public', 'private', 'internal'].includes(data.get('visibility')) ? data.get('visibility') : 'private',
 				enableSignup: data.get('enableSignup') === 'on' || data.get('enableSignup') === 'true',
 				hideFromEmail: data.get('hideFromEmail') === 'on' || data.get('hideFromEmail') === 'true',
@@ -208,7 +209,7 @@ export const actions = {
 		throw redirect(302, '/hub/events');
 	},
 
-	deleteSignup: async ({ request, params, cookies }) => {
+		deleteSignup: async ({ request, params, cookies }) => {
 		const data = await request.formData();
 		const csrfToken = data.get('_csrf');
 
@@ -237,6 +238,105 @@ export const actions = {
 		} catch (error) {
 			console.error('Error deleting signup:', error);
 			return fail(400, { error: error.message || 'Failed to delete signup' });
+		}
+	},
+
+	createEventEmail: async ({ request, params, cookies, url }) => {
+		const data = await request.formData();
+		const csrfToken = data.get('_csrf');
+
+		if (!csrfToken || !verifyCsrfToken(cookies, csrfToken)) {
+			return fail(403, { error: 'CSRF token validation failed' });
+		}
+
+		try {
+			const organisationId = await getCurrentOrganisationId();
+			const event = await findById('events', params.id);
+			if (!event) {
+				return fail(404, { error: 'Event not found' });
+			}
+			if (event.organisationId != null && event.organisationId !== organisationId) {
+				return fail(404, { error: 'Event not found' });
+			}
+
+			const baseUrl = url.origin || env.APP_BASE_URL || 'http://localhost:5173';
+			let publicEventLink = baseUrl;
+			try {
+				const token = await ensureEventToken(params.id);
+				publicEventLink = `${baseUrl}/event/${token.token}`;
+			} catch (e) {
+				console.error('Error generating event token:', e);
+			}
+
+			const eventTitle = event.title || 'Event';
+			const subject = `You're invited: ${eventTitle}`;
+
+			// Build HTML: image (resizable in editor via ql-resizable-image), Hello {{firstName}}, event details, signup CTA if enabled
+			const imageBlock = event.image
+				? `<p style="margin:0 0 2.5em 0;"><img class="ql-resizable-image" src="${event.image}" alt="${(eventTitle || '').replace(/"/g, '&quot;')}" width="560" style="max-width:100%; height:auto; border-radius:8px;" /></p>`
+				: '';
+
+			const detailsParts = [];
+			
+			// Event Title - larger and with spacing
+			if (event.title) {
+				detailsParts.push(`<h2 style="font-size:24px; font-weight:bold; color:#111827; margin:1em 0 0.5em 0; line-height:1.3;">${event.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</h2>`);
+			}
+			
+			// Location
+			if (event.location) {
+				detailsParts.push(`<p style="margin:0 0 1em 0; font-size:16px; color:#4b5563;"><strong>Location:</strong> ${event.location.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`);
+			}
+			
+			// Description
+			if (event.description) {
+				detailsParts.push(`<div style="font-size:16px; line-height:1.6; color:#374151;">${event.description}</div>`);
+			}
+
+			const eventDetailsHtml = detailsParts.length
+				? `<div style="margin-top:0.5em;">${detailsParts.join('')}</div>`
+				: '';
+
+			// Signup CTA: Simple button-style link in a paragraph (left-aligned) - better compatibility with editors
+			const signupLine = event.enableSignup
+				? `<p style="margin:2em 0;"><a href="${publicEventLink}" style="background-color:#059669; color:#ffffff; padding:12px 24px; border-radius:6px; text-decoration:none; display:inline-block; font-weight:bold; font-size:16px;">Sign up here</a></p>`
+				: '';
+
+			const htmlContent = `
+<div style="font-family: sans-serif; max-width: 600px;">
+${imageBlock}
+<p>Hello {{firstName}},</p>
+<p>I would love you to come to this event:</p>
+${eventDetailsHtml}
+${signupLine}
+</div>`.trim();
+
+			const textContent = [
+				'Hello {{firstName}},',
+				'',
+				'I would love you to come to this event:',
+				'',
+				event.title || '',
+				event.location ? `Location: ${event.location}` : '',
+				'',
+				event.enableSignup ? `You can sign up here: ${publicEventLink}` : ''
+			].filter(Boolean).join('\n');
+
+			const sanitizedHtml = await sanitizeHtml(htmlContent);
+
+			const newsletter = await create('emails', withOrganisationId({
+				subject,
+				htmlContent: sanitizedHtml,
+				textContent: textContent.trim(),
+				status: 'draft',
+				logs: [],
+				metrics: {}
+			}, organisationId));
+
+			return { success: true, emailId: newsletter.id, type: 'createEventEmail' };
+		} catch (error) {
+			console.error('[Create event email] Error:', error);
+			return fail(400, { error: error.message || 'Failed to create email' });
 		}
 	}
 };

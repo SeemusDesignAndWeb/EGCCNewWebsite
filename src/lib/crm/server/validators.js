@@ -165,10 +165,11 @@ export async function validateEvent(data) {
 		}
 	}
 
-	return {
+		return {
 		title: validateString(data.title, 'Title', 200),
 		description: validateString(data.description || '', 'Description', 10000),
 		location: validateString(data.location || '', 'Location', 500),
+		image: validateString(data.image || '', 'Image', 2000),
 		visibility: ['public', 'private', 'internal'].includes(data.visibility) ? data.visibility : 'private',
 		enableSignup: data.enableSignup === true || data.enableSignup === 'true' || data.enableSignup === 'on',
 		hideFromEmail: data.hideFromEmail === true || data.hideFromEmail === 'true' || data.hideFromEmail === 'on',

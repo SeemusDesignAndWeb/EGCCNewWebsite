@@ -6,20 +6,44 @@
 
 	$: newsletter = $page.data?.newsletter;
 	$: lists = $page.data?.lists || [];
+	$: contacts = $page.data?.contacts || [];
 	$: csrfToken = $page.data?.csrfToken || '';
 
 	let selectedListId = '';
+	let selectedContactIds = [];
 	let sending = false;
 	let results = null;
 
+	$: useManualSelection = selectedContactIds.length > 0;
+	$: recipientCount = useManualSelection ? selectedContactIds.length : (lists.find(l => l.id === selectedListId)?.contactCount ?? 0);
+	$: canSend = sending === false && (selectedContactIds.length > 0 || (selectedListId && lists.length > 0));
+
+	function toggleContact(id) {
+		selectedContactIds = selectedContactIds.includes(id)
+			? selectedContactIds.filter(cid => cid !== id)
+			: [...selectedContactIds, id];
+	}
+
+	function selectAllContacts() {
+		selectedContactIds = contacts.map(c => c.id);
+	}
+
+	function clearContactSelection() {
+		selectedContactIds = [];
+	}
+
 	async function sendNewsletter() {
-		if (!selectedListId) {
-			await dialog.alert('Please select a contact list to send the email to', 'No List Selected');
+		if (!canSend) {
+			await dialog.alert(
+				useManualSelection ? 'Please select at least one contact.' : 'Please select a contact list or select individual contacts.',
+				'No Recipients'
+			);
 			return;
 		}
 
+		const count = useManualSelection ? selectedContactIds.length : recipientCount;
 		const confirmed = await dialog.confirm(
-			`Are you sure you want to send this email to the selected list? This action cannot be undone.`,
+			`Send this email to ${count} ${count === 1 ? 'recipient' : 'recipients'}? This action cannot be undone.`,
 			'Confirm Send Email'
 		);
 
@@ -31,13 +55,14 @@
 		results = null;
 
 		try {
+			const body = {
+				_csrf: csrfToken,
+				...(useManualSelection ? { contactIds: selectedContactIds } : { listId: selectedListId })
+			};
 			const response = await fetch(`/hub/emails/${newsletter.id}/send`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					_csrf: csrfToken,
-					listId: selectedListId
-				})
+				body: JSON.stringify(body)
 			});
 
 			const data = await response.json();
@@ -105,17 +130,18 @@
 
 				<!-- List Selection -->
 				<div>
-					<label class="block text-sm font-medium text-gray-700 mb-2">
-						Select Contact List <span class="text-hub-red-500">*</span>
+					<label for="send-email-list" class="block text-sm font-medium text-gray-700 mb-2">
+						Select Contact List
 					</label>
 					{#if lists.length === 0}
 						<div class="bg-hub-yellow-50 border border-hub-yellow-200 rounded-lg p-4">
 							<p class="text-hub-yellow-800 text-sm">
-								No contact lists available. <a href="/hub/lists/new" class="underline font-medium">Create a list</a> first.
+								No contact lists available. <a href="/hub/lists/new" class="underline font-medium">Create a list</a> or select contacts below.
 							</p>
 						</div>
 					{:else}
 						<select 
+							id="send-email-list"
 							bind:value={selectedListId} 
 							class="w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-3 px-4"
 							disabled={sending}
@@ -128,7 +154,64 @@
 							{/each}
 						</select>
 						<p class="mt-1 text-xs text-gray-500">
-							Select the contact list you want to send this email to. All contacts in the selected list will receive the email.
+							Send to everyone on this list, or pick specific contacts below.
+						</p>
+					{/if}
+				</div>
+
+				<!-- Manual contact selection -->
+				<div role="group" aria-labelledby="manual-contacts-legend">
+					<p id="manual-contacts-legend" class="block text-sm font-medium text-gray-700 mb-2">
+						Or select contacts manually
+					</p>
+					{#if contacts.length === 0}
+						<p class="text-sm text-gray-500">No subscribed contacts. Add contacts and ensure they are subscribed.</p>
+					{:else}
+						<div class="flex flex-wrap gap-2 mb-2">
+							<button
+								type="button"
+								on:click={selectAllContacts}
+								disabled={sending}
+								class="text-sm text-theme-button-2 hover:underline disabled:opacity-50"
+							>
+								Select all
+							</button>
+							<button
+								type="button"
+								on:click={clearContactSelection}
+								disabled={sending || selectedContactIds.length === 0}
+								class="text-sm text-gray-600 hover:underline disabled:opacity-50"
+							>
+								Clear selection
+							</button>
+							{#if selectedContactIds.length > 0}
+								<span class="text-sm text-gray-500">{selectedContactIds.length} selected</span>
+							{/if}
+						</div>
+						<div class="border border-gray-200 rounded-lg max-h-60 overflow-y-auto">
+							<ul class="divide-y divide-gray-100">
+								{#each contacts as contact}
+									<li class="flex items-center gap-3 px-4 py-2 hover:bg-gray-50">
+										<input
+											type="checkbox"
+											id="contact-{contact.id}"
+											checked={selectedContactIds.includes(contact.id)}
+											on:change={() => toggleContact(contact.id)}
+											disabled={sending}
+											class="rounded border-gray-300 text-theme-button-2 focus:ring-theme-button-2"
+										/>
+										<label for="contact-{contact.id}" class="flex-1 text-sm cursor-pointer select-none">
+											<span class="font-medium text-gray-900">{[contact.firstName, contact.lastName].filter(Boolean).join(' ') || contact.email}</span>
+											{#if contact.firstName || contact.lastName}
+												<span class="text-gray-500"> &lt;{contact.email}&gt;</span>
+											{/if}
+										</label>
+									</li>
+								{/each}
+							</ul>
+						</div>
+						<p class="mt-1 text-xs text-gray-500">
+							If you select any contacts above, only those will receive the email (the list selection is ignored).
 						</p>
 					{/if}
 				</div>
@@ -137,7 +220,7 @@
 				<div class="flex gap-3">
 					<button
 						on:click={sendNewsletter}
-						disabled={sending || !selectedListId || lists.length === 0}
+						disabled={!canSend}
 						class="btn-theme-2 px-[18px] py-2.5 rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium inline-flex items-center gap-2 transition-colors"
 					>
 						{#if sending}

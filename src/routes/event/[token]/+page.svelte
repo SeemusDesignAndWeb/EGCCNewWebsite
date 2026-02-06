@@ -76,6 +76,20 @@
 </script>
 
 <div class="min-h-screen bg-gray-50">
+	{#if event?.image}
+		<section class="relative h-48 sm:h-56 overflow-hidden">
+			<div
+				class="absolute inset-0 bg-cover bg-center"
+				style="background-image: url('{event.image}'); filter: blur(4px); transform: scale(1.05);"
+			></div>
+			<div class="absolute inset-0 bg-black/40"></div>
+			<div class="relative h-full flex items-end pb-6">
+				<div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
+					<h1 class="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">{event.title}</h1>
+				</div>
+			</div>
+		</section>
+	{/if}
 	<div class="max-w-7xl mx-auto py-8 px-4 sm:py-12 sm:px-6 lg:px-8">
 		{#if event}
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -83,7 +97,11 @@
 				<div class="space-y-6">
 					<!-- Event Header -->
 					<div class="bg-white shadow rounded-lg p-6">
-						<h1 class="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
+						{#if !event.image}
+							<h1 class="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
+						{:else}
+							<h2 class="text-2xl font-bold text-gray-900 mb-4">{event.title}</h2>
+						{/if}
 						{#if event.description}
 							<div class="prose max-w-none mb-4">
 								{@html event.description}
