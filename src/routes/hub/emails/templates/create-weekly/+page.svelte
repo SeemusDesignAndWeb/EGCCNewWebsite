@@ -42,10 +42,10 @@
 			<li>Upcoming events (public events in the next 7 days)</li>
 			<li>Personal rotas (rotas assigned to the contact in the next 14 days)</li>
 			<li>Professional styling and layout</li>
-			<li>All personalization placeholders ({{firstName}}, {{name}}, etc.)</li>
+			<li>All personalization placeholders ({'{{firstName}}'}, {'{{name}}'}, etc.)</li>
 		</ul>
 		<p class="text-sm text-hub-blue-800">
-			The template uses <code class="bg-hub-blue-100 px-1 rounded">{{upcomingEvents}}</code> and <code class="bg-hub-blue-100 px-1 rounded">{{rotaLinks}}</code> placeholders that will be automatically populated when sending newsletters.
+			The template uses <code class="bg-hub-blue-100 px-1 rounded">{'{{upcomingEvents}}'}</code> and <code class="bg-hub-blue-100 px-1 rounded">{'{{rotaLinks}}'}</code> placeholders that will be automatically populated when sending newsletters.
 		</p>
 	</div>
 
