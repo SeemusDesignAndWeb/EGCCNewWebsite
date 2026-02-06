@@ -65,7 +65,7 @@
 		<p class="mt-1 text-sm text-red-600">{error}</p>
 	{/if}
 	{#if helpText && !error}
-		<p class="mt-1 text-sm text-gray-500">{helpText}</p>
+		<p class="mt-1 text-xs text-gray-500">{helpText}</p>
 	{/if}
 </div>
 

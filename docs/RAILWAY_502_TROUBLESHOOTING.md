@@ -19,6 +19,16 @@ Railway builds the app with **Nixpacks** (no custom Dockerfile). Start command i
 5. **Build didn’t produce `build/index.js`**  
    If the Nixpacks build fails or uses a different output path, the start command will fail. Check build logs.
 
+## Route-specific 502: `/hub/emails/[id]` and `__data.json`
+
+If you see **502** with **~15s** on the email detail page or its data request:
+
+1. **Request timeout** – The gateway often times out at 15s. The email page load now has a 12s timeout; you'll get **503** with a message instead of 502, and logs will show `[hub/emails/[id]] Load timed out`.
+2. **Slow or large data** – Loading one email can be slow if:
+   - **File store**: `findById('emails', id)` reads the whole `emails.ndjson` file. With many/large emails, that file is big and slow to read.
+   - **Large email body**: A very large `htmlContent` makes the `__data.json` response huge and can hit timeouts or memory limits.
+3. **Fix**: Prefer **DATA_STORE=database** on Railway so emails are fetched by id (single row). If you must use file store, keep the emails collection small or consider moving to the database.
+
 ## Quick checks
 
 - In Railway: **Variables** → ensure `PORT` is not set (Railway sets it).

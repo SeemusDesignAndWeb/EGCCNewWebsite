@@ -4,6 +4,7 @@
 	import FormField from '$lib/crm/components/FormField.svelte';
 	import HtmlEditor from '$lib/crm/components/HtmlEditor.svelte';
 	import MultiSelect from '$lib/crm/components/MultiSelect.svelte';
+	import ImagePicker from '$lib/components/ImagePicker.svelte';
 	import { notifications } from '$lib/crm/stores/notifications.js';
 	import { EVENT_COLORS } from '$lib/crm/constants/eventColours.js';
 
@@ -12,7 +13,12 @@
 	$: eventColors = $page.data?.eventColors || EVENT_COLORS;
 	$: lists = $page.data?.lists || [];
 	
-	// Get date from URL parameter and pre-fill form
+	let showImagePicker = false;
+
+	function handleImageSelect(imagePath) {
+		formData.image = imagePath;
+		showImagePicker = false;
+	}
 	$: {
 		const dateParam = $page.url.searchParams.get('date');
 		if (dateParam && !formData.firstDate && !formData.firstStart) {
@@ -51,6 +57,8 @@
 	let formData = {
 		title: '',
 		location: '',
+		image: '',
+		maxSpaces: '',
 		visibility: 'private',
 		enableSignup: false,
 		hideFromEmail: false,
@@ -128,85 +136,136 @@
 		<input type="hidden" name="firstDate" value={formData.firstDate} />
 		<input type="hidden" name="allDay" value={formData.allDay ? 'true' : 'false'} />
 		
-		<!-- Basic Information Panel -->
 		<div class="border border-gray-200 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
 			<h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Basic Information</h3>
-			<div class="space-y-3 sm:space-y-4">
-				<FormField label="Title" name="title" bind:value={formData.title} required />
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-					<FormField label="Location" name="location" bind:value={formData.location} />
+			<div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+				<!-- Left Column: Fields -->
+				<div class="lg:col-span-1 space-y-4">
+					<div class="bg-gray-50 rounded-lg p-3 space-y-3">
+						<FormField label="Title" name="title" bind:value={formData.title} required />
+						<FormField label="Location" name="location" bind:value={formData.location} />
+					</div>
+					
+					<div class="bg-gray-50 rounded-lg p-3 space-y-3">
+						<div class="flex items-center">
+							<input
+								type="checkbox"
+								id="enableSignup"
+								name="enableSignup"
+								bind:checked={formData.enableSignup}
+								class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
+							/>
+							<label for="enableSignup" class="ml-2 block text-sm text-gray-700">
+								Add Signup to this event
+							</label>
+						</div>
+						
+						{#if formData.enableSignup}
+							<div>
+								<FormField label="Max Spaces (optional)" name="maxSpaces" type="number" bind:value={formData.maxSpaces} helpText="Maximum number of people who can sign up" />
+							</div>
+							<div class="flex items-center pl-2">
+								<input
+									type="checkbox"
+									id="showDietaryRequirements"
+									name="showDietaryRequirements"
+									bind:checked={formData.showDietaryRequirements}
+									class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
+								/>
+								<label for="showDietaryRequirements" class="ml-2 block text-sm text-gray-700">
+									Show "Any dietary requirements?"
+								</label>
+							</div>
+						{/if}
+					</div>
+				</div>
+
+				<!-- Right Column: Description & Display -->
+				<div class="lg:col-span-3 bg-gray-50 rounded-lg p-3 space-y-4">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
-						<select name="visibility" bind:value={formData.visibility} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 sm:py-3 px-3 sm:px-4 text-xs">
-							<option value="private">Private (Hub Admins only)</option>
-							<option value="internal">Internal (Church only)</option>
-							<option value="public">Public (Everyone)</option>
-						</select>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+						<HtmlEditor bind:value={description} name="description" />
 					</div>
-				</div>
-				<div class="flex items-center">
-					<input
-						type="checkbox"
-						id="enableSignup"
-						name="enableSignup"
-						bind:checked={formData.enableSignup}
-						class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
-					/>
-					<label for="enableSignup" class="ml-2 block text-sm text-gray-700">
-						Add Signup to this event
-					</label>
-				</div>
-				<div class="flex items-center">
-					<input
-						type="checkbox"
-						id="hideFromEmail"
-						name="hideFromEmail"
-						bind:checked={formData.hideFromEmail}
-						class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
-					/>
-					<label for="hideFromEmail" class="ml-2 block text-sm text-gray-700">
-						Hide from email
-					</label>
-				</div>
-				{#if formData.enableSignup}
-					<div class="flex items-center">
-						<input
-							type="checkbox"
-							id="showDietaryRequirements"
-							name="showDietaryRequirements"
-							bind:checked={formData.showDietaryRequirements}
-							class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
-						/>
-						<label for="showDietaryRequirements" class="ml-2 block text-sm text-gray-700">
-							Show "Any dietary requirements?" field on signup
-						</label>
+
+					<div class="border-t border-gray-200 pt-4">
+						<h3 class="text-xs font-semibold text-gray-900 mb-3">Display & Sharing</h3>
+						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+							<div>
+								<label class="block text-sm font-medium text-gray-700 mb-1">Image (optional)</label>
+								{#if formData.image}
+									<div class="mb-2 rounded border border-gray-300 overflow-hidden bg-gray-100 aspect-[2/1] min-h-[120px]">
+										<img src={formData.image} alt="Event preview" class="w-full h-full object-cover" />
+									</div>
+								{/if}
+								<div class="flex gap-2">
+									<input type="hidden" name="image" value={formData.image} />
+									<button
+										type="button"
+										on:click={() => showImagePicker = true}
+										class="w-full text-xs py-2 px-3 rounded-md border border-gray-500 bg-white text-gray-700 hover:bg-gray-50"
+									>
+										{formData.image ? 'Change image' : 'Choose image'}
+									</button>
+									{#if formData.image}
+										<button
+											type="button"
+											on:click={() => formData.image = ''}
+											class="text-xs py-2 px-3 rounded-md border border-gray-500 bg-white text-gray-700 hover:bg-gray-50"
+										>
+											Clear
+										</button>
+									{/if}
+								</div>
+							</div>
+
+							<div class="space-y-4">
+								<div>
+									<label class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
+									<select name="visibility" bind:value={formData.visibility} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 sm:py-3 px-3 sm:px-4 text-xs">
+										<option value="private">Private (Hub Admins only)</option>
+										<option value="internal">Internal (Church only)</option>
+										<option value="public">Public (Everyone)</option>
+									</select>
+								</div>
+								<div>
+									<label class="block text-sm font-medium text-gray-700 mb-1">Event Color</label>
+									<div class="flex items-center gap-2 sm:gap-3">
+										<div class="w-8 h-8 sm:w-10 sm:h-10 rounded border border-gray-300 flex-shrink-0" style="background-color: {formData.color};"></div>
+										<select name="color" bind:value={formData.color} class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 sm:py-3 px-3 sm:px-4 text-xs">
+											{#each eventColors as colorOption}
+												<option value={colorOption.value}>{colorOption.label}</option>
+											{/each}
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<div class="space-y-4">
+								<div class="flex items-center pt-6">
+									<input
+										type="checkbox"
+										id="hideFromEmail"
+										name="hideFromEmail"
+										bind:checked={formData.hideFromEmail}
+										class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
+									/>
+									<label for="hideFromEmail" class="ml-2 block text-sm text-gray-700">
+										Hide from email
+									</label>
+								</div>
+								<div>
+									<MultiSelect
+										label="Email Lists"
+										name="listIds"
+										options={lists.map(list => ({ id: list.id, name: list.name }))}
+										bind:selected={selectedListIds}
+										placeholder="Select lists..."
+									/>
+									<p class="text-xs text-gray-500 mt-1">If no lists selected, sends to everyone (based on visibility)</p>
+								</div>
+							</div>
+						</div>
 					</div>
-				{/if}
-				<div>
-					<MultiSelect
-						label="Email Lists"
-						name="listIds"
-						options={lists.map(list => ({ id: list.id, name: list.name }))}
-						bind:selected={selectedListIds}
-						placeholder="Select lists..."
-					/>
-					<p class="text-xs text-gray-500 mt-1">Select lists to show this event to on an email. If no lists are selected, the event will be sent to everyone (based on visibility).</p>
-				</div>
-				<div>
-					<label class="block text-sm font-medium text-gray-700 mb-1">Event Color</label>
-					<div class="flex items-center gap-2 sm:gap-3">
-						<div class="w-8 h-8 sm:w-10 sm:h-10 rounded border border-gray-300 flex-shrink-0" style="background-color: {formData.color};"></div>
-						<select name="color" bind:value={formData.color} class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 sm:py-3 px-3 sm:px-4 text-xs">
-							{#each eventColors as colorOption}
-								<option value={colorOption.value}>{colorOption.label}</option>
-							{/each}
-						</select>
-					</div>
-					<p class="text-xs text-gray-500 mt-1">This color will be used to display the event on the calendar</p>
-				</div>
-				<div>
-					<label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-					<HtmlEditor bind:value={description} name="description" />
 				</div>
 			</div>
 		</div>
@@ -330,5 +389,7 @@
 			</div>
 		</div>
 	</form>
+
+	<ImagePicker open={showImagePicker} onSelect={handleImageSelect} on:close={() => (showImagePicker = false)} imagesApiUrl="/hub/api/images" />
 
 </div>

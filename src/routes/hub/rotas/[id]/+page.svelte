@@ -857,7 +857,7 @@
 					<!-- Add Help File Form -->
 					<div class="border-t border-gray-200 pt-4">
 						<div class="mb-3">
-							<div class="block text-sm font-medium text-gray-700 mb-2">Add Help File</div>
+							<div class="block text-sm font-medium text-gray-700 mb-2">Choose to add a link to a file or upload a file</div>
 							<div class="flex gap-2 mb-2">
 								<button
 									type="button"

@@ -1,23 +1,44 @@
-import { redirect, fail } from '@sveltejs/kit';
+import { redirect, fail, error, isRedirect } from '@sveltejs/kit';
 import { findById, update, create, readCollection, remove } from '$lib/crm/server/fileStore.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
 import { validateNewsletterTemplate } from '$lib/crm/server/validators.js';
 import { getCurrentOrganisationId, filterByOrganisation, withOrganisationId } from '$lib/crm/server/orgContext.js';
 
-export async function load({ params, cookies }) {
-	const organisationId = await getCurrentOrganisationId();
-	const email = await findById('emails', params.id);
-	if (!email) {
-		throw redirect(302, '/hub/emails');
-	}
-	if (email.organisationId != null && email.organisationId !== organisationId) {
-		throw redirect(302, '/hub/emails');
-	}
+const LOAD_TIMEOUT_MS = 12_000;
 
-	const templates = filterByOrganisation(await readCollection('email_templates'), organisationId);
-	const csrfToken = getCsrfToken(cookies) || '';
-	return { newsletter: email, templates, csrfToken };
+export async function load({ params, cookies }) {
+	const timeoutPromise = new Promise((_, reject) =>
+		setTimeout(() => reject(new Error('LOAD_TIMEOUT')), LOAD_TIMEOUT_MS)
+	);
+
+	const loadPromise = (async () => {
+		const organisationId = await getCurrentOrganisationId();
+		const email = await findById('emails', params.id);
+		if (!email) {
+			throw redirect(302, '/hub/emails');
+		}
+		if (email.organisationId != null && email.organisationId !== organisationId) {
+			throw redirect(302, '/hub/emails');
+		}
+
+		const templates = filterByOrganisation(await readCollection('email_templates'), organisationId);
+		const csrfToken = getCsrfToken(cookies) || '';
+		return { newsletter: email, templates, csrfToken };
+	})();
+
+	try {
+		return await Promise.race([loadPromise, timeoutPromise]);
+	} catch (e) {
+		if (e?.message === 'LOAD_TIMEOUT') {
+			console.error('[hub/emails/[id]] Load timed out after', LOAD_TIMEOUT_MS, 'ms for id:', params.id);
+			throw error(503, 'This page took too long to load. Try again or open a different email.');
+		}
+		if (isRedirect(e)) throw e;
+		console.error('[hub/emails/[id]] Load error:', e?.message ?? e);
+		if (e?.stack) console.error('[hub/emails/[id]] Stack:', e.stack);
+		throw error(500, 'Failed to load email.');
+	}
 }
 
 export const actions = {
