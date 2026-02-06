@@ -1,5 +1,18 @@
 # CRM Module Setup Guide
 
+## Data store: use the database
+
+**All CRM data—including admin users, sessions, contacts, events, rotas, emails, etc.—should be stored in the database, not in JSON/NDJSON files.**
+
+Set these in your `.env` (and on Railway):
+
+- **`DATA_STORE=database`** – Use Postgres for all collections (admins, sessions, contacts, events, etc.).
+- **`DATABASE_URL`** – Your Postgres connection string (e.g. from Railway’s Postgres service Variables; use the **private** URL when app and DB are on Railway – see `docs/RAILWAY_POSTGRES_SETUP.md`).
+
+When `DATA_STORE=database` is set, the app uses the `crm_records` table in Postgres. No NDJSON files are used for Hub data. This is the recommended setup for production and for any environment where you have Postgres.
+
+(If `DATA_STORE` is unset or not `database`, the app falls back to file store under `data/*.ndjson` for local development only.)
+
 ## Installation
 
 1. **Install Dependencies**
@@ -11,6 +24,9 @@
    
    Create a `.env` file (or add to your existing one) with:
    ```env
+   DATA_STORE=database
+   DATABASE_URL=postgresql://user:pass@host:5432/dbname
+
    RESEND_API_KEY=your_resend_api_key
    RESEND_FROM_EMAIL=your_verified_email@domain.com
    APP_BASE_URL=https://yourdomain.com
@@ -24,37 +40,19 @@
 
 3. **Create Initial Admin User**
    
-   Admin users are stored in `data/admins.ndjson`. This file is **not** in git (it contains password hashes), so each environment (local, Railway, etc.) has its own copy. You can:
-   - Run the script below to create an admin
-   - Or copy `data/admins.ndjson` from another environment (e.g. from your machine to the server volume)
-   - Or manually create an entry in `data/admins.ndjson`
+   Admin users are stored in the **database** when `DATA_STORE=database` (recommended). Run the script:
+   ```bash
+   node -r dotenv/config scripts/create-admin.js admin@example.com 'YourSecurePassword12!' "Admin Name"
+   ```
+   The script creates the admin in Postgres when `DATA_STORE=database` and `DATABASE_URL` are set; otherwise it writes to `data/admins.ndjson` (file store).
 
-## Quick Start Script
+## Create-admin script
 
-Create a file `scripts/create-admin.js`:
+Use the existing script (writes to database when `DATA_STORE=database`, else to file):
 
-```javascript
-import { createAdmin } from '../src/lib/hub/server/auth.js';
-
-const email = process.argv[2];
-const password = process.argv[3];
-const name = process.argv[4] || 'Admin';
-
-if (!email || !password) {
-  console.error('Usage: node scripts/create-admin.js <email> <password> [name]');
-  process.exit(1);
-}
-
-try {
-  const admin = await createAdmin({ email, password, name });
-  console.log('Admin created:', admin.id);
-} catch (error) {
-  console.error('Error:', error.message);
-  process.exit(1);
-}
+```bash
+node -r dotenv/config scripts/create-admin.js admin@example.com 'YourSecurePassword12!' "Admin Name"
 ```
-
-Run: `node scripts/create-admin.js admin@example.com password123 "Admin Name"`
 
 ## File Structure
 
@@ -65,12 +63,10 @@ The CRM module has been installed at:
 - `static/docs/` - Documentation
 - `src/hooks.server.js` - Hook integration
 
-## Data Storage
+## Data storage
 
-Data is stored in NDJSON files under `/data`:
-- The directory will be created automatically
-- Files are created on first write
-- All writes are atomic (queued per file)
+- **With `DATA_STORE=database`** (recommended): All data is stored in Postgres in the `crm_records` table. No NDJSON files are used for Hub/CRM data.
+- **Without database**: Data is stored in NDJSON files under `data/`. Use this only for local development if you are not using Postgres.
 
 ## Access
 

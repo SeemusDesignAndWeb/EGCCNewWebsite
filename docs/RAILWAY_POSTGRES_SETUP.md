@@ -1,5 +1,7 @@
 # Railway Postgres: Use the Private (Internal) URL
 
+**Hub/CRM data (including admin users) should be stored in the database.** Set `DATA_STORE=database` and `DATABASE_URL` (see below) in your app service so all collections—admins, sessions, contacts, events, rotas, emails, etc.—use Postgres instead of JSON files.
+
 When your app runs on Railway and uses a Postgres service in the **same project**, you should connect using the **private/internal** URL, not the public one.
 
 ## Why use the private URL?
