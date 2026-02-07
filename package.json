@@ -12,8 +12,7 @@
     "sync-cloudinary-images": "node scripts/sync-cloudinary-images.js",
     "recover-database": "node scripts/recover-database.js",
     "restore-to-railway": "node scripts/restore-to-railway.js",
-    "deploy": "node -r dotenv/config scripts/deploy.js",
-    "start:railway": "node -r dotenv/config scripts/deploy.js || true && node -r dotenv/config build/index.js"
+    "start:railway": "node -r dotenv/config build/index.js"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^3.0.0",
