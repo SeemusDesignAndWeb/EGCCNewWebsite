@@ -420,7 +420,11 @@
 					{/each}
 				</ul>
 			{:else}
-				<p class="text-amber-700 mt-2">No organisation-scoped records. In production set <code class="bg-gray-100 px-1 rounded">DATA_STORE=database</code> and <code class="bg-gray-100 px-1 rounded">DATABASE_URL</code> to your Postgres URL.</p>
+				{#if totalContactsInStore > 0}
+					<p class="text-amber-700 mt-2">Contacts have no <code class="bg-gray-100 px-1 rounded">organisationId</code> set. Run <code class="bg-gray-100 px-1 rounded">node scripts/rewrite-organisation-id.js "Eltham Green Community Church"</code> (or the org id) to assign them.</p>
+				{:else}
+					<p class="text-amber-700 mt-2">No data in store. In production set <code class="bg-gray-100 px-1 rounded">DATA_STORE=database</code> and <code class="bg-gray-100 px-1 rounded">DATABASE_URL</code> to your Postgres URL.</p>
+				{/if}
 			{/if}
 		</div>
 	</div>
