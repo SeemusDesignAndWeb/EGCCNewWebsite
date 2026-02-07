@@ -1,12 +1,35 @@
 import { env } from '$env/dynamic/private';
-import { readCollection } from '$lib/crm/server/fileStore.js';
+import { readCollection, getStoreMode } from '$lib/crm/server/fileStore.js';
+import * as fileStoreImpl from '$lib/crm/server/fileStoreImpl.js';
 import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
+
+/**
+ * If store is database but has no data, load from file store (ndjson) for display only.
+ * READ-ONLY: must never write to the database or to files. Only fileStoreImpl.readCollection.
+ */
+async function loadFromFileStoreWhenDatabaseEmpty(storeMode, dbCollections) {
+	const hasNoData = dbCollections.every((arr) => !Array.isArray(arr) || arr.length === 0);
+	if (storeMode !== 'database' || !hasNoData) return null;
+
+	const collections = ['contacts', 'lists', 'emails', 'events', 'rotas', 'forms', 'email_stats', 'organisations'];
+	const fromFile = {};
+	for (const name of collections) {
+		try {
+			const records = await fileStoreImpl.readCollection(name);
+			if (records.length > 0) fromFile[name] = records;
+		} catch {
+			// ignore missing or invalid file
+		}
+	}
+	return Object.keys(fromFile).length > 0 ? fromFile : null;
+}
 
 export async function load({ locals }) {
 	const emailModuleEnabled = !!(env.MAILGUN_API_KEY && env.MAILGUN_DOMAIN);
 	const organisationId = await getCurrentOrganisationId();
+	const storeMode = await getStoreMode();
 
-	const [contactsRaw, listsRaw, emailsRaw, eventsRaw, rotasRaw, formsRaw, emailStatsRaw] = await Promise.all([
+	let [contactsRaw, listsRaw, emailsRaw, eventsRaw, rotasRaw, formsRaw, emailStatsRaw] = await Promise.all([
 		readCollection('contacts'),
 		readCollection('lists'),
 		readCollection('emails'),
@@ -15,6 +38,26 @@ export async function load({ locals }) {
 		readCollection('forms'),
 		readCollection('email_stats')
 	]);
+
+	// If database is empty, show what's in file store (display only; never overwrite DB or files)
+	const fileData = await loadFromFileStoreWhenDatabaseEmpty(storeMode, [
+		contactsRaw,
+		listsRaw,
+		emailsRaw,
+		eventsRaw,
+		rotasRaw,
+		formsRaw
+	]);
+	if (fileData) {
+		// Use file data in memory only for this response; no writeCollection, no file writes
+		contactsRaw = fileData.contacts ?? contactsRaw;
+		listsRaw = fileData.lists ?? listsRaw;
+		emailsRaw = fileData.emails ?? emailsRaw;
+		eventsRaw = fileData.events ?? eventsRaw;
+		rotasRaw = fileData.rotas ?? rotasRaw;
+		formsRaw = fileData.forms ?? formsRaw;
+		if (fileData.email_stats?.length) emailStatsRaw = fileData.email_stats;
+	}
 
 	const contacts = organisationId ? filterByOrganisation(contactsRaw, organisationId) : contactsRaw;
 	const lists = organisationId ? filterByOrganisation(listsRaw, organisationId) : listsRaw;
@@ -76,7 +119,9 @@ export async function load({ locals }) {
 			orgContactCount.set(oid, (orgContactCount.get(oid) || 0) + 1);
 		}
 	}
-	const organisations = await readCollection('organisations');
+	const organisations = fileData?.organisations?.length
+		? fileData.organisations
+		: await readCollection('organisations');
 	const orgById = new Map((organisations || []).map((o) => [o.id, o]));
 	const organisationIdsWithData = Array.from(orgContactCount.entries())
 		.map(([organisationId, contactCount]) => ({
@@ -101,7 +146,11 @@ export async function load({ locals }) {
 		latestNewsletters,
 		latestRotas: enrichedRotas,
 		latestEvents,
-		organisationIdsWithData
+		organisationIdsWithData,
+		storeMode,
+		currentOrganisationId: organisationId ?? null,
+		totalContactsInStore: contactsRaw.length,
+		dataFromFileStore: !!fileData
 	};
 }
 

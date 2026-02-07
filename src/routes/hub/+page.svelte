@@ -11,6 +11,10 @@
 	$: latestRotas = $page.data?.latestRotas || [];
 	$: latestEvents = $page.data?.latestEvents || [];
 	$: organisationIdsWithData = $page.data?.organisationIdsWithData || [];
+	$: storeMode = $page.data?.storeMode ?? 'unknown';
+	$: currentOrganisationId = $page.data?.currentOrganisationId ?? null;
+	$: totalContactsInStore = $page.data?.totalContactsInStore ?? 0;
+	$: dataFromFileStore = $page.data?.dataFromFileStore ?? false;
 	$: organisationAreaPermissions = $page.data?.organisationAreaPermissions ?? null;
 	$: superAdminEmail = $page.data?.superAdminEmail ?? null;
 
@@ -392,21 +396,32 @@
 	{/if}
 	</div>
 
-	<!-- Data by organisation (all records in database) -->
-	{#if organisationIdsWithData.length > 0}
-		<div class="mt-8 pt-6 border-t border-gray-200">
-			<p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Records by organisation ID</p>
-			<ul class="text-sm text-gray-700 space-y-1 font-mono">
-				{#each organisationIdsWithData as row}
-					<li>
-						<span class="text-gray-900">{row.organisationId}</span>
-						<span class="text-gray-500"> — {row.contactCount} contacts</span>
-						{#if row.name}
-							<span class="text-gray-500"> ({row.name})</span>
-						{/if}
-					</li>
-				{/each}
-			</ul>
+	<!-- Data by organisation (always show for production debugging) -->
+	<div class="mt-8 pt-6 border-t border-gray-200">
+		<p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Data store &amp; organisation</p>
+		<div class="text-sm text-gray-700 space-y-1 font-mono">
+			<p><span class="text-gray-500">Store:</span> <span class="text-gray-900">{storeMode}</span></p>
+			{#if dataFromFileStore}
+				<p><span class="text-amber-700">Showing data from file store (database was empty).</span></p>
+			{/if}
+			<p><span class="text-gray-500">Current organisation ID:</span> <span class="text-gray-900">{currentOrganisationId || '—'}</span></p>
+			<p><span class="text-gray-500">Total contacts in store:</span> <span class="text-gray-900">{totalContactsInStore}</span></p>
+			{#if organisationIdsWithData.length > 0}
+				<p class="pt-2 text-gray-500">Records by organisation ID:</p>
+				<ul class="space-y-1 mt-1">
+					{#each organisationIdsWithData as row}
+						<li>
+							<span class="text-gray-900">{row.organisationId}</span>
+							<span class="text-gray-500"> — {row.contactCount} contacts</span>
+							{#if row.name}
+								<span class="text-gray-500"> ({row.name})</span>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+			{:else}
+				<p class="text-amber-700 mt-2">No organisation-scoped records. In production set <code class="bg-gray-100 px-1 rounded">DATA_STORE=database</code> and <code class="bg-gray-100 px-1 rounded">DATABASE_URL</code> to your Postgres URL.</p>
+			{/if}
 		</div>
-	{/if}
+	</div>
 {/if}
