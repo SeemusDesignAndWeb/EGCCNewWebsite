@@ -10,6 +10,7 @@
 	$: latestNewsletters = $page.data?.latestNewsletters || [];
 	$: latestRotas = $page.data?.latestRotas || [];
 	$: latestEvents = $page.data?.latestEvents || [];
+	$: organisationIdsWithData = $page.data?.organisationIdsWithData || [];
 	$: organisationAreaPermissions = $page.data?.organisationAreaPermissions ?? null;
 	$: superAdminEmail = $page.data?.superAdminEmail ?? null;
 
@@ -389,5 +390,23 @@
 			{/if}
 		</div>
 	{/if}
-</div>
+	</div>
+
+	<!-- Data by organisation (all records in database) -->
+	{#if organisationIdsWithData.length > 0}
+		<div class="mt-8 pt-6 border-t border-gray-200">
+			<p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Records by organisation ID</p>
+			<ul class="text-sm text-gray-700 space-y-1 font-mono">
+				{#each organisationIdsWithData as row}
+					<li>
+						<span class="text-gray-900">{row.organisationId}</span>
+						<span class="text-gray-500"> — {row.contactCount} contacts</span>
+						{#if row.name}
+							<span class="text-gray-500"> ({row.name})</span>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
 {/if}

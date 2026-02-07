@@ -68,6 +68,24 @@ export async function load({ locals }) {
 	const todayStat = emailStats.find(s => s.date === today);
 	const emailsSentToday = todayStat?.count || 0;
 
+	// Build organisation ID + contact count for all records (for dashboard footer / debugging)
+	const orgContactCount = new Map();
+	for (const c of contactsRaw) {
+		const oid = c?.organisationId ?? null;
+		if (oid) {
+			orgContactCount.set(oid, (orgContactCount.get(oid) || 0) + 1);
+		}
+	}
+	const organisations = await readCollection('organisations');
+	const orgById = new Map((organisations || []).map((o) => [o.id, o]));
+	const organisationIdsWithData = Array.from(orgContactCount.entries())
+		.map(([organisationId, contactCount]) => ({
+			organisationId,
+			contactCount,
+			name: orgById.get(organisationId)?.name ?? null
+		}))
+		.sort((a, b) => b.contactCount - a.contactCount);
+
 	return {
 		admin: locals.admin || null,
 		emailModuleEnabled,
@@ -82,7 +100,8 @@ export async function load({ locals }) {
 		},
 		latestNewsletters,
 		latestRotas: enrichedRotas,
-		latestEvents
+		latestEvents,
+		organisationIdsWithData
 	};
 }
 
