@@ -68,12 +68,16 @@ function ensureColorArray(arr, defaults) {
 	return defaults.map((d, i) => ensureHex(arr[i], d));
 }
 
+/** Single organisation ID for this instance (EGCC). */
+const DEFAULT_ORGANISATION_ID = '01KGNCSXHK6YNPEBCFMKH2VEQ7';
+
 function getDefaultSettings() {
 	return {
 		emailRateLimitDelay: 500,
 		calendarColours: getDefaultCalendarColours(),
 		meetingPlannerRotas: getDefaultMeetingPlannerRotas(),
-		theme: getDefaultTheme()
+		theme: getDefaultTheme(),
+		currentOrganisationId: DEFAULT_ORGANISATION_ID
 	};
 }
 
@@ -108,7 +112,7 @@ function mergeWithDefaults(record) {
 			: defaultSettings.meetingPlannerRotas,
 		theme,
 		hubSuperAdminEmail: record.hubSuperAdminEmail ?? null,
-		currentOrganisationId: record.currentOrganisationId ?? null
+		currentOrganisationId: record.currentOrganisationId ?? DEFAULT_ORGANISATION_ID
 	};
 }
 
@@ -187,7 +191,7 @@ export async function writeSettings(settings) {
 		meetingPlannerRotas: settings.meetingPlannerRotas,
 		theme: settings.theme,
 		hubSuperAdminEmail: existing?.hubSuperAdminEmail ?? settings.hubSuperAdminEmail ?? null,
-		currentOrganisationId: existing?.currentOrganisationId ?? settings.currentOrganisationId ?? null,
+		currentOrganisationId: existing?.currentOrganisationId ?? settings.currentOrganisationId ?? DEFAULT_ORGANISATION_ID,
 		createdAt: existing?.createdAt ?? now,
 		updatedAt: now
 	};
@@ -253,10 +257,9 @@ export async function getEffectiveSuperAdminEmail() {
 /**
  * Get the current Hub organisation ID (which org's data the Hub shows).
  * When the request is on a custom hub domain (e.g. hub.egcc.co.uk), the org is
- * taken from request context (set in the hook); we never use hub_settings or
- * client input in that case. Otherwise from hub_settings.currentOrganisationId,
- * or the first organisation if not set.
- * @returns {Promise<string|null>}
+ * taken from request context (set in the hook). Otherwise from hub_settings.currentOrganisationId,
+ * or default '1' for this single-organisation instance.
+ * @returns {Promise<string>}
  */
 export async function getCurrentOrganisationId() {
 	const { getRequestOrganisationId } = await import('./requestOrg.js');
@@ -276,13 +279,11 @@ export async function getCurrentOrganisationId() {
 		}
 		return currentOrganisationId;
 	}
-	const orgs = await readCollection('organisations');
-	const first = orgs && orgs.length > 0 ? orgs[0] : null;
-	const fallback = first ? first.id : null;
-	if (env.DEBUG_ORG_SCOPE === '1' && fallback) {
-		console.log('[org] getCurrentOrganisationId:', fallback, '(fallback first org)');
+	// Single-org instance: default to organisation id '1'
+	if (env.DEBUG_ORG_SCOPE === '1') {
+		console.log('[org] getCurrentOrganisationId: 1 (default single org)');
 	}
-	return fallback;
+	return DEFAULT_ORGANISATION_ID;
 }
 
 /**

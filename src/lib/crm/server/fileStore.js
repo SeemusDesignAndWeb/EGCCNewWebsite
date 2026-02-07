@@ -13,7 +13,7 @@ import { env } from '$env/dynamic/private';
 
 let storeModeCache = null;
 
-/** Resolve store mode: env DATA_STORE wins when set (ensures database-only when DATA_STORE=database), else data/store_mode.json, default 'file'. */
+/** Resolve store mode: env DATA_STORE wins when set (ensures database-only when DATA_STORE=database), else data/store_mode.json, else database if DATABASE_URL set, default 'file'. */
 export async function getStoreMode() {
 	if (storeModeCache !== null) {
 		return storeModeCache;
@@ -35,6 +35,11 @@ export async function getStoreMode() {
 		}
 	} catch {
 		// fall through to default
+	}
+	// When DATABASE_URL is set, use database so Hub data is not read from empty file store
+	if (typeof env.DATABASE_URL === 'string' && env.DATABASE_URL.trim()) {
+		storeModeCache = 'database';
+		return storeModeCache;
 	}
 	storeModeCache = 'file';
 	return storeModeCache;
