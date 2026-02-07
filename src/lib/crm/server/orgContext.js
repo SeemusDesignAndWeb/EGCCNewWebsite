@@ -9,15 +9,17 @@ import { ORG_SCOPED_COLLECTIONS } from './collections.js';
 export { getCurrentOrganisationId } from './settings.js';
 
 /**
- * Filter records to current organisation (strict). Only rows with matching organisationId
- * are returned. No data for an org shows as empty lists / no results.
+ * Filter records to current organisation. Includes rows with matching organisationId
+ * and rows with no organisationId (unassigned/legacy), so they show under the current org.
  * @param {Array<{ organisationId?: string | null }>} records
  * @param {string | null} organisationId - Current Hub organisation ID
  * @returns {Array}
  */
 export function filterByOrganisation(records, organisationId) {
 	if (!organisationId || !Array.isArray(records)) return records;
-	return records.filter((r) => r.organisationId === organisationId);
+	return records.filter(
+		(r) => r.organisationId === organisationId || r.organisationId == null || r.organisationId === ''
+	);
 }
 
 /**
