@@ -1747,12 +1747,22 @@ export async function sendRotaUpdateNotification({ to, name }, rotaData, event) 
 		allAssigneesList.push(assigneeInfo);
 	});
 
+	// Only show occurrences on or after today (day of email)
+	const startOfToday = new Date();
+	startOfToday.setHours(0, 0, 0, 0);
+
 	// Build assignees HTML section
 	let assigneesHtml = '';
 	if (allAssigneesList.length > 0) {
-		// Always group by occurrence to avoid duplicates and show clear structure
+		// Always group by occurrence to avoid duplicates and show clear structure; only include dates from today onwards
 		assigneesHtml = '<div style="margin-top: 15px;"><h3 style="color: #2d7a32; margin: 0 0 10px 0; font-size: 15px; font-weight: 600;">Assignees by Occurrence:</h3>';
 		for (const [occKey, assignees] of Object.entries(assigneesByOcc)) {
+			// Skip past occurrences: only show dates from the day of the email
+			if (occKey !== 'all' && occKey) {
+				const occ = eventOccurrences.find(o => o.id === occKey);
+				if (occ && new Date(occ.startsAt) < startOfToday) continue;
+			}
+
 			// Deduplicate assignees within the same occurrence (by email or name)
 			const uniqueAssignees = [];
 			const seenAssignees = new Set();
@@ -1789,11 +1799,17 @@ export async function sendRotaUpdateNotification({ to, name }, rotaData, event) 
 		assigneesHtml = '<div style="margin-top: 15px;"><p style="color: #666; font-size: 14px; font-style: italic;">No assignees yet.</p></div>';
 	}
 
-	// Build assignees text section
+	// Build assignees text section (same date filter: only from today onwards)
 	let assigneesText = '';
 	if (allAssigneesList.length > 0) {
 		assigneesText = '\n\nAssignees by Occurrence:\n';
 		for (const [occKey, assignees] of Object.entries(assigneesByOcc)) {
+			// Skip past occurrences: only show dates from the day of the email
+			if (occKey !== 'all' && occKey) {
+				const occ = eventOccurrences.find(o => o.id === occKey);
+				if (occ && new Date(occ.startsAt) < startOfToday) continue;
+			}
+
 			// Deduplicate assignees within the same occurrence (by email or name)
 			const uniqueAssignees = [];
 			const seenAssignees = new Set();
