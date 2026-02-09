@@ -81,23 +81,23 @@ export async function load({ locals }) {
 		})
 		.slice(0, 3);
 
-	// Get latest 5 rotas (sorted by updatedAt or createdAt, most recent first)
+	// Get latest 3 rotas (sorted by updatedAt or createdAt, most recent first)
 	const latestRotas = [...validRotas]
 		.sort((a, b) => {
 			const dateA = new Date(a.updatedAt || a.createdAt || 0);
 			const dateB = new Date(b.updatedAt || b.createdAt || 0);
 			return dateB - dateA;
 		})
-		.slice(0, 5);
+		.slice(0, 3);
 
-	// Get latest 5 events (sorted by updatedAt or createdAt, most recent first)
+	// Get latest 3 events (sorted by updatedAt or createdAt, most recent first)
 	const latestEvents = [...validEvents]
 		.sort((a, b) => {
 			const dateA = new Date(a.updatedAt || a.createdAt || 0);
 			const dateB = new Date(b.updatedAt || b.createdAt || 0);
 			return dateB - dateA;
 		})
-		.slice(0, 5);
+		.slice(0, 3);
 
 	// Enrich rotas with event titles
 	const eventsMap = new Map(validEvents.map(e => [e.id, e]));

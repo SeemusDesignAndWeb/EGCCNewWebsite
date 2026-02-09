@@ -1,6 +1,6 @@
 import { redirect, fail } from '@sveltejs/kit';
 import { findById, update, remove, readCollection, findMany, create } from '$lib/crm/server/fileStore.js';
-import { validateEvent, getEventColors } from '$lib/crm/server/validators.js';
+import { validateEvent, validateOccurrence, getEventColors } from '$lib/crm/server/validators.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sanitizeHtml } from '$lib/crm/server/sanitize.js';
 import { ensureEventToken, ensureOccurrenceToken } from '$lib/crm/server/tokens.js';
@@ -120,7 +120,15 @@ export async function load({ params, cookies, url }) {
 	const eventColors = await getEventColors();
 	const { filterByOrganisation } = await import('$lib/crm/server/orgContext.js');
 	const lists = filterByOrganisation(await readCollection('lists'), organisationId);
-	return { event, occurrences: occurrencesWithStats, rotas, meetingPlanners, rotaSignupLink, publicEventLink, occurrenceLinks, csrfToken, eventColors, lists };
+
+	// When opened from calendar with ?occurrenceId=, pass that occurrence so the bar can show even if it's past/filtered
+	let requestedOccurrence = null;
+	const occurrenceIdFromUrl = url.searchParams.get('occurrenceId');
+	if (occurrenceIdFromUrl) {
+		requestedOccurrence = eventOccurrences.find(o => String(o.id) === String(occurrenceIdFromUrl)) || null;
+	}
+
+	return { event, occurrences: occurrencesWithStats, rotas, meetingPlanners, rotaSignupLink, publicEventLink, occurrenceLinks, csrfToken, eventColors, lists, requestedOccurrence };
 }
 
 export const actions = {
@@ -337,6 +345,58 @@ ${signupLine}
 		} catch (error) {
 			console.error('[Create event email] Error:', error);
 			return fail(400, { error: error.message || 'Failed to create email' });
+		}
+	},
+
+	moveOccurrence: async ({ request, params, cookies }) => {
+		const data = await request.formData();
+		const csrfToken = data.get('_csrf');
+
+		if (!csrfToken || !verifyCsrfToken(cookies, csrfToken)) {
+			return { error: 'CSRF token validation failed' };
+		}
+
+		try {
+			const organisationId = await getCurrentOrganisationId();
+			const eventId = params.id;
+			const occurrenceId = data.get('occurrenceId');
+			if (!occurrenceId) {
+				return { error: 'Occurrence is required' };
+			}
+
+			const currentOcc = await findById('occurrences', occurrenceId);
+			if (!currentOcc || currentOcc.eventId !== eventId || (currentOcc.organisationId != null && currentOcc.organisationId !== organisationId)) {
+				return { error: 'Occurrence not found' };
+			}
+
+			const startsAt = data.get('startsAt');
+			const endsAt = data.get('endsAt');
+			const allDay = data.get('allDay') === 'true';
+
+			if (!startsAt || !endsAt) {
+				return { error: 'Date and time are required' };
+			}
+
+			const startISO = new Date(startsAt).toISOString();
+			const endISO = new Date(endsAt).toISOString();
+
+			const occurrenceData = {
+				eventId,
+				startsAt: startISO,
+				endsAt: endISO,
+				location: currentOcc.location || '',
+				maxSpaces: currentOcc.maxSpaces,
+				information: currentOcc.information || '',
+				allDay
+			};
+
+			const validated = validateOccurrence(occurrenceData);
+			await update('occurrences', occurrenceId, validated);
+
+			return { success: true, type: 'moveOccurrence' };
+		} catch (error) {
+			console.error('[Move Occurrence] Error:', error);
+			return { error: error.message || 'Failed to move occurrence' };
 		}
 	}
 };

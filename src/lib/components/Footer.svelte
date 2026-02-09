@@ -17,13 +17,6 @@
 		<div class="grid md:grid-cols-3 gap-8 mb-8">
 			<!-- Contact -->
 			<div class="text-center md:text-left">
-				<a href="/" class="inline-block mb-6">
-					<img
-						src="/images/egcc-logo-text.png"
-						alt="Eltham Green Community Church"
-						class="h-12 w-auto mx-auto md:mx-0"
-					/>
-				</a>
 				<h3 class="text-white font-semibold mb-4">Contact</h3>
 				<div class="space-y-2 text-sm text-white">
 					<p class="text-white">{contactInfo.address}</p>

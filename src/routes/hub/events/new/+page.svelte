@@ -188,80 +188,85 @@
 					</div>
 
 					<div class="border-t border-gray-200 pt-4">
-						<h3 class="text-xs font-semibold text-gray-900 mb-3">Display & Sharing</h3>
-						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-							<div>
-								<label class="block text-sm font-medium text-gray-700 mb-1">Image (optional)</label>
-								{#if formData.image}
-									<div class="mb-2 rounded border border-gray-300 overflow-hidden bg-gray-100 aspect-[2/1] min-h-[120px]">
-										<img src={formData.image} alt="Event preview" class="w-full h-full object-cover" />
+						<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+							<!-- Display column -->
+							<div class="bg-gray-50/80 rounded-lg p-3">
+								<h3 class="text-xs font-semibold text-gray-900 mb-3">Display</h3>
+								<div class="space-y-4">
+									<div>
+										<label class="block text-sm font-medium text-gray-700 mb-1">Image (optional)</label>
+										{#if formData.image}
+											<div class="mb-2 rounded border border-gray-300 overflow-hidden bg-gray-100 aspect-[2/1] min-h-[120px]">
+												<img src={formData.image} alt="Event preview" class="w-full h-full object-cover" />
+											</div>
+										{/if}
+										<div class="flex gap-2">
+											<input type="hidden" name="image" value={formData.image} />
+											<button
+												type="button"
+												on:click={() => showImagePicker = true}
+												class="w-full text-xs py-2 px-3 rounded-md border border-gray-500 bg-white text-gray-700 hover:bg-gray-50"
+											>
+												{formData.image ? 'Change image' : 'Choose image'}
+											</button>
+											{#if formData.image}
+												<button
+													type="button"
+													on:click={() => formData.image = ''}
+													class="text-xs py-2 px-3 rounded-md border border-gray-500 bg-white text-gray-700 hover:bg-gray-50"
+												>
+													Clear
+												</button>
+											{/if}
+										</div>
 									</div>
-								{/if}
-								<div class="flex gap-2">
-									<input type="hidden" name="image" value={formData.image} />
-									<button
-										type="button"
-										on:click={() => showImagePicker = true}
-										class="w-full text-xs py-2 px-3 rounded-md border border-gray-500 bg-white text-gray-700 hover:bg-gray-50"
-									>
-										{formData.image ? 'Change image' : 'Choose image'}
-									</button>
-									{#if formData.image}
-										<button
-											type="button"
-											on:click={() => formData.image = ''}
-											class="text-xs py-2 px-3 rounded-md border border-gray-500 bg-white text-gray-700 hover:bg-gray-50"
-										>
-											Clear
-										</button>
-									{/if}
-								</div>
-							</div>
-
-							<div class="space-y-4">
-								<div>
-									<label class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
-									<select name="visibility" bind:value={formData.visibility} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 sm:py-3 px-3 sm:px-4 text-xs">
-										<option value="private">Private (Hub Admins only)</option>
-										<option value="internal">Internal (Church only)</option>
-										<option value="public">Public (Everyone)</option>
-									</select>
-								</div>
-								<div>
-									<label class="block text-sm font-medium text-gray-700 mb-1">Event Color</label>
-									<div class="flex items-center gap-2 sm:gap-3">
-										<div class="w-8 h-8 sm:w-10 sm:h-10 rounded border border-gray-300 flex-shrink-0" style="background-color: {formData.color};"></div>
-										<select name="color" bind:value={formData.color} class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 sm:py-3 px-3 sm:px-4 text-xs">
-											{#each eventColors as colorOption}
-												<option value={colorOption.value}>{colorOption.label}</option>
-											{/each}
+									<div>
+										<label class="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
+										<select name="visibility" bind:value={formData.visibility} class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 sm:py-3 px-3 sm:px-4 text-xs">
+											<option value="private">Private (Hub Admins only)</option>
+											<option value="internal">Internal (Church only)</option>
+											<option value="public">Public (Everyone)</option>
 										</select>
 									</div>
+									<div>
+										<label class="block text-sm font-medium text-gray-700 mb-1">Event Color</label>
+										<div class="flex items-center gap-2 sm:gap-3">
+											<div class="w-8 h-8 sm:w-10 sm:h-10 rounded border border-gray-300 flex-shrink-0" style="background-color: {formData.color};"></div>
+											<select name="color" bind:value={formData.color} class="flex-1 rounded-md border border-gray-500 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 sm:py-3 px-3 sm:px-4 text-xs">
+												{#each eventColors as colorOption}
+													<option value={colorOption.value}>{colorOption.label}</option>
+												{/each}
+											</select>
+										</div>
+									</div>
 								</div>
 							</div>
 
-							<div class="space-y-4">
-								<div class="flex items-center pt-6">
-									<input
-										type="checkbox"
-										id="hideFromEmail"
-										name="hideFromEmail"
-										bind:checked={formData.hideFromEmail}
-										class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
-									/>
-									<label for="hideFromEmail" class="ml-2 block text-sm text-gray-700">
-										Hide from email
-									</label>
-								</div>
-								<div>
-									<MultiSelect
-										label="Email Lists"
-										name="listIds"
-										options={lists.map(list => ({ id: list.id, name: list.name }))}
-										bind:selected={selectedListIds}
-										placeholder="Select lists..."
-									/>
-									<p class="text-xs text-gray-500 mt-1">If no lists selected, sends to everyone (based on visibility)</p>
+							<!-- Email column -->
+							<div class="bg-gray-50/80 rounded-lg p-3">
+								<h3 class="text-xs font-semibold text-gray-900 mb-3">Email</h3>
+								<div class="space-y-4">
+									<div class="flex items-center">
+										<input
+											type="checkbox"
+											id="hideFromEmail"
+											name="hideFromEmail"
+											bind:checked={formData.hideFromEmail}
+											class="h-4 w-4 text-hub-green-600 focus:ring-theme-button-2 border-gray-300 rounded"
+										/>
+										<label for="hideFromEmail" class="ml-2 block text-sm text-gray-700">
+											Hide from email
+										</label>
+									</div>
+									<div>
+										<MultiSelect
+											label="Only send email to these lists (leave blank for all contacts)"
+											name="listIds"
+											options={lists.map(list => ({ id: list.id, name: list.name }))}
+											bind:selected={selectedListIds}
+											placeholder="Select lists..."
+										/>
+									</div>
 								</div>
 							</div>
 						</div>
