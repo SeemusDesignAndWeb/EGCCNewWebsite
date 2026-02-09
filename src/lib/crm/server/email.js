@@ -1498,64 +1498,6 @@ Visit our website: ${baseUrl}
 }
 
 /**
- * Send MultiOrg password reset email.
- * @param {{ to: string, name: string, resetToken: string }} - Recipient and token
- * @param {{ url: URL, adminSubdomain?: boolean }} event - url.origin and adminSubdomain (for reset link path)
- */
-export async function sendMultiOrgPasswordResetEmail({ to, name, resetToken }, event) {
-	if (!env.MAILGUN_API_KEY || !env.MAILGUN_DOMAIN) {
-		console.error('[MultiOrg password reset email] MAILGUN_API_KEY or MAILGUN_DOMAIN is not set. Set them in your environment (e.g. Railway variables).');
-		throw new Error('Email is not configured: Mailgun credentials are missing.');
-	}
-	const adminSubdomain = !!event?.adminSubdomain;
-	const baseUrl = adminSubdomain ? event.url?.origin : getBaseUrl(event);
-	const path = adminSubdomain ? '/auth/reset-password' : '/multi-org/auth/reset-password';
-	const encodedToken = encodeURIComponent(resetToken);
-	const encodedEmail = encodeURIComponent(to);
-	const resetLink = `${baseUrl}${path}?token=${encodedToken}&email=${encodedEmail}`;
-
-	const fromEmail = fromEmailDefault();
-	const logoUrl = `${baseUrl}/images/onnuma-logo.png`;
-	const html = `
-		<!DOCTYPE html>
-		<html>
-		<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Reset Your Password - OnNuma</title></head>
-		<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.5; color: #272838; max-width: 600px; margin: 0 auto; padding: 10px; background-color: #f8f8fa;">
-			<div style="background: #fff; padding: 24px; border-radius: 12px; border: 1px solid #7E7F9A; box-shadow: 0 2px 8px rgba(39,40,56,0.08);">
-				<div style="background: #FEFCF4; padding: 24px; border-radius: 10px; text-align: center; margin-bottom: 20px; border: 1px solid #F3DE8A;">
-					<img src="${logoUrl}" alt="OnNuma" style="max-width: 180px; height: auto; max-height: 48px; margin-bottom: 12px; display: inline-block;" />
-					<h1 style="color: #272838; margin: 0; font-size: 20px; font-weight: 600;">Reset Your Password</h1>
-					<p style="color: #272838; margin: 8px 0 0 0; font-size: 14px; opacity: 0.85;">OnNuma</p>
-				</div>
-				<p style="color: #272838; font-size: 15px; margin: 0 0 15px 0;">Hello ${name},</p>
-				<p style="color: #272838; font-size: 15px; margin: 0 0 15px 0;">We received a request to reset your OnNuma admin password.</p>
-				<div style="background: #F3DE8A; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #EB9486;">
-					<p style="color: #272838; font-size: 14px; margin: 0 0 12px 0;">Click the button below to set a new password. This link expires in 24 hours.</p>
-					<a href="${resetLink}" style="display: inline-block; background: #EB9486; color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Reset Password</a>
-					<p style="color: #7E7F9A; font-size: 12px; margin: 12px 0 0 0;">Or copy this link: ${resetLink}</p>
-				</div>
-				<p style="color: #7E7F9A; font-size: 12px; margin: 16px 0 0 0;">If you didn't request this, you can ignore this email. Your password will not change until you use the link above.</p>
-			</div>
-		</body>
-		</html>
-	`;
-	const text = `Reset Your Password - OnNuma\n\nHello ${name},\n\nWe received a request to reset your OnNuma admin password.\n\nOpen this link to set a new password (expires in 24 hours):\n${resetLink}\n\nIf you didn't request this, ignore this email.\n`;
-
-	try {
-		return await rateLimitedSend(() => sendEmail({
-			from: fromEmail,
-			to: [to],
-			subject: 'Reset your OnNuma password',
-			html,
-			text
-		}));
-	} catch (error) {
-		console.error('Failed to send MultiOrg password reset email:', error);
-		throw error;
-	}
-}
-
-/**
  * Send event signup confirmation email
  * @param {object} options - Email options
  * @param {string} options.to - Recipient email
@@ -2312,5 +2254,38 @@ This email was sent from the member signup form on Eltham Green Community Church
 		console.error('Failed to send member signup admin notification:', error);
 		throw error;
 	}
+}
+
+/**
+ * Send a reply email for a help request (from Hub Settings). Used when admin replies in-app.
+ * @param {object} opts
+ * @param {string} opts.toEmail - Recipient email (the person who submitted the help request)
+ * @param {string} opts.toName - Recipient name
+ * @param {string} opts.fromName - Sender name (admin)
+ * @param {string} opts.fromEmail - Sender email (admin); if missing uses fromEmailDefault()
+ * @param {string} opts.subject - Email subject
+ * @param {string} opts.message - Plain text reply body
+ * @returns {Promise<{ data: { id: string } }>}
+ */
+export async function sendHelpRequestReply({ toEmail, toName, fromName, fromEmail, subject, message }) {
+	const from = fromEmail
+		? (fromName ? `${fromName} <${fromEmail}>` : fromEmail)
+		: fromEmailDefault();
+	const to = toName ? `${toName} <${toEmail}>` : toEmail;
+	const text = message || '';
+	const html = text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/\n/g, '<br>\n');
+	return rateLimitedSend(() =>
+		sendEmail({
+			from,
+			to: toEmail,
+			subject,
+			text,
+			html: html || undefined
+		})
+	);
 }
 

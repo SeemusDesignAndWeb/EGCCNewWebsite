@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { findById, readCollection } from '$lib/crm/server/fileStore.js';
+import { getSettings } from '$lib/crm/server/settings.js';
 import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 /**
@@ -198,14 +199,18 @@ export async function GET({ params, locals }) {
 			throw error(500, 'PDF export requires puppeteer. Please run: npm install puppeteer');
 		}
 
-		// Generate HTML for PDF
+		// Generate HTML for PDF (use editable section name from settings)
+		const settings = await getSettings();
+		const sectionLabel = settings.sundayPlannersLabel || 'Sunday Planners';
+		const singularLabel = sectionLabel.replace(/s$/, '') || 'Sunday Planner';
 		const htmlContent = generateMeetingPlannerPDFHTML({
 			meetingPlanner,
 			event,
 			occurrence,
 			eventOccurrences,
 			rotasData,
-			now
+			now,
+			singularLabel
 		});
 
 		// Launch browser
@@ -269,7 +274,7 @@ export async function GET({ params, locals }) {
 /**
  * Generate HTML content for meeting planner PDF export
  */
-function generateMeetingPlannerPDFHTML({ meetingPlanner, event, occurrence, eventOccurrences, rotasData, now }) {
+function generateMeetingPlannerPDFHTML({ meetingPlanner, event, occurrence, eventOccurrences, rotasData, now, singularLabel = 'Sunday Planner' }) {
 	const eventTitle = event.title || 'Unknown Event';
 	const rotaNames = {
 		meetingLeader: 'Meeting Leader',
@@ -424,7 +429,7 @@ function generateMeetingPlannerPDFHTML({ meetingPlanner, event, occurrence, even
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Meeting Planner: ${escapeHtml(eventTitle)}</title>
+	<title>${escapeHtml(singularLabel)}: ${escapeHtml(eventTitle)}</title>
 	<style>
 		* {
 			margin: 0;

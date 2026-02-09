@@ -30,12 +30,23 @@ export async function load({ cookies }) {
 	const rotasForOrg = currentOrganisationId ? filterByOrganisation(rotas, currentOrganisationId) : rotas;
 	const uniqueRoles = [...new Set(rotasForOrg.map((r) => r.role))].sort();
 
+	// Events for current org (for Sunday planner event setting) – unique by id so dropdown has no duplicates
+	const allEvents = await readCollection('events');
+	const eventsForOrg = currentOrganisationId ? filterByOrganisation(allEvents, currentOrganisationId) : allEvents;
+	const eventsSorted = [...new Map(eventsForOrg.map((e) => [e.id, e])).values()].sort((a, b) =>
+		(a.title || '').localeCompare(b.title || '')
+	);
+
+	const helpRequests = await readCollection('help_requests');
+
 	return {
 		admin,
 		settings,
 		availableRoles: uniqueRoles,
+		events: eventsSorted,
 		storeMode,
 		currentOrganisationId,
-		currentOrganisation
+		currentOrganisation,
+		helpRequests: helpRequests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 	};
 }

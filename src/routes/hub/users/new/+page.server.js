@@ -3,7 +3,7 @@ import { createAdmin, getAdminFromCookies } from '$lib/crm/server/auth.js';
 import { getCsrfToken, verifyCsrfToken } from '$lib/crm/server/auth.js';
 import { sendAdminWelcomeEmail } from '$lib/crm/server/email.js';
 import { isSuperAdmin, canCreateAdmin, getAvailableHubAreas, HUB_AREAS, isSuperAdminEmail } from '$lib/crm/server/permissions.js';
-import { getEffectiveSuperAdminEmail } from '$lib/crm/server/settings.js';
+import { getEffectiveSuperAdminEmail, getSettings } from '$lib/crm/server/settings.js';
 import { logDataChange } from '$lib/crm/server/audit.js';
 
 export async function load({ cookies }) {
@@ -12,14 +12,15 @@ export async function load({ cookies }) {
 		throw redirect(302, '/hub/auth/login');
 	}
 	
-	// Only super admins can create admins (use effective super admin from hub_settings/Multi-org)
+	// Only super admins can create admins (use effective super admin from hub_settings)
 	const superAdminEmail = await getEffectiveSuperAdminEmail();
 	if (!isSuperAdmin(admin, superAdminEmail)) {
 		throw redirect(302, '/hub/users');
 	}
 	
 	const csrfToken = getCsrfToken(cookies) || '';
-	const availableAreas = getAvailableHubAreas(admin, superAdminEmail);
+	const settings = await getSettings();
+	const availableAreas = getAvailableHubAreas(admin, { meetingPlanners: settings.sundayPlannersLabel });
 	return { csrfToken, availableAreas, superAdminEmail };
 }
 
@@ -47,7 +48,7 @@ export const actions = {
 			return { error: 'Not authenticated' };
 		}
 
-		// Check if current admin can create admins (use effective super admin from hub_settings/Multi-org)
+		// Check if current admin can create admins (use effective super admin from hub_settings)
 		const effectiveSuperAdminEmail = await getEffectiveSuperAdminEmail();
 		if (!canCreateAdmin(currentAdmin, effectiveSuperAdminEmail)) {
 			return { error: 'You do not have permission to create admins' };
@@ -58,7 +59,7 @@ export const actions = {
 		const isSuperAdminEmailMatch = isSuperAdminEmail(normalizedEmail, effectiveSuperAdminEmail);
 
 		// Validate permissions array
-		const validAreas = getAvailableHubAreas(currentAdmin, effectiveSuperAdminEmail).map(a => a.value);
+		const validAreas = getAvailableHubAreas(currentAdmin).map(a => a.value);
 		let validPermissions = permissions.filter(p => validAreas.includes(p.toString()));
 		
 		// Check if SUPER_ADMIN permission is being set

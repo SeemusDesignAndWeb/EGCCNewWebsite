@@ -5,7 +5,7 @@
 	export let showOnboarding = false;
 	export let admin = null;
 	export let superAdminEmail = null;
-	/** Org's allowed areas from MultiOrg (null = no restriction) */
+	/** Org's allowed areas from organisation record (null = no restriction) */
 	export let organisationAreaPermissions = null;
 
 	// Steps in the order we want to show: Settings, Contacts, Lists, Events, Rotas, Email, Forms.

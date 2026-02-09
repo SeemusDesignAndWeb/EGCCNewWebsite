@@ -20,10 +20,7 @@
 	// Route-derived flags (defined first so theme logic can use them)
 	$: isAdminArea = $page.url.pathname.startsWith('/admin');
 	$: isHubArea = $page.url.pathname.startsWith('/hub');
-	$: isMultiOrgArea = $page.url.pathname.startsWith('/multi-org');
-	// On admin subdomain path is /auth/* or /organisations, so we also hide website UI via data from server
-	$: multiOrgAdminDomain = data?.multiOrgAdminDomain ?? false;
-	$: hideWebsiteElements = isAdminArea || isHubArea || isMultiOrgArea || multiOrgAdminDomain;
+	$: hideWebsiteElements = isAdminArea || isHubArea;
 	// External = public hub pages: signup, event token, forms, unsubscribe, view-rotas (theme applies only here when Hub branding is on)
 	$: isExternalPage = $page.url.pathname.startsWith('/signup') || $page.url.pathname.startsWith('/event/') || $page.url.pathname.startsWith('/forms') || $page.url.pathname.startsWith('/unsubscribe') || $page.url.pathname.startsWith('/view-rotas');
 
@@ -144,8 +141,8 @@
 	<slot />
 </div>
 
-<!-- Global Notification Popups (MultiOrg uses OnNuma theme colours) -->
-<NotificationPopup useMultiOrgTheme={isMultiOrgArea} />
+<!-- Global Notification Popups -->
+<NotificationPopup useMultiOrgTheme={false} />
 
 <!-- Global Dialog/Confirm -->
 <ConfirmDialog />

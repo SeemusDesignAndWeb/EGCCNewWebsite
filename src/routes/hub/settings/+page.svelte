@@ -42,8 +42,111 @@
 	$: storeMode = storeModeOverride ?? data?.storeMode ?? 'file';
 	$: currentOrganisationId = data?.currentOrganisationId ?? null;
 	$: currentOrganisation = data?.currentOrganisation ?? null;
-	
-	// Meeting Planner Rota state
+	$: helpRequests = data?.helpRequests || [];
+	$: availableEvents = data?.events || [];
+	// Sync from server when data loads/refreshes; avoid overwriting user's unsaved selection
+	let selectedSundayPlannerEventId = '';
+	let _prevSundayPlannerEventIdFromServer = undefined;
+	$: if (data?.settings && data.settings.sundayPlannerEventId !== undefined) {
+		const v = data.settings.sundayPlannerEventId ?? '';
+		if (_prevSundayPlannerEventIdFromServer !== v) {
+			_prevSundayPlannerEventIdFromServer = v;
+			selectedSundayPlannerEventId = v;
+		}
+	}
+	let savingSundayPlannerEvent = false;
+
+	// Section name (Sunday Planners label) - sync from server, save on button
+	let sundayPlannersLabelInput = '';
+	let _prevSundayPlannersLabelFromServer = undefined;
+	$: if (data?.settings && data.settings.sundayPlannersLabel !== undefined) {
+		const v = data.settings.sundayPlannersLabel || 'Sunday Planners';
+		if (_prevSundayPlannersLabelFromServer !== v) {
+			_prevSundayPlannersLabelFromServer = v;
+			sundayPlannersLabelInput = v;
+		}
+	}
+	let savingSundayPlannersLabel = false;
+	$: settingsPlannerLabel = sundayPlannersLabelInput || data?.settings?.sundayPlannersLabel || 'Sunday Planners';
+	$: settingsPlannerLabelSingular = settingsPlannerLabel.replace(/s$/, '') || 'Sunday Planner';
+
+	// Help request filter: 'all' | 'open' (queries) | 'road_map' | 'completed' | 'dead' | 'ignore'
+	let helpRequestFilter = 'all';
+	const HELP_STATUS_OPTIONS = [
+		{ value: 'open', label: 'Queries' },
+		{ value: 'road_map', label: 'Road Map' },
+		{ value: 'completed', label: 'Complete' },
+		{ value: 'dead', label: 'Dead' },
+		{ value: 'ignore', label: 'Ignore' }
+	];
+	const HELP_FILTER_OPTIONS = [
+		{ value: 'all', label: 'All' },
+		...HELP_STATUS_OPTIONS
+	];
+	function helpRequestStatus(req) {
+		return req.status || 'open';
+	}
+	$: filteredHelpRequests = helpRequestFilter === 'all'
+		? helpRequests
+		: helpRequests.filter((r) => helpRequestStatus(r) === helpRequestFilter);
+
+	async function updateHelpRequestStatus(id, newStatus) {
+		try {
+			const res = await fetch('/hub/api/help-request/update', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id, status: newStatus })
+			});
+			if (res.ok) {
+				notifications.success('Request updated');
+				helpRequests = helpRequests.map(r => r.id === id ? { ...r, status: newStatus } : r);
+			} else {
+				notifications.error('Update failed');
+			}
+		} catch (e) {
+			notifications.error('Update failed');
+		}
+	}
+
+	// Reply modal state
+	let replyToRequest = null;
+	let replyMessage = '';
+	let replySending = false;
+
+	function openReplyModal(req) {
+		replyToRequest = req;
+		replyMessage = '';
+	}
+
+	function closeReplyModal() {
+		replyToRequest = null;
+		replyMessage = '';
+	}
+
+	async function submitReply() {
+		if (!replyToRequest || !replyMessage.trim()) return;
+		replySending = true;
+		try {
+			const res = await fetch('/hub/api/help-request/reply', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id: replyToRequest.id, message: replyMessage.trim() })
+			});
+			const data = await res.json().catch(() => ({}));
+			if (res.ok) {
+				notifications.success('Reply sent');
+				closeReplyModal();
+			} else {
+				notifications.error(data?.error || 'Failed to send reply');
+			}
+		} catch (e) {
+			notifications.error('Failed to send reply');
+		} finally {
+			replySending = false;
+		}
+	}
+
+	// Sunday Planner Rota state
 	let editingRotaIndex = null;
 	let originalRota = null;
 	let showAddRota = false;
@@ -296,12 +399,12 @@
 			});
 			
 			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({ message: 'Failed to save meeting planner rotas' }));
-				throw new Error(errorData.message || 'Failed to save meeting planner rotas');
+				const errorData = await response.json().catch(() => ({ message: 'Failed to save Sunday planner rotas' }));
+				throw new Error(errorData.message || 'Failed to save Sunday planner rotas');
 			}
 			
 			const result = await response.json();
-			notifications.success('Meeting planner rotas saved successfully!');
+			notifications.success('Sunday planner rotas saved successfully!');
 			
 			await invalidateAll();
 			
@@ -310,10 +413,56 @@
 			showAddRota = false;
 			newRota = { role: '' };
 		} catch (err) {
-			notifications.error(err.message || 'Failed to save meeting planner rotas');
-			console.error('Error saving meeting planner rotas:', err);
+			notifications.error(err.message || 'Failed to save Sunday planner rotas');
+			console.error('Error saving Sunday planner rotas:', err);
 		} finally {
 			saving = false;
+		}
+	}
+
+	async function saveSundayPlannerEvent() {
+		savingSundayPlannerEvent = true;
+		try {
+			const value = selectedSundayPlannerEventId === '' ? null : selectedSundayPlannerEventId;
+			const response = await fetch('/hub/settings', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ sundayPlannerEventId: value })
+			});
+			if (!response.ok) {
+				const errData = await response.json().catch(() => ({ message: 'Failed to save' }));
+				throw new Error(errData.message || 'Failed to save');
+			}
+			_prevSundayPlannerEventIdFromServer = value ?? '';
+			notifications.success('Sunday planner event saved.');
+			await invalidateAll();
+		} catch (err) {
+			notifications.error(err.message || 'Failed to save Sunday planner event');
+		} finally {
+			savingSundayPlannerEvent = false;
+		}
+	}
+
+	async function saveSundayPlannersLabel() {
+		savingSundayPlannersLabel = true;
+		try {
+			const label = (sundayPlannersLabelInput || '').trim() || 'Sunday Planners';
+			const response = await fetch('/hub/settings', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ sundayPlannersLabel: label })
+			});
+			if (!response.ok) {
+				const errData = await response.json().catch(() => ({ message: 'Failed to save' }));
+				throw new Error(errData.message || 'Failed to save');
+			}
+			_prevSundayPlannersLabelFromServer = label;
+			notifications.success('Section name saved.');
+			await invalidateAll();
+		} catch (err) {
+			notifications.error(err.message || 'Failed to save section name');
+		} finally {
+			savingSundayPlannersLabel = false;
 		}
 	}
 	
@@ -435,7 +584,7 @@
 	}
 
 	async function removeRota(index) {
-		const confirmed = await dialog.confirm('Are you sure you want to remove this rota? New meeting planners will no longer include this role.');
+		const confirmed = await dialog.confirm('Are you sure you want to remove this rota? New Sunday planners will no longer include this role.');
 		if (confirmed) {
 			meetingPlannerRotas = meetingPlannerRotas.filter((_, i) => i !== index);
 			await saveMeetingPlannerRotas();
@@ -594,7 +743,7 @@
 	<title>Settings - TheHUB</title>
 </svelte:head>
 
-<div class="max-w-4xl mx-auto px-4 py-8">
+<div class="w-full px-4 py-8">
 	<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 		<h1 class="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
 		<p class="text-gray-600 mb-6">Manage system settings (Superadmin only)</p>
@@ -618,7 +767,7 @@
 					on:click={() => activeTab = 'meeting-planner'}
 					class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {activeTab === 'meeting-planner' ? 'border-theme-button-1 text-theme-button-1' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
 				>
-					Meeting Planner
+					{settingsPlannerLabelSingular}
 				</button>
 				<button
 					on:click={() => activeTab = 'email'}
@@ -631,6 +780,12 @@
 					class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {activeTab === 'data-store' ? 'border-theme-button-1 text-theme-button-1' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
 				>
 					Data store
+				</button>
+				<button
+					on:click={() => activeTab = 'help'}
+					class="py-4 px-1 border-b-2 font-medium text-sm transition-colors {activeTab === 'help' ? 'border-theme-button-1 text-theme-button-1' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}"
+				>
+					Help Requests
 				</button>
 				<button
 					on:click={() => activeTab = 'advanced'}
@@ -650,44 +805,64 @@
 			</p>
 			<div class="space-y-4 max-w-xl">
 				<div>
-					<label for="theme-logo-path" class="block text-sm font-medium text-gray-700 mb-1">Navbar logo (path or URL)</label>
-					<div class="flex gap-2">
-						<input
-							id="theme-logo-path"
-							type="text"
-							bind:value={themeLogoPath}
-							placeholder="/images/egcc-color.png"
-							class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-theme-button-1 focus:border-theme-button-1"
-						/>
-						<button
-							type="button"
-							on:click={() => openImageBrowser('navbar')}
-							class="px-3 py-2 text-sm font-medium btn-theme-light-1 rounded-md whitespace-nowrap"
-						>
-							Select from library
-						</button>
+					<label class="block text-sm font-medium text-gray-700 mb-1">Navbar logo</label>
+					<div class="flex items-center gap-4">
+						<div class="flex-shrink-0 w-32 h-16 border border-gray-200 rounded-md bg-gray-50 flex items-center justify-center overflow-hidden">
+							<img
+								src={themeLogoPath.trim() || '/images/OnNuma-Icon.png'}
+								alt="Navbar logo preview"
+								class="max-h-14 max-w-full object-contain"
+								on:error={(e) => { e.currentTarget.style.display = 'none'; }}
+							/>
+						</div>
+						<div class="flex gap-2">
+							<button
+								type="button"
+								on:click={() => openImageBrowser('navbar')}
+								class="px-3 py-2 text-sm font-medium btn-theme-light-1 rounded-md whitespace-nowrap"
+							>
+								Select from library
+							</button>
+							<button
+								type="button"
+								on:click={() => (themeLogoPath = '')}
+								class="px-3 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+							>
+								Use default
+							</button>
+						</div>
 					</div>
-					<p class="mt-1 text-xs text-gray-500">Logo shown in the Hub navbar and on external pages. Leave empty for default.</p>
+					<p class="mt-1 text-xs text-gray-500">Shown in the Hub navbar and on external pages. Leave empty for default.</p>
 				</div>
 				<div>
-					<label for="theme-login-logo-path" class="block text-sm font-medium text-gray-700 mb-1">Login screen logo (path or URL)</label>
-					<div class="flex gap-2">
-						<input
-							id="theme-login-logo-path"
-							type="text"
-							bind:value={themeLoginLogoPath}
-							placeholder="/images/egcc-color.png"
-							class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-theme-button-1 focus:border-theme-button-1"
-						/>
-						<button
-							type="button"
-							on:click={() => openImageBrowser('login')}
-							class="px-3 py-2 text-sm font-medium btn-theme-light-1 rounded-md whitespace-nowrap"
-						>
-							Select from library
-						</button>
+					<label class="block text-sm font-medium text-gray-700 mb-1">Login screen logo</label>
+					<div class="flex items-center gap-4">
+						<div class="flex-shrink-0 w-32 h-16 border border-gray-200 rounded-md bg-gray-50 flex items-center justify-center overflow-hidden">
+							<img
+								src={themeLoginLogoPath.trim() || '/images/onnuma-logo.png'}
+								alt="Login logo preview"
+								class="max-h-14 max-w-full object-contain"
+								on:error={(e) => { e.currentTarget.style.display = 'none'; }}
+							/>
+						</div>
+						<div class="flex gap-2">
+							<button
+								type="button"
+								on:click={() => openImageBrowser('login')}
+								class="px-3 py-2 text-sm font-medium btn-theme-light-1 rounded-md whitespace-nowrap"
+							>
+								Select from library
+							</button>
+							<button
+								type="button"
+								on:click={() => (themeLoginLogoPath = '')}
+								class="px-3 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+							>
+								Use default
+							</button>
+						</div>
 					</div>
-					<p class="mt-1 text-xs text-gray-500">Logo shown on the Hub login screen only. Leave empty to use the navbar logo or default.</p>
+					<p class="mt-1 text-xs text-gray-500">Shown on the Hub login screen only. Leave empty to use the navbar logo or default.</p>
 				</div>
 				<div>
 					<label for="theme-primary-color" class="block text-sm font-medium text-gray-700 mb-1">Primary colour (green)</label>
@@ -1002,12 +1177,66 @@
 		</div>
 		{/if}
 
-		<!-- Meeting Planner Settings -->
+		<!-- Sunday Planner Settings -->
 		{#if activeTab === 'meeting-planner'}
 		<div class="border-b border-gray-200 pb-6 mb-6">
-			<h2 class="text-xl font-semibold text-gray-900 mb-4">Meeting Planner Rotas</h2>
+			<h2 class="text-xl font-semibold text-gray-900 mb-2">Section name</h2>
 			<p class="text-sm text-gray-600 mb-4">
-				Manage the default rotas that are automatically created and attached to new meeting planners.
+				The name shown in the Hub nav and section headings (e.g. "Sunday Planners"). Change this to match your church’s wording.
+			</p>
+			<div class="flex flex-wrap items-end gap-3 mb-6">
+				<div class="min-w-[200px] max-w-xs">
+					<label for="sunday-planners-label" class="block text-xs font-medium text-gray-700 mb-1">Display name</label>
+					<input
+						id="sunday-planners-label"
+						type="text"
+						bind:value={sundayPlannersLabelInput}
+						placeholder="Sunday Planners"
+						maxlength="80"
+						class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-theme-button-1 focus:border-theme-button-1"
+					/>
+				</div>
+				<button
+					type="button"
+					on:click={saveSundayPlannersLabel}
+					disabled={savingSundayPlannersLabel}
+					class="px-4 py-2 text-sm btn-theme-2 rounded-md disabled:opacity-50"
+				>
+					{savingSundayPlannersLabel ? 'Saving…' : 'Save'}
+				</button>
+			</div>
+
+			<h2 class="text-xl font-semibold text-gray-900 mb-2">Event for {settingsPlannerLabel}</h2>
+			<p class="text-sm text-gray-600 mb-4">
+				Choose which event Sunday planners are attached to. This tells the system which event (e.g. Sunday service) to use for planning.
+			</p>
+			<div class="flex flex-wrap items-end gap-3 mb-6">
+				<div class="min-w-[200px]">
+					<label for="sunday-planner-event" class="block text-xs font-medium text-gray-700 mb-1">Event</label>
+					<select
+						id="sunday-planner-event"
+						bind:value={selectedSundayPlannerEventId}
+						class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-theme-button-1 focus:border-theme-button-1"
+					>
+						<option value="">— No event selected —</option>
+						{#each availableEvents as event}
+							<option value={event.id}>{event.title || event.id}</option>
+						{/each}
+					</select>
+				</div>
+				<button
+					type="button"
+					on:click={saveSundayPlannerEvent}
+					disabled={savingSundayPlannerEvent}
+					class="px-4 py-2 text-sm btn-theme-2 rounded-md disabled:opacity-50"
+				>
+					{savingSundayPlannerEvent ? 'Saving…' : 'Save'}
+				</button>
+			</div>
+
+			<h2 class="text-xl font-semibold text-gray-900 mb-4">{settingsPlannerLabelSingular} Rotas</h2>
+			<p class="text-sm text-gray-600 mb-4">
+				Manage the default rotas that are automatically created and attached to new {settingsPlannerLabel.toLowerCase()}.
 			</p>
 			
 			<div class="space-y-4">
@@ -1249,6 +1478,141 @@
 				</div>
 			</div>
 		</div>
+		{/if}
+
+		<!-- Help Requests -->
+		{#if activeTab === 'help'}
+		<div class="border-b border-gray-200 pb-6 mb-6">
+			<h2 class="text-xl font-semibold text-gray-900 mb-4">Help Requests</h2>
+			<div class="mb-4 flex flex-wrap items-center gap-3">
+				<label for="help-request-filter" class="text-sm font-medium text-gray-700">Filter:</label>
+				<select
+					id="help-request-filter"
+					bind:value={helpRequestFilter}
+					class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-theme-button-1 focus:border-theme-button-1"
+				>
+					{#each HELP_FILTER_OPTIONS as opt}
+						<option value={opt.value}>{opt.label}</option>
+					{/each}
+				</select>
+			</div>
+			<div class="overflow-x-auto">
+				<table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
+					<thead class="bg-gray-50">
+						<tr>
+							<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+							<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+							<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+							<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
+							<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+							<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+						</tr>
+					</thead>
+					<tbody class="bg-white divide-y divide-gray-200">
+						{#each filteredHelpRequests as req}
+							{@const status = helpRequestStatus(req)}
+							<tr>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									{new Date(req.createdAt).toLocaleDateString()}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+									<div class="font-medium">{req.name}</div>
+									<div class="text-gray-500 text-xs">{req.email}</div>
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {req.type === 'bug' ? 'bg-red-100 text-red-800' : (req.type === 'enhancement' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800')}">
+										{req.type}
+									</span>
+								</td>
+								<td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title={req.message}>
+									{req.message}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									<select
+										aria-label="Set status for request"
+										value={status}
+										on:change={(e) => updateHelpRequestStatus(req.id, e.currentTarget.value)}
+										class="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-theme-button-1 focus:border-theme-button-1"
+									>
+										{#each HELP_STATUS_OPTIONS as opt}
+											<option value={opt.value}>{opt.label}</option>
+										{/each}
+									</select>
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+									<button
+										type="button"
+										on:click={() => openReplyModal(req)}
+										class="text-blue-600 hover:text-blue-900 focus:outline-none focus:underline"
+									>
+										Reply
+									</button>
+								</td>
+							</tr>
+						{/each}
+						{#if filteredHelpRequests.length === 0}
+							<tr>
+								<td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">No help requests found.</td>
+							</tr>
+						{/if}
+					</tbody>
+				</table>
+			</div>
+		</div>
+		{/if}
+
+		<!-- Help request reply modal -->
+		{#if replyToRequest}
+			<div
+				class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="reply-modal-title"
+			>
+				<button
+					type="button"
+					class="absolute inset-0 cursor-default"
+					aria-label="Close"
+					on:click={closeReplyModal}
+				></button>
+				<div class="relative z-10 bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+					<h2 id="reply-modal-title" class="text-lg font-semibold text-gray-900 mb-1">Reply to {replyToRequest.name}</h2>
+					<p class="text-sm text-gray-500 mb-4">{replyToRequest.email} · {replyToRequest.type}</p>
+					<form
+						on:submit|preventDefault={() => submitReply()}
+						class="space-y-4"
+					>
+						<div>
+							<label for="reply-message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+							<textarea
+								id="reply-message"
+								bind:value={replyMessage}
+								rows="5"
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-theme-button-1 focus:border-theme-button-1"
+								placeholder="Your reply..."
+								required
+								disabled={replySending}
+							></textarea>
+						</div>
+						<div class="flex justify-end gap-2">
+							<button
+								type="button"
+								on:click={closeReplyModal}
+								class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-button-1"
+							>
+								Cancel
+							</button>
+							<button
+								type="submit"
+								disabled={replySending || !replyMessage.trim()}
+								class="rounded-md border border-transparent bg-theme-button-1 px-4 py-2 text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-button-1 disabled:opacity-50"
+							>
+								{replySending ? 'Sending...' : 'Send reply'}
+							</button>
+						</div>
+					</form>
+				</div>
+			</div>
 		{/if}
 
 		<!-- Advanced -->

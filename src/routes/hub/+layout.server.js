@@ -18,12 +18,13 @@ export async function load({ cookies, locals }) {
 	if (organisationId && locals.admin && org) {
 		showOnboarding = !org.onboardingDismissedAt;
 	}
-	// MultiOrg: org's allowed areas (null = no restriction, [] = none)
+	// Org's allowed areas (null = no restriction, [] = none)
 	const organisationAreaPermissions = org && Array.isArray(org.areaPermissions) ? org.areaPermissions : null;
 	return {
 		csrfToken,
 		admin: locals.admin || null,
 		theme: settings?.theme || null,
+		sundayPlannersLabel: settings?.sundayPlannersLabel ?? 'Sunday Planners',
 		superAdminEmail: locals.superAdminEmail || null,
 		hubOrganisationFromDomain: locals.hubOrganisationFromDomain || null,
 		currentOrganisation: org || null,

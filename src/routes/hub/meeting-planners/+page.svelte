@@ -6,6 +6,8 @@
 	import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
 
 	$: data = $page.data || {};
+	$: label = data.sundayPlannersLabel ?? 'Sunday Planners';
+	$: singularLabel = label.replace(/s$/, '') || 'Sunday Planner';
 	$: meetingPlanners = data.meetingPlanners || [];
 	$: currentPage = data.currentPage || 1;
 	$: totalPages = data.totalPages || 1;
@@ -47,7 +49,7 @@
 </script>
 
 <div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-	<h2 class="text-xl sm:text-2xl font-bold text-gray-900">Meeting Planners</h2>
+	<h2 class="text-xl sm:text-2xl font-bold text-gray-900">{label}</h2>
 	<div class="flex flex-wrap gap-2">
 		<a href="/hub/meeting-planners/export-next-4-pdf" target="_blank" class="bg-theme-button-1 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs flex items-center gap-2">
 			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +61,7 @@
 			Quick View
 		</a>
 		<a href="/hub/meeting-planners/new" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
-			<span class="hidden sm:inline">New Meeting Planner</span>
+			<span class="hidden sm:inline">New {singularLabel}</span>
 			<span class="sm:hidden">New Planner</span>
 		</a>
 	</div>
@@ -70,7 +72,7 @@
 		<input
 			type="text"
 			bind:value={searchInput}
-			placeholder="Search meeting planners..."
+			placeholder="Search {label.toLowerCase()}..."
 			class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 px-[18px] py-2.5"
 		/>
 		<button type="submit" class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs">
@@ -79,6 +81,6 @@
 	</form>
 </div>
 
-<Table {columns} rows={meetingPlanners} emptyMessage="No meeting planners yet. Add your first above." onRowClick={(row) => goto(`/hub/meeting-planners/${row.id}`)} />
+<Table {columns} rows={meetingPlanners} emptyMessage="No {label.toLowerCase()} yet. Add your first above." onRowClick={(row) => goto(`/hub/meeting-planners/${row.id}`)} />
 
 <Pager {currentPage} {totalPages} onPageChange={handlePageChange} />

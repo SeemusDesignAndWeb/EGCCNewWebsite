@@ -9,7 +9,7 @@
 >
 	<a href="/" class="flex items-center">
 		<img
-			src={theme?.logoPath?.trim() || '/images/egcc-color.png'}
+			src={theme?.logoPath?.trim() || '/images/OnNuma-Icon.png'}
 			alt="Eltham Green Community Church"
 			class="h-10 w-auto {theme ? 'brightness-0 invert' : ''}"
 		/>

@@ -26,8 +26,6 @@ export const ALL_COLLECTIONS = [
 	'loom_videos',
 	'meeting_planners',
 	'members',
-	'multi_org_admins',
-	'multi_org_sessions',
 	'occurrence_tokens',
 	'occurrences',
 	'organisations',

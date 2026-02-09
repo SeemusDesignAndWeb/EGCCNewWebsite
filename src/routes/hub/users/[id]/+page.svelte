@@ -57,7 +57,8 @@
 	let formData = {
 		email: '',
 		name: '',
-		permissions: []
+		permissions: [],
+		isTech: false
 	};
 
 	let passwordData = {
@@ -67,24 +68,31 @@
 
 	let showPassword = false;
 
-	// Populate formData from admin when admin is set (and not mid-submit)
-	// Runs on load and when admin data refreshes (e.g. after save)
+	// Populate formData from admin only when viewing a different user or after save.
+	// This avoids overwriting formData when the user toggles Tech Admin (which would reset permissions).
 	let isSubmitting = false;
+	let lastSyncedAdminId = null;
+	let wasSubmitting = false;
 	
-	$: if (admin && !isSubmitting) {
-		// Get permissions from admin object
-		let permissions = admin.permissions || [];
-		// If admin is super admin (by email or permission), ensure SUPER_ADMIN is in permissions
-		const isAdminSuperAdmin = permissions.includes(HUB_AREAS.SUPER_ADMIN) || 
-			(admin.email && admin.email.toLowerCase() === superAdminEmail.toLowerCase());
-		if (isAdminSuperAdmin && !permissions.includes(HUB_AREAS.SUPER_ADMIN)) {
-			permissions = [...permissions, HUB_AREAS.SUPER_ADMIN];
+	$: if (admin) {
+		const justFinishedSubmit = wasSubmitting && !isSubmitting;
+		wasSubmitting = isSubmitting;
+		const adminId = admin.id;
+		if (lastSyncedAdminId !== adminId || justFinishedSubmit) {
+			lastSyncedAdminId = adminId;
+			let permissions = admin.permissions || [];
+			const isAdminSuperAdmin = permissions.includes(HUB_AREAS.SUPER_ADMIN) || 
+				(admin.email && admin.email.toLowerCase() === superAdminEmail.toLowerCase());
+			if (isAdminSuperAdmin && !permissions.includes(HUB_AREAS.SUPER_ADMIN)) {
+				permissions = [...permissions, HUB_AREAS.SUPER_ADMIN];
+			}
+			formData = {
+				email: admin.email || '',
+				name: admin.name || '',
+				permissions: [...permissions],
+				isTech: admin.isTech || false
+			};
 		}
-		formData = {
-			email: admin.email || '',
-			name: admin.name || '',
-			permissions: [...permissions] // Create a copy
-		};
 	}
 	
 	function togglePermission(area) {
@@ -217,6 +225,15 @@
 					>
 						Edit
 					</button>
+					<button
+						on:click={() => resettingPassword = true}
+						class="bg-hub-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-blue-700 text-xs inline-flex items-center gap-1.5"
+					>
+						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+						</svg>
+						Reset Password
+					</button>
 					{#if !admin.emailVerified}
 						<button
 							on:click={handleVerify}
@@ -264,7 +281,7 @@
 			}}>
 				<input type="hidden" name="_csrf" value={csrfToken} />
 				
-				<div class="space-y-4">
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<FormField 
 						label="Name" 
 						name="name" 
@@ -280,11 +297,9 @@
 						bind:value={formData.email} 
 						required 
 					/>
+				</div>
 					
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-3">
-							Hub Area Permissions
-						</label>
 						{#if isSuperAdminEmailMatch}
 							<div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
 								<p class="text-sm text-blue-800">
@@ -300,30 +315,55 @@
 						<!-- Super Admin Permission (only visible to super admins) -->
 						{#if isCurrentUserSuperAdmin && superAdminArea}
 							<div class="mb-4 p-4 border-2 border-purple-300 rounded-lg bg-purple-50">
-								<label class="flex items-start cursor-pointer">
-									<input
-										type="checkbox"
-										name="permissions"
-										value={superAdminArea.value}
-										checked={hasSuperAdminPermission || isSuperAdminEmailMatch}
-										disabled={isSuperAdminEmailMatch}
-										on:change={() => !isSuperAdminEmailMatch && togglePermission(superAdminArea.value)}
-										class="mt-1 mr-3 h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-									/>
-									<div class="flex-1">
-										<div class="text-sm font-bold text-purple-900">{superAdminArea.label}</div>
-										<div class="text-xs text-purple-700 mt-1">{superAdminArea.description}</div>
-										{#if hasSuperAdminPermission || isSuperAdminEmailMatch}
-											<div class="text-xs text-purple-600 mt-2 font-medium">
-												All permissions will be granted automatically.
-											</div>
-										{/if}
+								<div class="flex flex-col md:flex-row md:items-center gap-6">
+									<div>
+										<label for="cb-super-admin" class="flex items-center cursor-pointer">
+											<input
+												id="cb-super-admin"
+												type="checkbox"
+												name="permissions"
+												value={superAdminArea.value}
+												checked={hasSuperAdminPermission || isSuperAdminEmailMatch}
+												disabled={isSuperAdminEmailMatch}
+												on:change={(e) => {
+													if (isSuperAdminEmailMatch) return;
+													// Only handle when this checkbox was actually toggled (not from another control)
+													if (e.target.id === 'cb-super-admin') {
+														togglePermission(superAdminArea.value);
+													}
+												}}
+												class="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+											/>
+											<span class="ml-3 text-sm font-bold text-purple-900">{superAdminArea.label}</span>
+										</label>
 									</div>
-								</label>
+									
+									{#if hasSuperAdminPermission || isSuperAdminEmailMatch}
+										<div>
+											<label for="cb-tech-admin" class="flex items-center cursor-pointer border-l border-purple-200 pl-6 md:ml-0 md:border-l-0 md:pl-0">
+												<input
+													id="cb-tech-admin"
+													type="checkbox"
+													name="isTech"
+													value="true"
+													bind:checked={formData.isTech}
+													class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+												/>
+												<span class="ml-2 text-sm text-purple-900 font-medium">Tech Admin</span>
+											</label>
+										</div>
+									{/if}
+								</div>
+								<div class="mt-2 text-xs text-purple-700">{superAdminArea.description}</div>
+								{#if hasSuperAdminPermission || isSuperAdminEmailMatch}
+									<div class="text-xs text-purple-600 mt-1 font-medium">
+										All permissions will be granted automatically. Tech Admin grants access to technical settings.
+									</div>
+								{/if}
 							</div>
 						{/if}
 						
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+						<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
 							{#each regularAreas as area}
 								<label class="flex items-start p-3 border rounded-lg {(isSuperAdminEmailMatch || hasSuperAdminPermission) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-50'} {formData.permissions.includes(area.value) || isSuperAdminEmailMatch || hasSuperAdminPermission ? 'border-hub-green-500 bg-hub-green-50' : 'border-gray-300'}">
 									<input
@@ -354,7 +394,6 @@
 							{/each}
 						{/if}
 					</div>
-				</div>
 			</form>
 		{:else}
 			<div class="space-y-6">
@@ -379,6 +418,11 @@
 								{#if isAdminSuperAdmin}
 									<div class="text-sm font-bold text-purple-900">Super Admin</div>
 									<div class="text-xs text-purple-700 mt-1">Full access to all areas, can create other admins</div>
+									{#if admin.isTech}
+										<div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+											Tech Admin
+										</div>
+									{/if}
 								{:else}
 									{#if adminPermissions.length === 0}
 										<div class="text-sm text-gray-500 italic">No permissions assigned</div>
@@ -443,117 +487,110 @@
 			</div>
 		{/if}
 
-		<!-- Password Reset Section -->
-		<div class="mt-8 border-t border-gray-200 pt-6">
-			<div class="flex justify-between items-center mb-4">
-				<h3 class="text-lg font-semibold text-gray-900">Reset Password</h3>
-				<button
-					on:click={() => resettingPassword = !resettingPassword}
-					class="text-sm text-hub-blue-600 hover:text-hub-blue-800"
-				>
-					{resettingPassword ? 'Cancel' : 'Reset Password'}
-				</button>
-			</div>
+		<!-- Password Reset Modal -->
+		{#if resettingPassword}
+			<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+				<div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+					<h3 class="text-lg font-semibold text-gray-900 mb-4">Reset Password</h3>
+					<form method="POST" action="?/resetPassword" use:enhance>
+						<input type="hidden" name="_csrf" value={csrfToken} />
+						
+						<div class="space-y-4">
+							<div>
+								<label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">
+									New Password
+								</label>
+								<div class="relative">
+									{#if showPassword}
+										<input
+											type="text"
+											id="newPassword"
+											name="newPassword"
+											bind:value={passwordData.newPassword}
+											required
+											placeholder="Minimum 12 characters"
+											class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4 pr-10"
+										/>
+									{:else}
+										<input
+											type="password"
+											id="newPassword"
+											name="newPassword"
+											bind:value={passwordData.newPassword}
+											required
+											placeholder="Minimum 12 characters"
+											class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4 pr-10"
+										/>
+									{/if}
+									<button
+										type="button"
+										on:click={() => showPassword = !showPassword}
+										class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+									>
+										{#if showPassword}
+											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+											</svg>
+										{:else}
+											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+											</svg>
+										{/if}
+									</button>
+								</div>
+								<p class="mt-1 text-xs text-gray-500">
+									Must be at least 12 characters with uppercase, lowercase, number, and special character
+								</p>
+							</div>
 
-			{#if resettingPassword}
-				<form method="POST" action="?/resetPassword" use:enhance>
-					<input type="hidden" name="_csrf" value={csrfToken} />
-					
-					<div class="space-y-4">
-						<div>
-							<label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">
-								New Password
-							</label>
-							<div class="relative">
+							<div>
+								<label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">
+									Confirm Password
+								</label>
 								{#if showPassword}
 									<input
 										type="text"
-										id="newPassword"
-										name="newPassword"
-										bind:value={passwordData.newPassword}
+										id="confirmPassword"
+										name="confirmPassword"
+										bind:value={passwordData.confirmPassword}
 										required
-										placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-										class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4 pr-10"
+										placeholder="Confirm new password"
+										class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4"
 									/>
 								{:else}
 									<input
 										type="password"
-										id="newPassword"
-										name="newPassword"
-										bind:value={passwordData.newPassword}
+										id="confirmPassword"
+										name="confirmPassword"
+										bind:value={passwordData.confirmPassword}
 										required
-										placeholder="Minimum 12 characters with uppercase, lowercase, number, and special character"
-										class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4 pr-10"
+										placeholder="Confirm new password"
+										class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4"
 									/>
 								{/if}
-								<button
-									type="button"
-									on:click={() => showPassword = !showPassword}
-									class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-								>
-									{#if showPassword}
-										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-										</svg>
-									{:else}
-										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-										</svg>
-									{/if}
-								</button>
 							</div>
-							<p class="mt-1 text-xs text-gray-500">
-								Must be at least 12 characters with uppercase, lowercase, number, and special character
-							</p>
 						</div>
 
-						<div>
-							<label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">
-								Confirm Password
-							</label>
-							{#if showPassword}
-								<input
-									type="text"
-									id="confirmPassword"
-									name="confirmPassword"
-									bind:value={passwordData.confirmPassword}
-									required
-									placeholder="Confirm new password"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4"
-								/>
-							{:else}
-								<input
-									type="password"
-									id="confirmPassword"
-									name="confirmPassword"
-									bind:value={passwordData.confirmPassword}
-									required
-									placeholder="Confirm new password"
-									class="w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-2 focus:ring-theme-button-2 py-2 px-4"
-								/>
-							{/if}
+						<div class="flex gap-2 mt-6 justify-end">
+							<button
+								type="button"
+								on:click={() => {
+									resettingPassword = false;
+									passwordData = { newPassword: '', confirmPassword: '' };
+								}}
+								class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 text-sm font-medium"
+							>
+								Cancel
+							</button>
+							<button type="submit" class="bg-theme-button-2 text-white px-4 py-2 rounded-md hover:opacity-90 text-sm font-medium">
+								Reset Password
+							</button>
 						</div>
-					</div>
-
-					<div class="flex gap-2 mt-6">
-						<button type="submit" class="bg-theme-button-2 text-white px-[18px] py-2.5 rounded-md hover:opacity-90">
-							Reset Password
-						</button>
-						<button
-							type="button"
-							on:click={() => {
-								resettingPassword = false;
-								passwordData = { newPassword: '', confirmPassword: '' };
-							}}
-							class="bg-theme-button-3 text-white px-[18px] py-2.5 rounded-md hover:opacity-90"
-						>
-							Back
-						</button>
-					</div>
-				</form>
-			{/if}
-		</div>
+					</form>
+				</div>
+			</div>
+		{/if}
 	</div>
 {/if}
 

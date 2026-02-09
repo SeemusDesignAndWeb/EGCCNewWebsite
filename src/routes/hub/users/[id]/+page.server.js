@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import { findById, update, remove } from '$lib/crm/server/fileStore.js';
 import { getAdminById, getAdminByEmail, updateAdminPassword, verifyAdminEmail, getCsrfToken, verifyCsrfToken, getAdminFromCookies } from '$lib/crm/server/auth.js';
 import { isSuperAdmin, getAdminPermissions, getAvailableHubAreas, HUB_AREAS, isSuperAdminEmail } from '$lib/crm/server/permissions.js';
-import { getEffectiveSuperAdminEmail } from '$lib/crm/server/settings.js';
+import { getEffectiveSuperAdminEmail, getSettings } from '$lib/crm/server/settings.js';
 import { logDataChange, logSensitiveOperation } from '$lib/crm/server/audit.js';
 
 export async function load({ params, cookies, request }) {
@@ -16,7 +16,7 @@ export async function load({ params, cookies, request }) {
 		throw redirect(302, '/hub/auth/login');
 	}
 
-	// Only super admins can view/edit other admins (use effective super admin from hub_settings/Multi-org)
+	// Only super admins can view/edit other admins (use effective super admin from hub_settings)
 	const superAdminEmail = await getEffectiveSuperAdminEmail();
 	if (!isSuperAdmin(currentAdmin, superAdminEmail)) {
 		throw redirect(302, '/hub/users');
@@ -43,7 +43,8 @@ export async function load({ params, cookies, request }) {
 		createdAt: admin.createdAt,
 		passwordChangedAt: admin.passwordChangedAt,
 		failedLoginAttempts: admin.failedLoginAttempts || 0,
-		accountLockedUntil: admin.accountLockedUntil
+		accountLockedUntil: admin.accountLockedUntil,
+		isTech: admin.isTech || false
 	};
 
 	// Sanitize current admin data (only need basic info for permission checks)
@@ -56,7 +57,8 @@ export async function load({ params, cookies, request }) {
 	} : null;
 
 	const csrfToken = getCsrfToken(cookies) || '';
-	const availableAreas = getAvailableHubAreas(currentAdmin, superAdminEmail);
+	const settings = await getSettings();
+	const availableAreas = getAvailableHubAreas(currentAdmin, { meetingPlanners: settings.sundayPlannersLabel });
 	
 	// Check for creation success message
 	const url = new URL(request.url);
@@ -90,6 +92,8 @@ export const actions = {
 			const name = data.get('name');
 			const permissions = data.getAll('permissions'); // Get all permissions checkboxes
 
+			const isTech = data.get('isTech') === 'true';
+
 			if (!email || !name) {
 				return { error: 'Email and name are required' };
 			}
@@ -106,7 +110,7 @@ export const actions = {
 				return { error: 'An admin with this email already exists' };
 			}
 
-			// Use effective super admin email (hub_settings/Multi-org) for permission checks
+			// Use effective super admin email (hub_settings) for permission checks
 			const effectiveSuperAdminEmail = await getEffectiveSuperAdminEmail();
 			// Check if email matches super admin email - always super admin (no permissions needed)
 			const normalizedEmail = email.toString().toLowerCase().trim();
@@ -139,6 +143,11 @@ export const actions = {
 				if (hasSuperAdminPermission) {
 					validPermissions.push(HUB_AREAS.SUPER_ADMIN);
 				}
+				// Set isTech property if it's a super admin
+				updateData.isTech = isTech;
+			} else {
+				// Non-super admins can't be tech
+				updateData.isTech = false;
 			}
 			
 			updateData.permissions = validPermissions;

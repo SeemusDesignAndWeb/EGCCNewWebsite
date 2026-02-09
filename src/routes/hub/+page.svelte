@@ -17,7 +17,7 @@
 	$: urlParams = new URLSearchParams($page.url.search);
 	$: accessDenied = urlParams.get('error') === 'access_denied';
 
-	// Check permissions (respects MultiOrg org area restrictions)
+	// Check permissions (respects org area restrictions)
 	$: canAccessContacts = admin && hasRouteAccess(admin, '/hub/contacts', superAdminEmail, organisationAreaPermissions);
 	$: canAccessLists = admin && hasRouteAccess(admin, '/hub/lists', superAdminEmail, organisationAreaPermissions);
 	$: canAccessNewsletters = admin && hasRouteAccess(admin, '/hub/emails', superAdminEmail, organisationAreaPermissions);

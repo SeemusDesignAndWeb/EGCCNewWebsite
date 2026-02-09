@@ -1,7 +1,9 @@
 import { json, error } from '@sveltejs/kit';
 import { getAdminFromCookies } from '$lib/crm/server/auth.js';
 import { isSuperAdmin } from '$lib/crm/server/permissions.js';
-import { getSettings, writeSettings } from '$lib/crm/server/settings.js';
+import { getSettings, writeSettings, getCurrentOrganisationId } from '$lib/crm/server/settings.js';
+import { readCollection } from '$lib/crm/server/fileStore.js';
+import { filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 export async function POST({ request, cookies }) {
 	const admin = await getAdminFromCookies(cookies);
@@ -15,7 +17,7 @@ export async function POST({ request, cookies }) {
 	}
 	
 	const data = await request.json();
-	const { emailRateLimitDelay, calendarColours, calendarColors, meetingPlannerRotas, theme: themeUpdate } = data; // Support both for backward compatibility
+	const { emailRateLimitDelay, calendarColours, calendarColors, meetingPlannerRotas, sundayPlannerEventId, sundayPlannersLabel, theme: themeUpdate } = data; // Support both for backward compatibility
 	
 	const settings = await getSettings();
 	
@@ -75,6 +77,29 @@ export async function POST({ request, cookies }) {
 		}
 
 		settings.meetingPlannerRotas = meetingPlannerRotas;
+	}
+
+	// Update Sunday planner event if provided
+	if (sundayPlannerEventId !== undefined) {
+		const value = sundayPlannerEventId === null || sundayPlannerEventId === '' ? null : String(sundayPlannerEventId).trim();
+		if (value !== null) {
+			const organisationId = await getCurrentOrganisationId();
+			const events = filterByOrganisation(await readCollection('events'), organisationId);
+			const eventExists = events.some((e) => e.id === value);
+			if (!eventExists) {
+				throw error(400, 'Invalid event: must be an event in the current organisation');
+			}
+		}
+		settings.sundayPlannerEventId = value || null;
+	}
+
+	// Update Sunday planners display name if provided
+	if (sundayPlannersLabel !== undefined) {
+		const label = typeof sundayPlannersLabel === 'string' ? sundayPlannersLabel.trim() : '';
+		if (label.length > 80) {
+			throw error(400, 'Label must be 80 characters or fewer');
+		}
+		settings.sundayPlannersLabel = label || 'Sunday Planners';
 	}
 
 	// Update theme if provided

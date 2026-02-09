@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { readCollection, findById } from '$lib/crm/server/fileStore.js';
+import { getSettings } from '$lib/crm/server/settings.js';
 import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 
 /**
@@ -241,8 +242,10 @@ export async function GET({ locals, url }) {
 			throw error(500, 'PDF export requires puppeteer. Please run: npm install puppeteer');
 		}
 
-		// Generate HTML for PDF
-		const htmlContent = generateMultipleMeetingPlannersPDFHTML(meetingPlannersData, now);
+		// Generate HTML for PDF (use editable section name from settings)
+		const settings = await getSettings();
+		const sectionLabel = settings.sundayPlannersLabel || 'Sunday Planners';
+		const htmlContent = generateMultipleMeetingPlannersPDFHTML(meetingPlannersData, now, sectionLabel);
 
 		// Launch browser
 		const browser = await puppeteer.default.launch({
@@ -300,7 +303,7 @@ export async function GET({ locals, url }) {
 /**
  * Generate HTML content for multiple meeting planners PDF export
  */
-function generateMultipleMeetingPlannersPDFHTML(meetingPlannersData, now) {
+function generateMultipleMeetingPlannersPDFHTML(meetingPlannersData, now, label = 'Sunday Planners') {
 	const rotaNames = {
 		meetingLeader: 'Meeting Leader',
 		worshipLeader: 'Worship Leader and Team',
@@ -445,7 +448,7 @@ function generateMultipleMeetingPlannersPDFHTML(meetingPlannersData, now) {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Next 4 Meeting Planners</title>
+	<title>Next 4 ${escapeHtml(label)}</title>
 	<style>
 		* {
 			margin: 0;
@@ -605,7 +608,7 @@ function generateMultipleMeetingPlannersPDFHTML(meetingPlannersData, now) {
 </head>
 <body>
 	<div class="header">
-		<h1>Next 4 Meeting Planners</h1>
+		<h1>Next 4 ${escapeHtml(label)}</h1>
 	</div>
 	
 	<div class="cards-container">

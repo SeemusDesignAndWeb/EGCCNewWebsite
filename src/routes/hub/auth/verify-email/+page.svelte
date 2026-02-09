@@ -8,7 +8,7 @@
 	$: email = $page.data?.email || '';
 	$: expired = $page.data?.expired || false;
 	$: theme = $page.data?.theme ?? null;
-	$: loginLogoSrc = (theme?.loginLogoPath && theme.loginLogoPath.trim()) || (theme?.logoPath && theme.logoPath.trim()) || '/images/egcc-color.png';
+	$: loginLogoSrc = (theme?.loginLogoPath && theme.loginLogoPath.trim()) || (theme?.logoPath && theme.logoPath.trim()) || '/images/onnuma-logo.png';
 	
 	let redirectTimer;
 	

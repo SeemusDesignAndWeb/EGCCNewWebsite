@@ -46,8 +46,8 @@ function getDefaultMeetingPlannerRotas() {
 
 function getDefaultTheme() {
 	return {
-		logoPath: '/images/egcc-color.png',
-		loginLogoPath: '',
+		logoPath: '/images/OnNuma-Icon.png',
+		loginLogoPath: '/images/onnuma-logo.png',
 		primaryColor: '#4BB170',
 		brandColor: '#4A97D2',
 		navbarBackgroundColor: '#4A97D2',
@@ -76,6 +76,8 @@ function getDefaultSettings() {
 		emailRateLimitDelay: 500,
 		calendarColours: getDefaultCalendarColours(),
 		meetingPlannerRotas: getDefaultMeetingPlannerRotas(),
+		sundayPlannerEventId: null,
+		sundayPlannersLabel: 'Sunday Planners',
 		theme: getDefaultTheme(),
 		currentOrganisationId: DEFAULT_ORGANISATION_ID
 	};
@@ -110,6 +112,10 @@ function mergeWithDefaults(record) {
 		meetingPlannerRotas: Array.isArray(record.meetingPlannerRotas)
 			? record.meetingPlannerRotas
 			: defaultSettings.meetingPlannerRotas,
+		sundayPlannerEventId: record.sundayPlannerEventId ?? defaultSettings.sundayPlannerEventId,
+		sundayPlannersLabel: typeof record.sundayPlannersLabel === 'string' && record.sundayPlannersLabel.trim()
+			? record.sundayPlannersLabel.trim()
+			: defaultSettings.sundayPlannersLabel,
 		theme,
 		hubSuperAdminEmail: record.hubSuperAdminEmail ?? null,
 		currentOrganisationId: record.currentOrganisationId ?? DEFAULT_ORGANISATION_ID
@@ -189,6 +195,8 @@ export async function writeSettings(settings) {
 		emailRateLimitDelay: settings.emailRateLimitDelay,
 		calendarColours: settings.calendarColours,
 		meetingPlannerRotas: settings.meetingPlannerRotas,
+		sundayPlannerEventId: settings.sundayPlannerEventId ?? existing?.sundayPlannerEventId ?? null,
+		sundayPlannersLabel: settings.sundayPlannersLabel ?? existing?.sundayPlannersLabel ?? getDefaultSettings().sundayPlannersLabel,
 		theme: settings.theme,
 		hubSuperAdminEmail: existing?.hubSuperAdminEmail ?? settings.hubSuperAdminEmail ?? null,
 		currentOrganisationId: existing?.currentOrganisationId ?? settings.currentOrganisationId ?? DEFAULT_ORGANISATION_ID,
@@ -200,7 +208,7 @@ export async function writeSettings(settings) {
 }
 
 /**
- * Get Hub super admin email from settings (set by MultiOrg when creating Hub super admin).
+ * Get Hub super admin email from settings (when set in hub_settings).
  * @returns {Promise<string|null>}
  */
 export async function getHubSuperAdminEmail() {
@@ -209,7 +217,7 @@ export async function getHubSuperAdminEmail() {
 }
 
 /**
- * Set Hub super admin email in settings (used by MultiOrg when creating Hub super admin).
+ * Set Hub super admin email in settings (can be set in hub_settings).
  * @param {string} email
  */
 export async function setHubSuperAdminEmail(email) {

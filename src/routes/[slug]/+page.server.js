@@ -16,8 +16,7 @@ const reservedRoutes = [
 	'new-at-egcc',
 	'policy',
 	'the-church',
-	'the-team',
-	'organisations' // multi-org admin subdomain uses /organisations; main site redirects to /multi-org
+	'the-team'
 ];
 
 export const load = async ({ params }) => {

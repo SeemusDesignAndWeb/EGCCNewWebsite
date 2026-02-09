@@ -131,6 +131,63 @@ export const actions = {
 			console.error('[Delete Week Note] Error:', error);
 			return { error: error.message || 'Failed to delete week note' };
 		}
+	},
+
+	moveOccurrence: async ({ request, cookies, locals }) => {
+		const data = await request.formData();
+		const csrfToken = data.get('_csrf');
+
+		if (!csrfToken || !verifyCsrfToken(cookies, csrfToken)) {
+			return { error: 'CSRF token validation failed' };
+		}
+
+		try {
+			const occurrenceId = data.get('occurrenceId');
+			const newDateStr = data.get('newDate'); // YYYY-MM-DD
+
+			if (!occurrenceId || !newDateStr) {
+				return { error: 'Occurrence ID and new date are required' };
+			}
+
+			const organisationId = await getCurrentOrganisationId();
+			const occurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
+			const occurrence = occurrences.find(o => o.id === occurrenceId);
+
+			if (!occurrence) {
+				return { error: 'Occurrence not found' };
+			}
+
+			// Calculate time difference
+			const oldStartDate = new Date(occurrence.startsAt);
+			const newStartDate = new Date(newDateStr);
+			
+			// Set the year, month, date of the new start date, but keep the time from the old start date
+			newStartDate.setHours(oldStartDate.getHours(), oldStartDate.getMinutes(), oldStartDate.getSeconds(), oldStartDate.getMilliseconds());
+
+			// Calculate the duration to update the end date
+			const oldEndDate = new Date(occurrence.endsAt);
+			const durationMs = oldEndDate.getTime() - oldStartDate.getTime();
+			const newEndDate = new Date(newStartDate.getTime() + durationMs);
+
+			await update('occurrences', occurrence.id, {
+				startsAt: newStartDate.toISOString(),
+				endsAt: newEndDate.toISOString(),
+				updatedAt: new Date().toISOString()
+			});
+
+			const adminId = locals?.admin?.id || null;
+			const event = { getClientAddress: () => 'unknown', request };
+			await logDataChange(adminId, 'update', 'occurrence', occurrence.id, {
+				action: 'move_date',
+				oldStartsAt: occurrence.startsAt,
+				newStartsAt: newStartDate.toISOString()
+			}, event);
+
+			return { success: true, type: 'moveOccurrence' };
+		} catch (error) {
+			console.error('[Move Occurrence] Error:', error);
+			return { error: error.message || 'Failed to move occurrence' };
+		}
 	}
 };
 

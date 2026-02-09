@@ -3,26 +3,15 @@
 	import CrmShell from '$lib/crm/components/CrmShell.svelte';
 	import Onboarding from '$lib/crm/components/Onboarding.svelte';
 	import { page } from '$app/stores';
-	import { invalidateAll, goto } from '$app/navigation';
-	import { onMount } from 'svelte';
 
 	export let data = {};
 	export let params = {};
-	$: orgUpdated = typeof $page !== 'undefined' && $page.url?.searchParams?.get('org_updated') === '1';
 	$: admin = data?.admin ?? null;
 	$: theme = data?.theme ?? null;
 	$: superAdminEmail = data?.superAdminEmail ?? null;
 	$: showOnboarding = data?.showOnboarding ?? false;
 	$: organisationAreaPermissions = data?.organisationAreaPermissions ?? null;
-
-	// When user switches back to this tab (e.g. after changing org in MultiOrg), refetch so Hub shows current org's data
-	onMount(() => {
-		const handler = () => {
-			if (document.visibilityState === 'visible') invalidateAll();
-		};
-		document.addEventListener('visibilitychange', handler);
-		return () => document.removeEventListener('visibilitychange', handler);
-	});
+	$: sundayPlannersLabel = data?.sundayPlannersLabel ?? 'Sunday Planners';
 
 	function getColor(val, fallback) {
 		return typeof val === 'string' && val.trim() && /^#[0-9A-Fa-f]{6}$/.test(val.trim()) ? val.trim() : fallback;
@@ -56,23 +45,7 @@
 	}
 </script>
 
-{#if orgUpdated}
-	<div class="mx-4 mt-4 p-3 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-sm flex items-center justify-between gap-4">
-		<span>Organisation updated. Content is now scoped to the selected organisation.</span>
-		<button
-			type="button"
-			class="text-emerald-600 hover:text-emerald-800 font-medium"
-			on:click={() => {
-				const url = new URL($page.url);
-				url.searchParams.delete('org_updated');
-				goto(url.pathname + url.search, { replaceState: true });
-			}}
-		>
-			Dismiss
-		</button>
-	</div>
-{/if}
-<CrmShell {admin} {theme} superAdminEmail={superAdminEmail} organisationAreaPermissions={organisationAreaPermissions}>
+<CrmShell {admin} {theme} {sundayPlannersLabel} superAdminEmail={superAdminEmail} organisationAreaPermissions={organisationAreaPermissions}>
 	<slot />
 </CrmShell>
 {#if !$page.url.pathname.startsWith('/hub/auth/') && admin && showOnboarding}

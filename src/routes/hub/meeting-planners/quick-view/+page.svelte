@@ -4,6 +4,8 @@
 	import { onMount } from 'svelte';
 
 	$: data = $page.data || {};
+	$: label = data.sundayPlannersLabel ?? 'Sunday Planners';
+	$: singularLabel = label.replace(/s$/, '') || 'Sunday Planner';
 	$: meetingPlanners = data.meetingPlanners || [];
 	$: otherRotaRoles = data.otherRotaRoles || [];
 
@@ -125,7 +127,7 @@
 </script>
 
 <div class="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-	<h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Meeting Planners - Quick View</h2>
+	<h2 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{label} - Quick View</h2>
 	<div class="flex flex-wrap gap-2">
 		<button 
 			on:click={toggleFullscreen}
@@ -150,7 +152,7 @@
 			Back to List
 		</a>
 		<a href="/hub/meeting-planners/new" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs sm:text-sm whitespace-nowrap">
-			<span class="hidden sm:inline">New Meeting Planner</span>
+			<span class="hidden sm:inline">New {singularLabel}</span>
 			<span class="sm:hidden">New</span>
 		</a>
 	</div>
@@ -220,7 +222,7 @@
 		</div>
 	{:else}
 		<div class="bg-white shadow rounded-lg p-6 text-center text-gray-500">
-			No meeting planners found
+			No {label.toLowerCase()} found
 		</div>
 	{/each}
 </div>
@@ -334,7 +336,7 @@
 				{:else}
 					<tr>
 						<td colspan={totalColumns} class="px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 border border-gray-300">
-							No meeting planners found
+							No {label.toLowerCase()} found
 						</td>
 					</tr>
 				{/each}

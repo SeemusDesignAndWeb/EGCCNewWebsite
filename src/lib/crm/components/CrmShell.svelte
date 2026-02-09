@@ -6,15 +6,17 @@
 	export let admin = null;
 	/** @type {{ logoPath?: string; primaryColor?: string; brandColor?: string } | null} */
 	export let theme = null;
-	/** Effective super admin email (from hub_settings when set by MultiOrg) */
+	/** Display name for the Sunday Planners section (editable in Settings) */
+	export let sundayPlannersLabel = 'Sunday Planners';
+	/** Effective super admin email (from hub_settings or env) */
 	export let superAdminEmail = null;
-	/** Org's allowed areas from MultiOrg (null = no restriction). Restricts navbar and access per user. */
+	/** Org's allowed areas from organisation record (null = no restriction). Restricts navbar and access per user. */
 	export let organisationAreaPermissions = null;
 
 	$: isAuthPage = $page.url.pathname.startsWith('/hub/auth/');
 	$: accessDenied = $page.url.searchParams.get('error') === 'access_denied';
 
-	// Check permissions: user permissions intersected with org's allowed areas (MultiOrg)
+	// Check permissions: user permissions intersected with org's allowed areas
 	$: canAccessContacts = admin && hasRouteAccess(admin, '/hub/contacts', superAdminEmail, organisationAreaPermissions);
 	$: canAccessLists = admin && hasRouteAccess(admin, '/hub/lists', superAdminEmail, organisationAreaPermissions);
 	$: canAccessMembers = admin && hasRouteAccess(admin, '/hub/members', superAdminEmail, organisationAreaPermissions);
@@ -39,8 +41,10 @@
 	let eventsDropdownOpen = false;
 	let eventsDropdownElement;
 	
+	import { notifications } from '$lib/crm/stores/notifications.js';
+
 	$: isSettingsActive = $page.url.pathname.startsWith('/hub/users') || $page.url.pathname.startsWith('/hub/profile') || $page.url.pathname.startsWith('/hub/videos') || $page.url.pathname.startsWith('/hub/images') || $page.url.pathname.startsWith('/hub/audit-logs') || $page.url.pathname.startsWith('/hub/settings');
-	$: isHelpActive = $page.url.pathname.startsWith('/hub/help');
+	// Help is no longer a page, but a modal
 	$: isVideoTutorialsActive = $page.url.pathname.startsWith('/hub/video-tutorials');
 	$: isContactsActive = $page.url.pathname.startsWith('/hub/contacts') || $page.url.pathname.startsWith('/hub/lists') || $page.url.pathname.startsWith('/hub/members');
 	$: isEventsActive = $page.url.pathname.startsWith('/hub/events') || $page.url.pathname.startsWith('/hub/meeting-planners');
@@ -63,6 +67,50 @@
 			document.removeEventListener('click', handleClickOutside);
 		};
 	});
+
+	let showHelpModal = false;
+	let helpForm = {
+		name: '',
+		email: '',
+		type: 'question',
+		message: ''
+	};
+	let helpSubmitting = false;
+
+	function openHelpModal() {
+		if (admin) {
+			helpForm.name = `${admin.firstName || ''} ${admin.lastName || ''}`.trim();
+			helpForm.email = admin.email || '';
+		}
+		showHelpModal = true;
+	}
+
+	async function submitHelpRequest() {
+		if (!helpForm.message) {
+			notifications.error('Please enter a message');
+			return;
+		}
+		helpSubmitting = true;
+		try {
+			const res = await fetch('/hub/api/help-request', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(helpForm)
+			});
+			if (res.ok) {
+				notifications.success('Help request submitted successfully');
+				showHelpModal = false;
+				helpForm.message = '';
+			} else {
+				const data = await res.json();
+				notifications.error(data.error || 'Failed to submit request');
+			}
+		} catch (e) {
+			notifications.error('Failed to submit request');
+		} finally {
+			helpSubmitting = false;
+		}
+	}
 </script>
 
 <div class="min-h-screen bg-theme-panel flex flex-col">
@@ -90,7 +138,7 @@
 					<div class="flex items-center gap-4">
 						<a href="/hub" class="flex items-center gap-2">
 							<img
-								src={theme?.logoPath?.trim() || '/images/egcc-color.png'}
+								src={theme?.logoPath?.trim() || '/images/OnNuma-Icon.png'}
 								alt="EGCC"
 								class="h-8 w-auto"
 							/>
@@ -155,7 +203,7 @@
 													<a href="/hub/events/calendar" on:click={() => eventsDropdownOpen = false} class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {$page.url.pathname.startsWith('/hub/events') ? 'bg-gray-100 text-theme-button-1' : ''}" role="menuitem">Events</a>
 												{/if}
 												{#if canAccessMeetingPlanners}
-													<a href="/hub/meeting-planners" on:click={() => eventsDropdownOpen = false} class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {$page.url.pathname.startsWith('/hub/meeting-planners') ? 'bg-gray-100 text-theme-button-1' : ''}" role="menuitem">Meeting Planners</a>
+													<a href="/hub/meeting-planners" on:click={() => eventsDropdownOpen = false} class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {$page.url.pathname.startsWith('/hub/meeting-planners') ? 'bg-gray-100 text-theme-button-1' : ''}" role="menuitem">{sundayPlannersLabel}</a>
 												{/if}
 											</div>
 										{/if}
@@ -176,12 +224,12 @@
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
 									</svg>
 								</a>
-								<!-- Help -->
-								<a href="/hub/help" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {isHelpActive ? 'hub-nav-selected' : 'hub-nav-link'} flex items-center" aria-label="Help">
+								<!-- Help (Modal) -->
+								<button on:click={openHelpModal} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors hub-nav-link flex items-center" aria-label="Help">
 									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
-								</a>
+								</button>
 							</nav>
 						{/if}
 					</div>
@@ -267,7 +315,7 @@
 								<a href="/hub/events/calendar" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/events') ? 'hub-nav-selected' : 'hub-nav-link'}">Events</a>
 							{/if}
 							{#if canAccessMeetingPlanners}
-								<a href="/hub/meeting-planners" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/meeting-planners') ? 'hub-nav-selected' : 'hub-nav-link'}">Meeting Planners</a>
+								<a href="/hub/meeting-planners" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/meeting-planners') ? 'hub-nav-selected' : 'hub-nav-link'}">{sundayPlannersLabel}</a>
 							{/if}
 							{#if canAccessRotas}
 								<a href="/hub/rotas" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/rotas') ? 'hub-nav-selected' : 'hub-nav-link'}">Rotas</a>
@@ -284,12 +332,12 @@
 								</svg>
 								Video Tutorials
 							</a>
-							<a href="/hub/help" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/help') ? 'hub-nav-selected' : 'hub-nav-link'} flex items-center gap-2">
+							<button on:click={() => { mobileMenuOpen = false; openHelpModal(); }} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors hub-nav-link flex items-center gap-2">
 								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 								</svg>
 								Help
-							</a>
+							</button>
 							{#if admin}
 								<a href="/hub/profile" on:click={() => mobileMenuOpen = false} class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {$page.url.pathname.startsWith('/hub/profile') ? 'hub-nav-selected' : 'hub-nav-link'}">Profile</a>
 							{/if}
@@ -315,8 +363,8 @@
 		</header>
 	{/if}
 
-	<!-- Main Content -->
-	<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full box-border flex-grow">
+	<!-- Main Content (full width on Settings, otherwise max-w-7xl) -->
+	<main class="{$page.url.pathname === '/hub/settings' ? 'hub-settings-main w-full px-4 sm:px-6 lg:px-8 py-8 box-border flex-grow' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full box-border flex-grow'}">
 		<slot />
 	</main>
 
@@ -339,6 +387,47 @@
 			</div>
 		</footer>
 	{/if}
+	{#if showHelpModal}
+		<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+			<div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto p-8">
+				<h2 class="text-xl font-bold text-gray-900 mb-4">Help & Feedback</h2>
+				<p class="text-sm text-gray-600 mb-4">Have a question or a suggestion? Let us know below.</p>
+				<form on:submit|preventDefault={submitHelpRequest}>
+					<div class="space-y-4">
+						<div class="grid grid-cols-2 gap-4">
+							<div>
+								<label for="help-name" class="block text-sm font-medium text-gray-700">Name</label>
+								<input type="text" id="help-name" bind:value={helpForm.name} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-1 focus:ring-theme-button-1 sm:text-sm px-3 py-2 border" required />
+							</div>
+							<div>
+								<label for="help-email" class="block text-sm font-medium text-gray-700">Email</label>
+								<input type="email" id="help-email" bind:value={helpForm.email} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-1 focus:ring-theme-button-1 sm:text-sm px-3 py-2 border" required />
+							</div>
+						</div>
+						<div>
+							<label for="help-type" class="block text-sm font-medium text-gray-700">Type of Query</label>
+							<select id="help-type" bind:value={helpForm.type} class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-1 focus:ring-theme-button-1 sm:text-sm px-3 py-2 border">
+								<option value="question">Question</option>
+								<option value="enhancement">Enhancement / Suggestion</option>
+								<option value="bug">Bug Report</option>
+								<option value="other">Other</option>
+							</select>
+						</div>
+						<div>
+							<label for="help-message" class="block text-sm font-medium text-gray-700">Message</label>
+							<textarea id="help-message" bind:value={helpForm.message} rows="12" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-theme-button-1 focus:ring-theme-button-1 sm:text-sm px-3 py-2 border" required placeholder="How can we help?"></textarea>
+						</div>
+					</div>
+					<div class="mt-6 flex justify-end space-x-3">
+						<button type="button" on:click={() => showHelpModal = false} class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-button-1">Cancel</button>
+						<button type="submit" disabled={helpSubmitting} class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-theme-button-1 hover:bg-theme-button-1/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-button-1 disabled:opacity-50">
+							{helpSubmitting ? 'Sending...' : 'Send'}
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -348,5 +437,10 @@
 		margin-left: auto;
 		margin-right: auto;
 		box-sizing: border-box;
+	}
+	main.hub-settings-main {
+		max-width: none;
+		margin-left: 0;
+		margin-right: 0;
 	}
 </style>

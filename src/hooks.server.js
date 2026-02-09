@@ -1,21 +1,6 @@
 import { sequence } from '@sveltejs/kit/hooks';
 import { crmHandle } from '$lib/crm/server/hook-plugin.js';
 import { cleanupExpiredSessions } from '$lib/crm/server/auth.js';
-import { isMultiOrgAdminDomain } from '$lib/crm/server/hubDomain.js';
-
-/** When host is MULTI_ORG_ADMIN_DOMAIN (e.g. admin.onnuma.com), set locals so multi-org links use /auth/* not /multi-org/auth/*. Path rewrite for route matching is done in hooks.js reroute. */
-async function multiOrgAdminDomainHandle({ event, resolve }) {
-	// Prefer X-Forwarded-Host when behind a proxy (Railway, Vercel, etc.)
-	const host =
-		event.request.headers.get('x-forwarded-host') ||
-		event.request.headers.get('host') ||
-		event.url?.host ||
-		'';
-	if (!isMultiOrgAdminDomain(host)) return resolve(event);
-
-	event.locals.multiOrgAdminDomain = true;
-	return resolve(event);
-}
 
 // Base handle (if you have existing hooks, add them here)
 async function baseHandle({ event, resolve }) {
@@ -50,5 +35,5 @@ async function sessionCleanupHandle({ event, resolve }) {
 	return resolve(event);
 }
 
-export const handle = sequence(multiOrgAdminDomainHandle, baseHandle, sessionCleanupHandle, crmHandle);
+export const handle = sequence(baseHandle, sessionCleanupHandle, crmHandle);
 

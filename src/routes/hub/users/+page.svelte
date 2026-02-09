@@ -5,13 +5,13 @@
 	import { goto } from '$app/navigation';
 	import { formatDateUK, formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
 	
-	// Area labels mapping
-	const areaLabels = {
+	// Area labels mapping (meeting_planners uses editable name from settings via layout)
+	$: areaLabels = {
 		contacts: 'Contacts',
 		lists: 'Lists',
 		rotas: 'Rotas',
 		events: 'Events',
-		meeting_planners: 'Meeting Planners',
+		meeting_planners: data?.sundayPlannersLabel ?? 'Sunday Planners',
 		newsletters: 'Newsletters',
 		forms: 'Forms',
 		safeguarding_forms: 'Safeguarding Forms',

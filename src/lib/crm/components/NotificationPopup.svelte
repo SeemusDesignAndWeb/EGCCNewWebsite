@@ -1,7 +1,7 @@
 <script>
 	import { notifications } from '$lib/crm/stores/notifications.js';
 
-	/** When true, use MultiOrg/OnNuma theme: Shadow Grey #272838, Light Gold #F3DE8A, Sweet Salmon #EB9486, Lavender Grey #7E7F9A */
+	/** When true, use OnNuma-style theme: Shadow Grey #272838, Light Gold #F3DE8A, Sweet Salmon #EB9486, Lavender Grey #7E7F9A */
 	export let useMultiOrgTheme = false;
 
 	$: notificationList = $notifications;

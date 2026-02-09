@@ -126,7 +126,7 @@ Access to personal information in the Hub is strictly controlled based on role-b
 ### Administrators with Full Access
 **Who**: Designated church leaders and senior administrators
 
-**Access**: Contacts, lists, members, rotas, events, meeting planners, newsletters, and forms
+**Access**: Contacts, lists, members, rotas, events, Sunday planners, newsletters, and forms
 
 **Why they need access**: To manage church operations, coordinate activities, and communicate with the church community.
 
@@ -153,7 +153,7 @@ Access to personal information in the Hub is strictly controlled based on role-b
 ### General Administrators
 **Who**: General church administrators
 
-**Access**: Contacts, lists, rotas, events, and meeting planners
+**Access**: Contacts, lists, rotas, events, and Sunday planners
 
 **Why they need access**: To support general church administration and coordination.
 

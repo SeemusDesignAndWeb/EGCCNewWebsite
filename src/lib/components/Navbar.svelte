@@ -92,7 +92,7 @@
 			<!-- Logo: colour on public (no theme), white/invert on themed/Hub banner -->
 			<a href="/" class="flex items-center z-10">
 				<img
-					src={theme?.logoPath?.trim() || '/images/egcc-color.png'}
+					src={theme?.logoPath?.trim() || '/images/OnNuma-Icon.png'}
 					alt="Eltham Green Community Church"
 					class="h-12 w-auto {theme ? 'brightness-0 invert' : ''}"
 				/>

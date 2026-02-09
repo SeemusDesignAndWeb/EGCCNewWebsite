@@ -19,9 +19,7 @@ export const load = async ({ locals }) => {
 	return {
 		highlightedEvent,
 		settings,
-		theme: hubSettings.theme || null,
-		/** When true (admin subdomain), root layout hides website navbar/banner so multi-org layout is full page. */
-		multiOrgAdminDomain: !!locals.multiOrgAdminDomain
+		theme: hubSettings.theme || null
 	};
 };
 

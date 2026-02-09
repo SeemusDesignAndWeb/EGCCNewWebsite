@@ -8,7 +8,11 @@ import { getCurrentOrganisationId, filterByOrganisation, withOrganisationId } fr
 
 export async function load({ cookies, url }) {
 	const organisationId = await getCurrentOrganisationId();
-	const events = filterByOrganisation(await readCollection('events'), organisationId);
+	const allEvents = filterByOrganisation(await readCollection('events'), organisationId);
+	// Deduplicate by event id (in case of duplicate records) so dropdown shows each event once
+	const events = [...new Map(allEvents.map((e) => [e.id, e])).values()].sort((a, b) =>
+		(a.title || '').localeCompare(b.title || '')
+	);
 	const occurrences = filterByOrganisation(await readCollection('occurrences'), organisationId);
 	const meetingPlanners = filterByOrganisation(await readCollection('meeting_planners'), organisationId);
 	const eventId = url.searchParams.get('eventId') || '';

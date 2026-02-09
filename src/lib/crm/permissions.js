@@ -211,13 +211,16 @@ export function canAccessNewsletters(admin) {
 	return getAdminPermissions(admin).includes(HUB_AREAS.NEWSLETTERS);
 }
 
-export function getAvailableHubAreas(currentAdmin = null) {
+const DEFAULT_MEETING_PLANNERS_LABEL = 'Sunday Planners';
+
+export function getAvailableHubAreas(currentAdmin = null, areaLabelOverrides = null) {
+	const meetingPlannersLabel = areaLabelOverrides?.meetingPlanners ?? DEFAULT_MEETING_PLANNERS_LABEL;
 	const areas = [
 		{ value: HUB_AREAS.CONTACTS, label: 'Contacts', description: 'Manage contact database' },
 		{ value: HUB_AREAS.LISTS, label: 'Lists', description: 'Manage contact lists' },
 		{ value: HUB_AREAS.ROTAS, label: 'Rotas', description: 'Manage volunteer rotas' },
 		{ value: HUB_AREAS.EVENTS, label: 'Events', description: 'Manage events and calendar' },
-		{ value: HUB_AREAS.MEETING_PLANNERS, label: 'Meeting Planners', description: 'Plan and manage meetings' },
+		{ value: HUB_AREAS.MEETING_PLANNERS, label: meetingPlannersLabel, description: 'Plan and manage Sunday services' },
 		{ value: HUB_AREAS.NEWSLETTERS, label: 'Emails', description: 'Create and send emails' },
 		{ value: HUB_AREAS.FORMS, label: 'Forms (Non-Safeguarding)', description: 'Manage general forms and submissions' },
 		{ value: HUB_AREAS.SAFEGUARDING_FORMS, label: 'Safeguarding Forms', description: 'Access safeguarding forms and submissions' },
@@ -233,13 +236,14 @@ export function getAvailableHubAreas(currentAdmin = null) {
 	return areas;
 }
 
-export function getOrganisationHubAreas() {
+export function getOrganisationHubAreas(areaLabelOverrides = null) {
+	const meetingPlannersLabel = areaLabelOverrides?.meetingPlanners ?? DEFAULT_MEETING_PLANNERS_LABEL;
 	return [
 		{ value: HUB_AREAS.CONTACTS, label: 'Contacts', description: 'Manage contact database' },
 		{ value: HUB_AREAS.LISTS, label: 'Lists', description: 'Manage contact lists' },
 		{ value: HUB_AREAS.ROTAS, label: 'Rotas', description: 'Manage volunteer rotas' },
 		{ value: HUB_AREAS.EVENTS, label: 'Events', description: 'Manage events and calendar' },
-		{ value: HUB_AREAS.MEETING_PLANNERS, label: 'Meeting Planners', description: 'Plan and manage meetings' },
+		{ value: HUB_AREAS.MEETING_PLANNERS, label: meetingPlannersLabel, description: 'Plan and manage Sunday services' },
 		{ value: HUB_AREAS.NEWSLETTERS, label: 'Emails', description: 'Create and send emails' },
 		{ value: HUB_AREAS.FORMS, label: 'Forms (Non-Safeguarding)', description: 'Manage general forms and submissions' },
 		{ value: HUB_AREAS.SAFEGUARDING_FORMS, label: 'Safeguarding Forms', description: 'Access safeguarding forms and submissions' },

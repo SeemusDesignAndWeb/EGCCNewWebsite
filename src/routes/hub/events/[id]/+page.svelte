@@ -15,18 +15,21 @@
 	import { dialog } from '$lib/crm/stores/notifications.js';
 	import { EVENT_COLORS } from '$lib/crm/constants/eventColours.js';
 
-	$: event = $page.data?.event;
-	$: occurrences = $page.data?.occurrences || [];
-	$: rotas = $page.data?.rotas || [];
-	$: meetingPlanners = $page.data?.meetingPlanners || [];
-	$: rotaSignupLink = $page.data?.rotaSignupLink || '';
-	$: publicEventLink = $page.data?.publicEventLink || '';
-	$: occurrenceLinks = $page.data?.occurrenceLinks || [];
-	$: eventColors = $page.data?.eventColors || EVENT_COLORS;
-	$: csrfToken = $page.data?.csrfToken || '';
+	$: data = $page.data || {};
+	$: label = data.sundayPlannersLabel ?? 'Sunday Planners';
+	$: singularLabel = label.replace(/s$/, '') || 'Sunday Planner';
+	$: event = data?.event;
+	$: occurrences = data?.occurrences || [];
+	$: rotas = data?.rotas || [];
+	$: meetingPlanners = data?.meetingPlanners || [];
+	$: rotaSignupLink = data?.rotaSignupLink || '';
+	$: publicEventLink = data?.publicEventLink || '';
+	$: occurrenceLinks = data?.occurrenceLinks || [];
+	$: eventColors = data?.eventColors || EVENT_COLORS;
+	$: csrfToken = data?.csrfToken || '';
 	$: formResult = $page.form;
-	$: lists = $page.data?.lists || [];
-	$: requestedOccurrence = $page.data?.requestedOccurrence || null;
+	$: lists = data?.lists || [];
+	$: requestedOccurrence = data?.requestedOccurrence || null;
 	
 	let occurrenceLinkCopied = {};
 
@@ -408,7 +411,7 @@
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
 						</svg>
-						Would you like to move this?
+						Would you like to change this?
 					</button>
 				</div>
 			</div>
@@ -988,10 +991,10 @@
 					>
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
 					</svg>
-					<h3 class="text-base sm:text-lg font-bold text-gray-900 group-hover:text-gray-700">Meeting Planners</h3>
+					<h3 class="text-base sm:text-lg font-bold text-gray-900 group-hover:text-gray-700">{label}</h3>
 				</button>
 				<a href="/hub/meeting-planners/new?eventId={event.id}" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-xs whitespace-nowrap flex-shrink-0">
-					<span class="hidden sm:inline">New Meeting Planner</span>
+					<span class="hidden sm:inline">New {singularLabel}</span>
 					<span class="sm:hidden">New Planner</span>
 				</a>
 			</div>
@@ -1001,7 +1004,7 @@
 						<div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer" on:click={() => goto(`/hub/meeting-planners/${mp.id}`)}>
 							<div class="flex justify-between items-center">
 								<div>
-									<p class="font-medium text-gray-900">Meeting Planner</p>
+									<p class="font-medium text-gray-900">{singularLabel}</p>
 									{#if mp.occurrenceId}
 										<p class="text-sm text-gray-500">
 											{(() => {

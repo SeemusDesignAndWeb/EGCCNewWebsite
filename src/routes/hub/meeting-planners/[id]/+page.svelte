@@ -11,17 +11,19 @@
 	import { dialog } from '$lib/crm/stores/notifications.js';
 	import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
 
-	$: meetingPlanner = $page.data?.meetingPlanner;
-	$: event = $page.data?.event;
-	$: occurrence = $page.data?.occurrence;
-	$: eventOccurrences = $page.data?.eventOccurrences || [];
-	$: rotas = $page.data?.rotas || {};
-	$: rawRotas = $page.data?.rawRotas || {};
-	$: rotasToLoad = $page.data?.rotasToLoad || [];
-	$: availableContacts = $page.data?.availableContacts || [];
-	$: lists = $page.data?.lists || [];
-	$: speakerSeries = $page.data?.speakerSeries || [];
-	$: csrfToken = $page.data?.csrfToken || '';
+	$: data = $page.data || {};
+	$: singularLabel = (data.sundayPlannersLabel ?? 'Sunday Planners').replace(/s$/, '') || 'Sunday Planner';
+	$: meetingPlanner = data?.meetingPlanner;
+	$: event = data?.event;
+	$: occurrence = data?.occurrence;
+	$: eventOccurrences = data?.eventOccurrences || [];
+	$: rotas = data?.rotas || {};
+	$: rawRotas = data?.rawRotas || {};
+	$: rotasToLoad = data?.rotasToLoad || [];
+	$: availableContacts = data?.availableContacts || [];
+	$: lists = data?.lists || [];
+	$: speakerSeries = data?.speakerSeries || [];
+	$: csrfToken = data?.csrfToken || '';
 	$: formResult = $page.form;
 	
 	// Debug: Log when data changes
@@ -152,7 +154,7 @@
 					invalidateAll();
 				}
 			} else if (formResult?.type !== 'addAssignee' && formResult?.type !== 'removeAssignee') {
-				notifications.success('Meeting planner updated successfully');
+				notifications.success(`${singularLabel.toLowerCase()} updated successfully`);
 				// Clear unsaved form data after successful save
 				if (browser && meetingPlanner?.id && typeof sessionStorage !== 'undefined') {
 					const unsavedFormDataKey = `unsavedMeetingPlanner_${meetingPlanner.id}`;
@@ -170,7 +172,7 @@
 	}
 
 	async function handleDelete() {
-		const confirmed = await dialog.confirm('Are you sure you want to delete this meeting planner?', 'Delete Meeting Planner');
+		const confirmed = await dialog.confirm(`Are you sure you want to delete this ${singularLabel.toLowerCase()}?`, `Delete ${singularLabel}`);
 		if (confirmed) {
 			const form = document.createElement('form');
 			form.method = 'POST';
@@ -642,7 +644,7 @@
 	<div class="bg-white shadow rounded-lg p-3 sm:p-4 mb-4">
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
 			<div class="flex-1 min-w-0">
-				<h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Meeting Planner</h2>
+				<h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">{singularLabel}</h2>
 				<div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 text-base sm:text-xl text-gray-600">
 					<div>
 						<a href="/hub/events/{event.id}" class="text-hub-blue-600 hover:text-hub-blue-700 underline font-bold break-words">

@@ -6,10 +6,13 @@
 	import { notifications } from '$lib/crm/stores/notifications.js';
 	import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
 
-	$: events = $page.data?.events || [];
-	$: occurrences = $page.data?.occurrences || [];
-	$: eventId = $page.data?.eventId || '';
-	$: csrfToken = $page.data?.csrfToken || '';
+	$: data = $page.data || {};
+	$: label = data.sundayPlannersLabel ?? 'Sunday Planners';
+	$: singularLabel = label.replace(/s$/, '') || 'Sunday Planner';
+	$: events = data?.events || [];
+	$: occurrences = data?.occurrences || [];
+	$: eventId = data?.eventId || '';
+	$: csrfToken = data?.csrfToken || '';
 	$: formResult = $page.form;
 	
 	// Show notifications from form results
@@ -20,9 +23,9 @@
 	function handleEnhance() {
 		return async ({ update, result }) => {
 			if (result.type === 'redirect') {
-				notifications.success('Meeting Planner created successfully');
+				notifications.success(`${singularLabel} created successfully`);
 			} else if (result.type === 'failure') {
-				notifications.error(result.data?.error || 'Failed to create meeting planner');
+				notifications.error(result.data?.error || `Failed to create ${singularLabel.toLowerCase()}`);
 			}
 			await update();
 		};
@@ -48,13 +51,13 @@
 	<!-- Header with Action Buttons -->
 	<div class="bg-white shadow rounded-lg p-4 mb-4">
 		<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-			<h2 class="text-lg sm:text-xl font-bold text-gray-900">New Meeting Planner</h2>
+			<h2 class="text-lg sm:text-xl font-bold text-gray-900">New {singularLabel}</h2>
 			<div class="flex flex-wrap gap-2">
 				<a href="/hub/meeting-planners" class="bg-theme-button-3 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-sm">
 					Cancel
 				</a>
 				<button type="submit" form="meeting-planner-form" class="bg-theme-button-2 text-white px-2.5 py-1.5 rounded-md hover:opacity-90 text-sm">
-					<span class="hidden sm:inline">Create Meeting Planner</span>
+					<span class="hidden sm:inline">Create {singularLabel}</span>
 					<span class="sm:hidden">Create</span>
 				</button>
 			</div>
