@@ -121,6 +121,33 @@ export async function load({ params, cookies, url }) {
 	const { filterByOrganisation } = await import('$lib/crm/server/orgContext.js');
 	const lists = filterByOrganisation(await readCollection('lists'), organisationId);
 
+	// Bookings view: all occurrences (including past) with signups, for admin view and CSV export
+	const contacts = filterByOrganisation(await readCollection('contacts'), organisationId);
+	const allOccurrencesForBookings = eventOccurrences
+		.map(occ => {
+			const occSignups = eventSignups.filter(s => s.occurrenceId === occ.id);
+			const totalAttendees = occSignups.reduce((sum, s) => sum + (s.guestCount || 0) + 1, 0);
+			const effectiveMaxSpaces = occ.maxSpaces !== null && occ.maxSpaces !== undefined ? occ.maxSpaces : event.maxSpaces;
+			const signupsEnriched = occSignups.map(s => {
+				const contact = contacts.find(c => c.email === s.email);
+				const contactName = contact ? `${(contact.firstName || '').trim()} ${(contact.lastName || '').trim()}`.trim() || contact.email : null;
+				return {
+					...s,
+					displayName: contactName || s.name || s.email || 'Unknown'
+				};
+			});
+			return {
+				...occ,
+				signupStats: {
+					signupCount: occSignups.length,
+					totalAttendees,
+					isFull: effectiveMaxSpaces ? totalAttendees >= effectiveMaxSpaces : false,
+					signups: signupsEnriched
+				}
+			};
+		})
+		.sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
+
 	// When opened from calendar with ?occurrenceId=, pass that occurrence so the bar can show even if it's past/filtered
 	let requestedOccurrence = null;
 	const occurrenceIdFromUrl = url.searchParams.get('occurrenceId');
@@ -128,7 +155,7 @@ export async function load({ params, cookies, url }) {
 		requestedOccurrence = eventOccurrences.find(o => String(o.id) === String(occurrenceIdFromUrl)) || null;
 	}
 
-	return { event, occurrences: occurrencesWithStats, rotas, meetingPlanners, rotaSignupLink, publicEventLink, occurrenceLinks, csrfToken, eventColors, lists, requestedOccurrence };
+	return { event, occurrences: occurrencesWithStats, rotas, meetingPlanners, rotaSignupLink, publicEventLink, occurrenceLinks, csrfToken, eventColors, lists, requestedOccurrence, allOccurrencesForBookings };
 }
 
 export const actions = {

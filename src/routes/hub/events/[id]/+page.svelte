@@ -30,8 +30,10 @@
 	$: formResult = $page.form;
 	$: lists = data?.lists || [];
 	$: requestedOccurrence = data?.requestedOccurrence || null;
+	$: allOccurrencesForBookings = data?.allOccurrencesForBookings || [];
 	
 	let occurrenceLinkCopied = {};
+	let showBookings = false;
 
 	// Occurrence highlighted when opened from calendar (?occurrenceId=)
 	$: highlightedOccurrenceId = $page.url.searchParams.get('occurrenceId') || null;
@@ -92,6 +94,46 @@
 			document.body.appendChild(form);
 			form.submit();
 		}
+	}
+
+	function escapeCsvCell(val) {
+		if (val == null || val === '') return '';
+		const s = String(val);
+		if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+		return s;
+	}
+
+	function exportBookingsToCsv() {
+		const rows = [['Occurrence date', 'Occurrence time', 'Name', 'Email', 'Guests', 'Total attendees', 'Dietary requirements', 'Signed up at']];
+		for (const occ of allOccurrencesForBookings) {
+			const stats = occ.signupStats;
+			if (!stats?.signups?.length) continue;
+			const start = occ.startsAt ? new Date(occ.startsAt) : null;
+			const dateStr = start ? start.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+			const timeStr = start && !occ.allDay ? start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : (occ.allDay ? 'All day' : '');
+			for (const signup of stats.signups) {
+				const total = (signup.guestCount || 0) + 1;
+				const signedAt = signup.createdAt ? new Date(signup.createdAt).toLocaleString('en-GB') : '';
+				rows.push([
+					dateStr,
+					timeStr,
+					signup.displayName || signup.name || '',
+					signup.email || '',
+					String(signup.guestCount || 0),
+					String(total),
+					signup.dietaryRequirements || '',
+					signedAt
+				]);
+			}
+		}
+		const csv = rows.map(r => r.map(escapeCsvCell).join(',')).join('\r\n');
+		const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+		const a = document.createElement('a');
+		a.href = URL.createObjectURL(blob);
+		a.download = `event-bookings-${event?.title || 'event'}-${new Date().toISOString().slice(0, 10)}.csv`.replace(/[^\w\-\.]/g, '-');
+		a.click();
+		URL.revokeObjectURL(a.href);
+		notifications.success('CSV downloaded');
 	}
 
 	let editing = false;
@@ -971,6 +1013,117 @@
 			</div>
 		{/if}
 	</div>
+
+	{#if event?.enableSignup}
+		<div class="bg-white shadow rounded-lg p-3 sm:p-4 mb-4">
+			<div class="flex items-center gap-2 flex-wrap">
+				<button
+					type="button"
+					on:click={() => (showBookings = !showBookings)}
+					class="flex items-center gap-2 flex-1 min-w-0 text-left group"
+					aria-expanded={showBookings}
+				>
+					<svg
+						class="w-5 h-5 text-gray-500 flex-shrink-0 transition-transform duration-200"
+						class:rotate-180={!showBookings}
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+						aria-hidden="true"
+					>
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+					</svg>
+					<h3 class="text-base sm:text-lg font-bold text-gray-900 group-hover:text-gray-700">Bookings</h3>
+					{#if allOccurrencesForBookings.some(occ => occ.signupStats?.signupCount > 0)}
+						<span class="text-sm font-normal text-gray-500">
+							({allOccurrencesForBookings.reduce((n, occ) => n + (occ.signupStats?.signupCount || 0), 0)} signups)
+						</span>
+					{/if}
+				</button>
+				{#if allOccurrencesForBookings.some(occ => occ.signupStats?.signupCount > 0)}
+					<button
+						type="button"
+						on:click={exportBookingsToCsv}
+						class="bg-hub-green-600 text-white px-2.5 py-1.5 rounded-md hover:bg-hub-green-700 text-xs whitespace-nowrap flex items-center gap-1.5 flex-shrink-0"
+					>
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+						</svg>
+						Export to CSV
+					</button>
+				{/if}
+			</div>
+			{#if showBookings}
+				<div class="mt-3 pt-3 border-t border-gray-200" transition:slide={{ duration: 200 }}>
+					{#if !allOccurrencesForBookings.some(occ => occ.signupStats?.signupCount > 0)}
+						<p class="text-sm text-gray-500">No signups yet. When people sign up for this event, they will appear here by date and time.</p>
+					{:else}
+						<div class="space-y-6">
+							{#each allOccurrencesForBookings as occ}
+								{#if occ.signupStats?.signupCount > 0}
+									<div class="border border-gray-200 rounded-lg overflow-hidden">
+										<div class="bg-gray-50 px-3 py-2 sm:px-4 sm:py-3 border-b border-gray-200">
+											<h4 class="text-sm font-semibold text-gray-900">
+												{formatDateTimeUK(occ.startsAt)}
+												{#if occ.endsAt}
+													<span class="text-gray-500 font-normal"> – {formatDateTimeUK(occ.endsAt)}</span>
+												{/if}
+											</h4>
+											<p class="text-xs text-gray-600 mt-0.5">
+												{occ.signupStats.signupCount} {occ.signupStats.signupCount === 1 ? 'person' : 'people'} · {occ.signupStats.totalAttendees} total attendees
+												{#if occ.maxSpaces != null || event?.maxSpaces}
+													· {occ.signupStats.totalAttendees} / {occ.maxSpaces ?? event?.maxSpaces} spots
+													{#if occ.signupStats.isFull}
+														<span class="text-hub-red-600 font-medium">(Full)</span>
+													{/if}
+												{/if}
+											</p>
+										</div>
+										<div class="overflow-x-auto">
+											<table class="min-w-full divide-y divide-gray-200">
+												<thead class="bg-gray-50">
+													<tr>
+														<th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+														<th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+														<th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Guests</th>
+														{#if event?.showDietaryRequirements}
+															<th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Dietary</th>
+														{/if}
+														<th scope="col" class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+													</tr>
+												</thead>
+												<tbody class="bg-white divide-y divide-gray-200">
+													{#each occ.signupStats.signups as signup}
+														<tr class="hover:bg-gray-50">
+															<td class="px-3 py-2 text-sm text-gray-900">{signup.displayName || signup.name || '—'}</td>
+															<td class="px-3 py-2 text-sm text-gray-600">{signup.email || '—'}</td>
+															<td class="px-3 py-2 text-sm text-gray-600">{signup.guestCount || 0}</td>
+															{#if event?.showDietaryRequirements}
+																<td class="px-3 py-2 text-sm text-gray-600">{signup.dietaryRequirements || '—'}</td>
+															{/if}
+															<td class="px-3 py-2 text-right">
+																<button
+																	on:click={() => handleDeleteSignup(signup.id)}
+																	class="text-hub-red-600 hover:text-hub-red-800 text-xs font-medium"
+																	title="Remove signup"
+																>
+																	Remove
+																</button>
+															</td>
+														</tr>
+													{/each}
+												</tbody>
+											</table>
+										</div>
+									</div>
+								{/if}
+							{/each}
+						</div>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	{/if}
 
 	{#if meetingPlanners.length > 0}
 		<div class="bg-white shadow rounded-lg p-3 sm:p-4 mb-4">

@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import { getEventTokenByToken, getOccurrenceTokenByToken } from '$lib/crm/server/tokens.js';
 import { findById, findMany, readCollection } from '$lib/crm/server/fileStore.js';
 import { getCsrfToken } from '$lib/crm/server/auth.js';
-import { filterUpcomingOccurrences } from '$lib/crm/utils/occurrenceFilters.js';
+import { filterUpcomingOccurrences, isUpcomingOccurrence } from '$lib/crm/utils/occurrenceFilters.js';
 
 // Simple in-memory rate limiting (in production, use Redis or similar)
 const rateLimitMap = new Map();
@@ -125,6 +125,11 @@ export async function load({ params, cookies, url }) {
 		? allOccurrencesWithSignups.filter(o => o.id === occurrenceId)
 		: allOccurrencesWithSignups;
 
+	// For signup form: only allow selecting occurrences from today onwards
+	const upcomingOccurrencesForSignup = occurrenceId
+		? allOccurrencesWithSignups.filter(o => o.id === occurrenceId).filter(o => filterUpcomingOccurrences([o]).length > 0)
+		: filterUpcomingOccurrences(allOccurrencesWithSignups);
+
 	// Load all rotas for this event (public, internal, church — for "Who's on the rotas" section)
 	const allRotas = await findMany('rotas', r => r.eventId === event.id);
 	const upcomingOccurrences = filterUpcomingOccurrences(allOccurrences);
@@ -180,6 +185,7 @@ export async function load({ params, cookies, url }) {
 		event,
 		occurrences: occurrencesWithSignups,
 		allOccurrences: allOccurrencesWithSignups,
+		upcomingOccurrencesForSignup,
 		occurrenceId,
 		rotas: rotasWithAssignees,
 		upcomingOccurrencesForRotas: upcomingOccurrences,
@@ -263,6 +269,11 @@ export const actions = {
 			const occurrence = await findById('occurrences', occurrenceId);
 			if (!occurrence || occurrence.eventId !== event.id) {
 				return fail(400, { error: 'Invalid occurrence selected' });
+			}
+
+			// Only allow signup for occurrences from today onwards
+			if (!isUpcomingOccurrence(occurrence)) {
+				return fail(400, { error: 'This date has passed. Please select a date from today onwards.' });
 			}
 
 			// Check if already signed up
