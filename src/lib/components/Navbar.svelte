@@ -4,6 +4,7 @@
 	export let bannerVisible = false;
 	/** @type {{ logoPath?: string; primaryColor?: string; brandColor?: string } | null} */
 	export let theme = null;
+	export let defaultLogoPath = '/images/OnNuma-Icon.png';
 
 	let menuOpen = false;
 	let scrolled = false;
@@ -92,7 +93,7 @@
 			<!-- Logo: colour on public (no theme), white/invert on themed/Hub banner -->
 			<a href="/" class="flex items-center z-10">
 				<img
-					src={theme?.logoPath?.trim() || '/images/OnNuma-Icon.png'}
+					src={theme?.logoPath?.trim() || defaultLogoPath}
 					alt="Eltham Green Community Church"
 					class="h-12 w-auto {theme ? 'brightness-0 invert' : ''}"
 				/>

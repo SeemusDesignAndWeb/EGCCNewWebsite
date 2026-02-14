@@ -26,6 +26,7 @@
 
 	// Theme from Hub settings. Only applied in Hub/admin and on public hub pages. Main website (/, /church, /events, etc.) never uses Hub theme.
 	$: theme = data?.theme || null;
+	$: frontendWebsiteLogoPath = data?.settings?.logoPath?.trim() || '/images/egcc-logo.png';
 	// Hub/admin: always use theme. Main website: never use theme. External (public hub) pages: use theme only when Hub branding is selected.
 	$: effectiveTheme = hideWebsiteElements ? theme : (isExternalPage && theme?.publicPagesBranding === 'hub' ? theme : null);
 
@@ -129,11 +130,11 @@
 
 <!-- Standalone header (external pages when theme is standalone) -->
 {#if showStandaloneHeader}
-	<StandaloneHeader theme={effectiveTheme} class="gallery-hide-when-fullscreen" />
+	<StandaloneHeader theme={effectiveTheme} defaultLogoPath={frontendWebsiteLogoPath} class="gallery-hide-when-fullscreen" />
 {/if}
 <!-- Website Navbar - full site nav when not standalone external page -->
 {#if showFullNavbar}
-	<Navbar theme={effectiveTheme} bannerVisible={showHighlightBanner && !isSignupPage && !isSundaysPage} class="gallery-hide-when-fullscreen" />
+	<Navbar theme={effectiveTheme} defaultLogoPath={frontendWebsiteLogoPath} bannerVisible={showHighlightBanner && !isSignupPage && !isSundaysPage} class="gallery-hide-when-fullscreen" />
 {/if}
 
 <!-- Page Content with dynamic padding to account for fixed navbar and banner -->

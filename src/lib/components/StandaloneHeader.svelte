@@ -1,6 +1,7 @@
 <script>
 	/** @type {{ logoPath?: string } | null} */
 	export let theme = null;
+	export let defaultLogoPath = '/images/OnNuma-Icon.png';
 </script>
 
 <header
@@ -9,7 +10,7 @@
 >
 	<a href="/" class="flex items-center">
 		<img
-			src={theme?.logoPath?.trim() || '/images/OnNuma-Icon.png'}
+			src={theme?.logoPath?.trim() || defaultLogoPath}
 			alt="Eltham Green Community Church"
 			class="h-10 w-auto {theme ? 'brightness-0 invert' : ''}"
 		/>
