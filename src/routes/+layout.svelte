@@ -26,7 +26,7 @@
 
 	// Theme from Hub settings. Only applied in Hub/admin and on public hub pages. Main website (/, /church, /events, etc.) never uses Hub theme.
 	$: theme = data?.theme || null;
-	$: frontendWebsiteLogoPath = data?.settings?.logoPath?.trim() || '/images/egcc-logo.png';
+	$: frontendWebsiteLogoPath = '/images/egcc-color.png';
 	// Hub/admin: always use theme. Main website: never use theme. External (public hub) pages: use theme only when Hub branding is selected.
 	$: effectiveTheme = hideWebsiteElements ? theme : (isExternalPage && theme?.publicPagesBranding === 'hub' ? theme : null);
 
