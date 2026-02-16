@@ -10,7 +10,7 @@
 	import Table from '$lib/crm/components/Table.svelte';
 	import MultiSelect from '$lib/crm/components/MultiSelect.svelte';
 	import ImagePicker from '$lib/components/ImagePicker.svelte';
-	import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
+	import { formatDateTimeUK, toDateTimeLocalValue } from '$lib/crm/utils/dateFormat.js';
 	import { notifications } from '$lib/crm/stores/notifications.js';
 	import { dialog } from '$lib/crm/stores/notifications.js';
 	import { EVENT_COLORS } from '$lib/crm/constants/eventColours.js';
@@ -195,11 +195,11 @@
 		const end = occ.endsAt ? new Date(occ.endsAt) : new Date();
 		moveAllDay = !!occ.allDay;
 		if (moveAllDay) {
-			moveStartsAt = start.toISOString().slice(0, 10);
-			moveEndsAt = start.toISOString().slice(0, 10) + 'T23:59';
+			moveStartsAt = toDateTimeLocalValue(start).slice(0, 10);
+			moveEndsAt = toDateTimeLocalValue(start).slice(0, 10) + 'T23:59';
 		} else {
-			moveStartsAt = start.toISOString().slice(0, 16);
-			moveEndsAt = end.toISOString().slice(0, 16);
+			moveStartsAt = toDateTimeLocalValue(start);
+			moveEndsAt = toDateTimeLocalValue(end);
 		}
 	}
 
@@ -1294,7 +1294,16 @@
 					<br />
 					<span class="text-gray-500">Current: {formatOccurrenceTimeRange(selectedOccurrence)} on {new Date(selectedOccurrence.startsAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
 				</p>
-				<form method="POST" action="?/moveOccurrence" use:enhance={() => {
+				<form method="POST" action="?/moveOccurrence" use:enhance={({ formData }) => {
+					// Convert datetime-local (user's local time) to ISO UTC so server stores correct time
+					const startsAt = formData.get('startsAt');
+					const endsAt = formData.get('endsAt');
+					if (startsAt && typeof startsAt === 'string') {
+						formData.set('startsAt', new Date(startsAt).toISOString());
+					}
+					if (endsAt && typeof endsAt === 'string') {
+						formData.set('endsAt', new Date(endsAt).toISOString());
+					}
 					return ({ result }) => {
 						if (result && result.error) notifications.error(result.error);
 					};

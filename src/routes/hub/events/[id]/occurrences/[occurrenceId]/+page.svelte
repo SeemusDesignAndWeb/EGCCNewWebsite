@@ -4,7 +4,7 @@
 	import { browser } from '$app/environment';
 	import FormField from '$lib/crm/components/FormField.svelte';
 	import HtmlEditor from '$lib/crm/components/HtmlEditor.svelte';
-	import { formatDateTimeUK } from '$lib/crm/utils/dateFormat.js';
+	import { formatDateTimeUK, toDateTimeLocalValue } from '$lib/crm/utils/dateFormat.js';
 	import { notifications } from '$lib/crm/stores/notifications.js';
 	import { dialog } from '$lib/crm/stores/notifications.js';
 	import { onMount, onDestroy } from 'svelte';
@@ -131,10 +131,10 @@
 			endDate.getHours() === 23 && endDate.getMinutes() === 59 &&
 			startDate.toDateString() === endDate.toDateString());
 		
-		// Convert ISO dates to datetime-local format or date format
-		const startDateStr = startDate ? startDate.toISOString().slice(0, 16) : '';
-		const endDateStr = endDate ? endDate.toISOString().slice(0, 16) : '';
-		const dateStr = startDate ? startDate.toISOString().slice(0, 10) : '';
+		// Convert ISO dates to datetime-local format in local time (avoid UTC/local mismatch)
+		const startDateStr = startDate ? toDateTimeLocalValue(startDate) : '';
+		const endDateStr = endDate ? toDateTimeLocalValue(endDate) : '';
+		const dateStr = startDate ? toDateTimeLocalValue(startDate).slice(0, 10) : '';
 		
 		// Use occurrence maxSpaces if set, otherwise leave empty to show it's using event default
 		formData = {
@@ -193,7 +193,16 @@
 		
 		// Create FormData and submit via fetch
 		const formData = new FormData(form);
-		
+		// Convert datetime-local values (user's local time) to ISO UTC so server stores correct time
+		const startsAt = formData.get('startsAt');
+		const endsAt = formData.get('endsAt');
+		if (startsAt && typeof startsAt === 'string') {
+			formData.set('startsAt', new Date(startsAt).toISOString());
+		}
+		if (endsAt && typeof endsAt === 'string') {
+			formData.set('endsAt', new Date(endsAt).toISOString());
+		}
+
 		// Construct the action URL properly
 		// The form action is "?/update", so we append it to the current page pathname
 		const actionUrl = $page.url.pathname + '?/update';

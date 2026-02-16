@@ -91,4 +91,23 @@ export function formatWeekdayUK(date) {
 	return d.toLocaleDateString('en-GB', { weekday: 'short' });
 }
 
+/**
+ * Format date for HTML datetime-local input (YYYY-MM-DDTHH:mm) in the user's local timezone.
+ * Use this when populating datetime-local from a UTC ISO string so the displayed time matches
+ * what the user sees elsewhere (e.g. 10:00 UK, not 10:00 UTC).
+ * @param {Date|string} date - Date to format (ISO string or Date)
+ * @returns {string} Value for datetime-local input
+ */
+export function toDateTimeLocalValue(date) {
+	if (!date) return '';
+	const d = date instanceof Date ? date : new Date(date);
+	if (isNaN(d.getTime())) return '';
+	const y = d.getFullYear();
+	const m = String(d.getMonth() + 1).padStart(2, '0');
+	const day = String(d.getDate()).padStart(2, '0');
+	const h = String(d.getHours()).padStart(2, '0');
+	const min = String(d.getMinutes()).padStart(2, '0');
+	return `${y}-${m}-${day}T${h}:${min}`;
+}
+
 

@@ -96,7 +96,18 @@
 		</div>
 	</div>
 
-	<form id="occurrence-create-form" method="POST" action="?/create" use:enhance>
+	<form id="occurrence-create-form" method="POST" action="?/create" use:enhance={({ formData }) => {
+		// Convert datetime-local (user's local time) to ISO UTC so server stores correct time
+		const startsAt = formData.get('startsAt');
+		const endsAt = formData.get('endsAt');
+		if (startsAt && typeof startsAt === 'string') {
+			formData.set('startsAt', new Date(startsAt).toISOString());
+		}
+		if (endsAt && typeof endsAt === 'string') {
+			formData.set('endsAt', new Date(endsAt).toISOString());
+		}
+		return async () => {};
+	}}>
 		<input type="hidden" name="_csrf" value={csrfToken} />
 		<input type="hidden" name="information" value={information} />
 		<input type="hidden" name="allDay" value={formData.allDay ? 'true' : 'false'} />
