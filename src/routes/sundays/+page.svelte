@@ -83,7 +83,7 @@
 														<h4 class="text-base sm:text-lg font-semibold text-gray-900 mb-2">
 															{occ.event.title}
 														</h4>
-														<div class="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600">
+														<div class="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600 flex-wrap">
 															<div class="flex items-center gap-1">
 																<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 																	<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -93,6 +93,14 @@
 																	<span> - {formatTimeUK(occ.endsAt)}</span>
 																{/if}
 															</div>
+															{#if occ.communionHappening}
+																<div class="flex items-center gap-1 text-gray-700 font-medium">
+																	<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+																	</svg>
+																	<span>Communion</span>
+																</div>
+															{/if}
 															{#if occ.location || occ.event.location}
 																<div class="flex items-center gap-1">
 																	<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

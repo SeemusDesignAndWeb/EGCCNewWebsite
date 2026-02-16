@@ -33,6 +33,13 @@ export async function load({ url, cookies }) {
 		});
 	}
 
+	// Sort by date descending (most recent updatedAt/createdAt first)
+	filtered = [...filtered].sort((a, b) => {
+		const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+		const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+		return dateB - dateA;
+	});
+
 	const total = filtered.length;
 	const start = (page - 1) * ITEMS_PER_PAGE;
 	const end = start + ITEMS_PER_PAGE;

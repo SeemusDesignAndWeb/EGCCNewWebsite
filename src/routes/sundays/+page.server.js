@@ -1,4 +1,5 @@
 import { readCollection } from '$lib/crm/server/fileStore.js';
+import { getCurrentOrganisationId, filterByOrganisation } from '$lib/crm/server/orgContext.js';
 import { filterUpcomingOccurrences } from '$lib/crm/utils/occurrenceFilters.js';
 import { ensureEventToken } from '$lib/crm/server/tokens.js';
 import { env } from '$env/dynamic/private';
@@ -9,6 +10,8 @@ export async function load({ url }) {
 	const allOccurrences = await readCollection('occurrences');
 	const allRotas = await readCollection('rotas');
 	const contacts = await readCollection('contacts');
+	const organisationId = await getCurrentOrganisationId();
+	const meetingPlanners = filterByOrganisation(await readCollection('meeting_planners'), organisationId);
 
 	// Filter to only public events
 	const publicEvents = events.filter(e => (e.visibility || 'public') === 'public');
@@ -62,6 +65,14 @@ export async function load({ url }) {
 			});
 		}
 	});
+
+	// Helper: get communion for an occurrence from meeting planners (prefer occurrence-specific over "all")
+	function getCommunionForOccurrence(eventId, occurrenceId) {
+		const specific = meetingPlanners.find(mp => mp.eventId === eventId && mp.occurrenceId === occurrenceId);
+		if (specific) return !!specific.communionHappening;
+		const allOcc = meetingPlanners.find(mp => mp.eventId === eventId && !mp.occurrenceId);
+		return allOcc ? !!allOcc.communionHappening : false;
+	}
 
 	// For each Sunday, get rotas for the events happening that day
 	const eventsMap = new Map(publicEvents.map(e => [e.id, e]));
@@ -173,8 +184,15 @@ export async function load({ url }) {
 			return 0;
 		});
 
+		// Enrich occurrences with communion from meeting planners
+		const occurrencesWithCommunion = sunday.occurrences.map(occ => ({
+			...occ,
+			communionHappening: getCommunionForOccurrence(occ.eventId, occ.id)
+		}));
+
 		return {
 			...sunday,
+			occurrences: occurrencesWithCommunion,
 			rotas: enrichedRotas
 		};
 	});
