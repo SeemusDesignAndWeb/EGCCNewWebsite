@@ -33,10 +33,15 @@ export async function load({ params, cookies, url }) {
 	if (rota.occurrenceId) {
 		const specificOccurrence = allEventOccurrences.find(o => o.id === rota.occurrenceId);
 		if (specificOccurrence && !eventOccurrences.find(o => o.id === rota.occurrenceId)) {
-			// Add it to the beginning of the list
+			// Add it to the list (will be sorted below)
 			eventOccurrences = [specificOccurrence, ...eventOccurrences];
 		}
 	}
+
+	// Sort occurrences by start date/time ascending so the grid shows chronological order
+	eventOccurrences = [...eventOccurrences].sort((a, b) =>
+		new Date(a.startsAt || 0).getTime() - new Date(b.startsAt || 0).getTime()
+	);
 
 	// Load contact details for assignees
 	// New structure: assignees are objects with { contactId, occurrenceId }
