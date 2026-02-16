@@ -13,6 +13,7 @@
 	$: rotas = $page.data?.rotas || [];
 	$: upcomingOccurrencesForRotas = $page.data?.upcomingOccurrencesForRotas || [];
 	$: rotaViewOccurrenceId = $page.data?.rotaViewOccurrenceId || null;
+	$: rotaViewOccurrenceIsPast = $page.data?.rotaViewOccurrenceIsPast ?? false;
 	$: csrfToken = $page.data?.csrfToken || '';
 	$: formResult = $page.form;
 
@@ -122,7 +123,12 @@
 							? (upcomingOccurrencesForRotas.find(occ => occ.id === rotaViewOccurrenceId) || allOccurrences.find(occ => occ.id === rotaViewOccurrenceId))
 							: null}
 						<div id="rotas" class="bg-white shadow rounded-lg p-6 scroll-mt-6">
-							{#if singleDateOccurrence}
+							{#if rotaViewOccurrenceIsPast}
+								<h2 class="text-xl font-bold text-gray-900 mb-2">Who's on the rotas</h2>
+								<p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-4 py-3">
+									This event has passed and no rotas can be found.
+								</p>
+							{:else if singleDateOccurrence}
 								<h2 class="text-xl font-bold text-gray-900 mb-1">Who's on the rotas</h2>
 								<p class="text-sm text-gray-600 mb-4">
 									{formatDate(singleDateOccurrence.startsAt)} at {formatTime(singleDateOccurrence.startsAt)}

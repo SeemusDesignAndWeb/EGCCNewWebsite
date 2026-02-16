@@ -178,6 +178,12 @@ export async function load({ params, cookies, url }) {
 
 	// When coming from rota email link: ?occurrenceId=xxx#rotas — show only that date's assignees
 	const rotaViewOccurrenceId = url.searchParams.get('occurrenceId') || null;
+	const rotaViewOccurrence = rotaViewOccurrenceId
+		? allOccurrences.find(o => o.id === rotaViewOccurrenceId)
+		: null;
+	const rotaViewOccurrenceIsPast = rotaViewOccurrence
+		? !isUpcomingOccurrence(rotaViewOccurrence)
+		: false;
 
 	const csrfToken = getCsrfToken(cookies) || '';
 	return {
@@ -190,6 +196,7 @@ export async function load({ params, cookies, url }) {
 		rotas: rotasWithAssignees,
 		upcomingOccurrencesForRotas: upcomingOccurrences,
 		rotaViewOccurrenceId,
+		rotaViewOccurrenceIsPast,
 		csrfToken
 	};
 }
